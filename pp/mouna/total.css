@@ -1,0 +1,112 @@
+/* -------- Pee overlay (erasable top layer) -------- */
+.pee-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-ui) ease;
+}
+
+.pee-overlay.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* overlay canvases */
+#pee-canvas,
+#pee-text-canvas,
+#pee-ui-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  pointer-events: none;
+}
+
+#pee-canvas {
+  z-index: 10000;
+}
+
+#pee-text-canvas {
+  z-index: 10001;
+  opacity: 0;
+  transition: opacity var(--t-text) ease;
+}
+
+#pee-text-canvas.is-visible {
+  opacity: 1;
+}
+
+#pee-ui-canvas {
+  z-index: 10003;
+  opacity: 0;
+  transition: opacity var(--t-text) ease;
+}
+
+.pee-overlay.is-active #pee-ui-canvas {
+  opacity: 1;
+}
+
+/* old DOM template no longer used */
+.pee-ui {
+  display: none !important;
+}
+
+/* -------- Chiffon draggable -------- */
+.chiffon-btn {
+  position: fixed;
+  top: var(--page-margin);
+  right: var(--page-margin);
+  left: auto;
+
+  width: 6.5rem;
+
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+
+  z-index: 10004;
+  cursor: grab;
+  user-select: none;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transform-origin: 50% 50%;
+  transform: scale(1);
+  transition:
+    opacity var(--t-ui) ease,
+    transform var(--t-ui) ease;
+}
+
+.chiffon-btn img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chiffon-btn.is-visible {
+  opacity: 0.96;
+  pointer-events: auto;
+}
+
+.chiffon-btn.is-grabbing {
+  cursor: grabbing;
+  transform: scale(1.06);
+}
+
+.chiffon-btn.is-dragging {
+  transition: opacity var(--t-ui) ease;
+}
+
+/* latent-only hairline stroke for homepage puddle */
+.total-block.is-latent .pipi-total {
+  filter:
+    drop-shadow(0.5px 0 0 rgba(0, 0, 0, 0.55))
+    drop-shadow(-0.5px 0 0 rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0.5px 0 rgba(0, 0, 0, 0.55))
+    drop-shadow(0 -0.5px 0 rgba(0, 0, 0, 0.55));
+}

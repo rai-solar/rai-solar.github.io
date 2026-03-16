@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pee debug</title>
+
+  <style>
+    :root{
+      --page-margin: 20px;
+      --bg: #fffeee;
+      --ui-bg: rgba(255,255,255,0.92);
+      --text: #111;
+      --muted: #444;
+      --border: #000;
+
+      --base-height: 122px; /* match your cyl svg height */
+    }
+
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      background: var(--bg);
+      font-family: Helvetica, Arial, sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* The "stage" is full screen */
+    .stage{
+      position: fixed;
+      inset: 0;
+    }
+
+    /* This matches your production anchoring: bottom-right via right/bottom */
+    .puddle{
+      position: absolute;
+      right: var(--page-margin);
+      bottom: var(--page-margin);
+
+      height: var(--base-height);
+      width: auto;
+      max-width: none;
+
+      transform-origin: 100% 100%;
+      transform: translate(0px, 0px) scale(1);
+      will-change: transform;
+      user-select: none;
+      -webkit-user-drag: none;
+
+      /* optional outline-softener to simulate "no stroke feeling" */
+      filter: blur(0px) contrast(1) saturate(1);
+    }
+
+    /* UI panel */
+    .ui{
+      position: fixed;
+      left: var(--page-margin);
+      top: var(--page-margin);
+      width: min(520px, calc(100vw - 2*var(--page-margin)));
+      background: var(--ui-bg);
+      border: 1px solid var(--border);
+      padding: 14px 14px 10px 14px;
+      box-sizing: border-box;
+    }
+
+    .ui h1{
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .row{
+      display: grid;
+      grid-template-columns: 110px 1fr 70px;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .label{
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    input[type="range"]{
+      width: 100%;
+    }
+
+    .val{
+      font-size: 13px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .buttons{
+      display:flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    button{
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #111;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover{ background:#f4f4f4; }
+
+    .code{
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      color: #111;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.35;
+    }
+
+    .hint{
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <img id="puddle" class="puddle" src="imgs/pipi.svg" alt="puddle" />
+  </div>
+
+  <div class="ui" aria-label="debug controls">
+    <h1>Pee debug — scale + position</h1>
+
+    <div class="row">
+      <div class="label">Scale</div>
+      <input id="scale" type="range" min="0" max="40" step="0.1" value="1" />
+      <div class="val" id="scaleVal">1.0</div>
+    </div>
+
+    <div class="row">
+      <div class="label">Translate X</div>
+      <input id="tx" type="range" min="-2000" max="2000" step="1" value="0" />
+      <div class="val" id="txVal">0</div>
+    </div>
+
+    <div class="row">
+      <div class="label">Translate Y</div>
+      <input id="ty" type="range" min="-2000" max="2000" step="1" value="0" />
+      <div class="val" id="tyVal">0</div>
+    </div>
+
+    <div class="row">
+      <div class="label">Duration (ms)</div>
+      <input id="dur" type="range" min="0" max="60000" step="100" value="12000" />
+      <div class="val" id="durVal">12000</div>
+    </div>
+
+    <div class="buttons">
+      <button id="apply">Apply instantly</button>
+      <button id="animate">Animate to current</button>
+      <button id="reset">Reset</button>
+    </div>
+
+    <div class="code" id="code"></div>
+    <div class="hint">
+      Tip: positive Y moves DOWN. This is anchored bottom-right (transform-origin 100% 100%).<br/>
+      Use “Animate to current” to preview constant-speed growth.
+    </div>
+  </div>
+
+  <script>
+    const puddle = document.getElementById("puddle");
+
+    const elScale = document.getElementById("scale");
+    const elTx = document.getElementById("tx");
+    const elTy = document.getElementById("ty");
+    const elDur = document.getElementById("dur");
+
+    const outScale = document.getElementById("scaleVal");
+    const outTx = document.getElementById("txVal");
+    const outTy = document.getElementById("tyVal");
+    const outDur = document.getElementById("durVal");
+    const code = document.getElementById("code");
+
+    const btnApply = document.getElementById("apply");
+    const btnAnimate = document.getElementById("animate");
+    const btnReset = document.getElementById("reset");
+
+    function fmt(n, digits=1){
+      return Number(n).toFixed(digits);
+    }
+
+    function currentValues(){
+      return {
+        scale: parseFloat(elScale.value),
+        tx: parseInt(elTx.value, 10),
+        ty: parseInt(elTy.value, 10),
+        dur: parseInt(elDur.value, 10)
+      };
+    }
+
+    function updateReadouts(){
+      const v = currentValues();
+      outScale.textContent = fmt(v.scale, 1);
+      outTx.textContent = String(v.tx);
+      outTy.textContent = String(v.ty);
+      outDur.textContent = String(v.dur);
+
+      const transform = `translate(${v.tx}px, ${v.ty}px) scale(${fmt(v.scale, 2)})`;
+      code.textContent =
+`transform: ${transform};
+duration: ${v.dur}ms;
+origin: 100% 100% (bottom-right)`;
+    }
+
+    function applyInstant(){
+      const v = currentValues();
+      puddle.style.transition = "none";
+      puddle.style.transform = `translate(${v.tx}px, ${v.ty}px) scale(${v.scale})`;
+    }
+
+    function animateToCurrent(){
+      const v = currentValues();
+
+      // Start from scale 0 at the same anchor point
+      puddle.style.transition = "none";
+      puddle.style.transformOrigin = "100% 100%";
+      puddle.style.transform = "translate(0px, 0px) scale(0)";
+      void puddle.offsetWidth;
+
+      // Constant speed: linear
+      puddle.style.transition = `transform ${v.dur}ms linear`;
+      puddle.style.transform = `translate(${v.tx}px, ${v.ty}px) scale(${v.scale})`;
+    }
+
+    function reset(){
+      elScale.value = "1";
+      elTx.value = "0";
+      elTy.value = "0";
+      elDur.value = "12000";
+      updateReadouts();
+      applyInstant();
+    }
+
+    [elScale, elTx, elTy, elDur].forEach(el => {
+      el.addEventListener("input", updateReadouts);
+    });
+
+    btnApply.addEventListener("click", () => {
+      applyInstant();
+      updateReadouts();
+    });
+
+    btnAnimate.addEventListener("click", () => {
+      animateToCurrent();
+      updateReadouts();
+    });
+
+    btnReset.addEventListener("click", reset);
+
+    // Init
+    updateReadouts();
+    applyInstant();
+  </script>
+</body>
+</html>

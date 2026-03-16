@@ -1,0 +1,299 @@
+<!-- email.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Outlook — Mail</title>
+    <link rel="stylesheet" href="email.css" />
+  </head>
+
+  <body>
+    <div class="ow" role="application" aria-label="Outlook web clone">
+      <!-- BLUE TOP BAR -->
+      <header class="ow-top" role="banner">
+        <div class="ow-top-left">
+          <button class="ow-iconbtn ow-iconbtn--blue" type="button" aria-label="App launcher">
+            <span class="ow-dots" aria-hidden="true">
+              <i></i><i></i><i></i>
+              <i></i><i></i><i></i>
+              <i></i><i></i><i></i>
+            </span>
+          </button>
+          <div class="ow-brand" aria-label="Outlook">
+            <span class="ow-brand-text">Outlook</span>
+          </div>
+        </div>
+
+        <div class="ow-top-center">
+          <div class="ow-search" role="search">
+            <span class="ow-search-ico" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M7 12.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11Z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M11.25 11.25 14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <input class="ow-search-input" type="search" placeholder="Search" aria-label="Search" />
+          </div>
+        </div>
+
+        <div class="ow-top-right">
+          <button class="ow-linkbtn ow-linkbtn--blue" type="button">
+            <span class="ow-mini-ico" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 5.5h8.5a2 2 0 0 1 2 2V12a1.5 1.5 0 0 1-1.5 1.5H3.5A1.5 1.5 0 0 1 2 12V5.5Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M12.5 7 14 6.2v3.6L12.5 9" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Meet Now
+          </button>
+
+          <button class="ow-iconbtn ow-iconbtn--blue" type="button" aria-label="Settings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M19.4 12a7.6 7.6 0 0 0-.1-1l2-1.5-2-3.4-2.4.9a7.7 7.7 0 0 0-1.7-1L15 3h-4l-.2 2.9a7.7 7.7 0 0 0-1.7 1L6.7 6 4.7 9.5l2 1.5a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.4 2.4-.9a7.7 7.7 0 0 0 1.7 1L11 21h4l.2-2.9a7.7 7.7 0 0 0 1.7-1l2.4.9 2-3.4-2-1.5c.1-.3.1-.7.1-1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <div class="ow-avatar" aria-label="Account">TC</div>
+        </div>
+      </header>
+
+      <!-- LIGHT RIBBON -->
+      <div class="ow-ribbon" role="navigation" aria-label="Command bar">
+        <div class="ow-ribbon-left">
+          <button class="ow-btn ow-btn--primary" type="button">
+            <span class="ow-btn-ico" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            New mail
+          </button>
+
+          <button class="ow-btn" type="button">
+            <span class="ow-btn-ico" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 4.5h10M6 4.5V3.3c0-.7.6-1.3 1.3-1.3h1.4c.7 0 1.3.6 1.3 1.3v1.2M5.5 6v6.8M8 6v6.8M10.5 6v6.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                <path d="M4.2 4.5 5 14h6l.8-9.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            Delete
+          </button>
+
+          <button class="ow-btn" type="button">
+            <span class="ow-btn-ico" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 6h10v8H3V6Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M2 6h12M5 6V3.8c0-1 1-1.8 2-1.8h2c1 0 2 .8 2 1.8V6" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+            </span>
+            Archive
+          </button>
+
+          <button class="ow-btn" type="button">Move to</button>
+          <button class="ow-btn" type="button">Reply</button>
+          <button class="ow-btn" type="button">Read / Unread</button>
+          <button class="ow-btn" type="button">Flag / Unflag</button>
+        </div>
+
+        <div class="ow-ribbon-right">
+          <button class="ow-btn ow-btn--ghost" type="button" aria-label="More">
+            <span class="ow-ellipsis" aria-hidden="true">⋯</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN SHELL -->
+      <div class="ow-shell">
+        <!-- LEFT APP RAIL -->
+        <nav class="ow-rail" aria-label="Apps">
+          <button class="ow-railbtn is-active" type="button" aria-label="Mail">
+            <span class="ow-railico" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M3 5.5h12v8H3v-8Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M3.5 6 9 10l5.5-4" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          <button class="ow-railbtn" type="button" aria-label="Calendar">
+            <span class="ow-railico" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M4 4.5h10v10H4v-10Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M4 7h10" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M6 3.5v2M12 3.5v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </button>
+          <button class="ow-railbtn" type="button" aria-label="People">
+            <span class="ow-railico" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M6.2 8.4a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M2.8 14.5c.6-2 2-3 3.4-3h.2c1.4 0 2.8 1 3.4 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                <path d="M12.2 8a1.9 1.9 0 1 0 0-3.8 1.9 1.9 0 0 0 0 3.8Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M10.8 14.5c.4-1.5 1.3-2.3 2.1-2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </button>
+
+          <div class="ow-railspacer" aria-hidden="true"></div>
+
+          <button class="ow-railbtn" type="button" aria-label="More apps">
+            <span class="ow-railico" aria-hidden="true">⋯</span>
+          </button>
+        </nav>
+
+        <!-- LEFT NAV PANE -->
+        <aside class="ow-nav" aria-label="Mail folders">
+          <div class="ow-nav-top">
+            <button class="ow-iconbtn" type="button" aria-label="Collapse">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M4 5.5h10M4 9h10M4 12.5h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </button>
+
+            <div class="ow-account" title="Account">
+              <div class="ow-account-name">tom@hotmail.com</div>
+            </div>
+          </div>
+
+          <div class="ow-nav-group">
+            <a class="ow-navlink" href="#">
+              <span class="ow-navdot" aria-hidden="true"></span>
+              Go to Groups
+            </a>
+          </div>
+        </aside>
+
+        <!-- CONTENT (READING VIEW LIKE YOUR SCREENSHOT) -->
+        <main class="ow-content" aria-label="Reading pane">
+          <div class="ow-readwrap">
+            <!-- Subject row -->
+            <div class="ow-subjectbar" aria-label="Message subject bar">
+              <button class="ow-subjectbtn" type="button" aria-label="Close">
+                <span aria-hidden="true">×</span>
+              </button>
+              <div class="ow-subjecttext">
+                Re: Communication Animale avec Mouna
+              </div>
+              <div class="ow-subjectspacer" aria-hidden="true"></div>
+              <button class="ow-subjectbtn" type="button" aria-label="Previous">‹</button>
+              <button class="ow-subjectbtn" type="button" aria-label="Next">›</button>
+            </div>
+
+            <!-- Message surface -->
+            <article class="ow-message" aria-label="Message">
+              <header class="ow-messagehead">
+                <div class="ow-from">
+                  <div class="ow-from-avatar" aria-hidden="true">D</div>
+                  <div class="ow-from-meta">
+                    <div class="ow-from-line">
+                      <span class="ow-from-name">alice_ca@gmail.com</span>
+                    </div>
+                    <div class="ow-to-line">
+                      <span class="ow-to-k">To:</span>
+                      <span class="ow-to-v">tom@hotmail.com</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ow-headactions" aria-label="Message actions">
+                  <button class="ow-headbtn" type="button">Reply</button>
+                  <button class="ow-headbtn" type="button">Reply all</button>
+                  <button class="ow-headbtn" type="button">Forward</button>
+                </div>
+
+                <div class="ow-date" aria-label="Date">Wed 04/03/26 14:03</div>
+              </header>
+
+              <div class="ow-body" id="mail-body"></div>
+
+              <div class="ow-bottomactions">
+                <a class="ow-link" href="poids.html">Back</a>
+              </div>
+            </article>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const bodyText = `Chers Tom, Garfield, Luna et Meowth,
+
+Comme dit précédemment, j’ai choisi de prendre le temps ce jour pour faire la CA avec Mouna, car demain ma journée est déjà bien remplie, et ce week-end, je donne une formation. 
+
+Voici donc sans tarder tout le déroulement de notre échange. 
+
+A mon arrivée près d’elle, Mouna a dans un premier temps souhaité conserver une petite distance qui lui est confortable. Elle m’a d’abord sentie, puis elle s’est gentiment rapprochée de moi pour venir me sentir au contact. Je lui ai laissé le temps qui lui est nécessaire, puis je lui ai dit : « Bonjour belle Mouna. Je m’appelle Alice. Je me permets de venir à toi à la demande de Tom, Garfield, Luna et Meowth. Ils souhaitent que nous échangions un moment ensemble. L’acceptes-tu ? » 
+
+Mouna m’observe avec grande attention, puis dit : « Oui, je l’accepte. » 
+
+Moi : « Nous t’en remercions beaucoup. Mouna, peux-tu déjà nous dire comment tu te sens de manière générale ? » 
+
+Mouna : « Dans l’ensemble, je me sens assez fatiguée au quotidien. J’ai la sensation qu’il y a beaucoup de dysfonctionnements à l’intérieur de moi. Je me sens diminuer assez rapidement. » 
+
+Moi : « Merci pour ce partage. Et moralement, comment te sens-ru ? » 
+
+Mouna : « Je dirais qu’il y a des jours avec et des jours sans. » 
+
+Moi : « Peux-tu nous dire si tu te sens heureuse ? » 
+
+Mouna : « Alors dans mon environnement, oui, je peux dire que je me sens heureuse. Mais dans mon état de santé, non, je ne peux pas dire que je me sente heureuse. » 
+
+Moi : « Et peux-tu nous dire si tu souffres, si tu as mal quelque part ? » 
+
+Mouna fit un rapide check de son être et dit : « Oui, au niveau de mon ventre, j’ai souvent des sensations que ça tire; un peu comme des sortes de crampes. Et ça, c’est presque tout le temps présent. Sinon, j’ai aussi beaucoup le sentiment d’être régulièrement déshydratée. Mais cette déshydratation se trouve partout dans mon corps, dans chacune de mes cellules. C’est assez difficile à décrire. J’ai aussi la sensation que me muscles se détériorent rapidement. » 
+
+Moi : « Merci beaucoup pour toutes ces précisions. Tom et ses amis ont besoin d’avoir ton avis sur un point très sensible. Ils souhaitent savoir si tu veux continuer à vivre ? » 
+
+Mouna me sourit avec grande tendresse et dit : « Je me sens encore un peu les forces de rester ici, parmi eux encore quelques temps. » 
+
+Il est toujours difficile d’évaluer ce que « quelques temps » veut signifier. Mais de ce que je ressens, cela pourrait être quelques semaines. Je précise aussi que je n’ai pas ressenti de vagues de froid. En général, les animaux, dès qu’ils ressentent leur heure venue, me font ressentir des vagues de froid. Ce n’est pas le cas de Mouna. Mais attention, cela ne veut pas dire que son départ n’est pas proche non plus. Cependant, je tenais à vous le dire également. 
+
+Moi : « Mouna, sais-tu nous dire pourquoi tu fais pipi partout ? » 
+
+Mouna : « Oui, bien sûr que je peux le dire. Très souvent, je n’arrive quasi plus à retenir mes urines. Je tiens à dire que je ne le fais pas du tout exprès, c’est vraiment physiologique. J’ai conscience que l’endroit n’est pas le bon, mais je ne peux m’en empêcher » dit-elle un peu honteuse. 
+
+Moi : « Nous le comprenons bien, ne t’inquiètes pas. Je le leur transmettrai. Je sais que pour nous humains, c’est très contraignant, mais nous pouvons aussi avoir la faculté de comprendre les raisons que tu nous as transmises honnêtement. Sais-tu s’ils peuvent faire quelque chose pour toi ? » 
+
+Mouna prit quelques instants pour réfléchir à cette question et dit, un peu démunie : « Je ne sais pas ce qu’ils peuvent faire pour moi. » 
+
+Moi : « Veux-tu continuer à vivre auprès d’eux, ou souhaites-tu êtres placée ailleurs pour la suite de ta vie ? » 
+
+Mouna me regarda bizarrement et dit avec spontanéité : « Mais ça va pas non ? Comment est-ce que je pourrai faire ce choix ? Ici, comme je l’ai dit avant, je m’y sens bien et m’y sens heureuse. Pourquoi ferais-je le choix d’aller vivre ailleurs ? Non, ici est ma maison, mon chez moi. Alors ma réponse est non. » 
+
+Moi : « Hé bien, cela a le mérite d’être très clair ! Je le leur transmettrai également. Est-ce qu’il y a quelque chose que tu veux partager avec eux ? » 
+
+Mouna : « Oui, je veux leur dire un grand merci pour la place qu’ils m’ont offerte au sein de notre foyer. Je m’y suis sentie assez rapidement à mon aise. Et maintenant, comme je viens de le lire, ici, c’est maintenant aussi chez moi et j’en suis très heureuse. Ici, il y a beaucoup de vie, alors parfois c’est un peu beaucoup pour moi, mais la plupart du temps, j’y trouve aussi mon compte. Chacun des êtres qui composent notre foyer est très respectueux et c’est vraiment très appréciable. Je les remercie aussi pour cela. Voilà, je crois que c’est tout pour le moment » dit-elle déjà fière d’elle :-) 
+
+Moi : « Parfait, alors je leur dirai également. Sache qu’ils ont tous beaucoup d’affection pour toi et je pense que Tom t’aime de tout son coeur. Sache aussi que tout ce que nous avons partagé ce jour leur sera précieusement retransmis » dis-je avec tendresse. 
+
+Le coeur de Mouna s’est gonflé d’amour en retour. 
+
+Arrivées proches de la fin de notre partage, je l’ai grandement remerciée pour toute sa confiance et son temps accordés. Puis je lui ai fait des caresses et un petit bisou qu’elle a accepté. Et nous nous sommes dit au revoir et notre échange s’est ainsi terminé. 
+
+Voilà Chers Tom, Garfield, Luna et Meowth, tout le magnifique moment que nous avons partagé ensemble. J’espère de tout mon coeur qu’il vous sera le plus aidant possible, pour chacun de vous. Peut-être serait-il bien de refaire un point de situation avec le vétérinaire et voir avec lui ce qu’il pense de l’évolution de sa situation. N’hésitez pas à me donner des nouvelles svp, cela me ferait très plaisir. 
+
+Je vous souhaite une très belle journée. 
+
+Prenez bien soin de vous et de vos 2 minettes. 
+
+Bien chaleureusement, 
+Alice
+
+Communication animale - Soins - formations
+Site : _
+Facebook : _
+Instagram : _
+`;
+
+      document.getElementById("mail-body").textContent = bodyText;
+
+      const to = "tom@hotmail.com";
+      const subject = encodeURIComponent("Compte-rendu — Communication animale");
+      const body = encodeURIComponent(bodyText);
+      document.getElementById("mailto-btn").href =
+        `mailto:${to}?subject=${subject}&body=${body}`;
+    </script>
+  </body>
+</html>
