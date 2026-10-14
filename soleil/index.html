@@ -3,1285 +3,269 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sun generator</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='4.6' fill='%23E04A1C'/%3E%3C/svg%3E">
-<style>
-  :root {
-    color-scheme: dark;
-    --ground: #0E1736;
-    --raised: #152150;
-    --check: #121C45;
-    --line: #2C3B78;
-    --stone: #F1EADB;
-    --stone-dim: #AEB6D3;
-    --warn: #FF8A6B;
-    --type: Optima, "Optima Nova", Candara, "Gill Sans", "Segoe UI", sans-serif;
-  }
-
-  * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
-
-  body {
-    margin: 0;
-    background: var(--ground);
-    color: var(--stone);
-    font-family: var(--type);
-    font-size: 16px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .wrap { max-width: 1120px; margin: 0 auto; padding: clamp(20px, 4vw, 48px); }
-
-  header { margin-bottom: clamp(24px, 4vw, 40px); }
-  h1 {
-    margin: 0 0 4px;
-    font-size: clamp(30px, 4.4vw, 44px);
-    font-weight: 400;
-    line-height: 1.1;
-    letter-spacing: 0.01em;
-  }
-  .lead { margin: 0; color: var(--stone-dim); max-width: 54ch; }
-
-  .layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 390px;
-    gap: clamp(28px, 5vw, 64px);
-    align-items: start;
-  }
-
-  /* ---------- preview ---------- */
-
-  .preview { position: sticky; top: 24px; }
-  .preview-inner { width: min(100%, 560px, max(280px, calc(100vh - 230px))); }
-
-  .stage {
-    aspect-ratio: 1 / 1;
-    border-radius: 6px;
-    overflow: hidden;
-    background: repeating-conic-gradient(var(--raised) 0 25%, var(--check) 0 50%) 0 0 / 32px 32px;
-  }
-  .stage.over { outline: 2px dashed var(--stone); outline-offset: 4px; }
-  .stage canvas { display: block; width: 100%; height: 100%; }
-  .stage canvas.movable { cursor: grab; touch-action: none; }
-  .stage canvas.dragging { cursor: grabbing; }
-
-  .crop-note { margin: 20px 0 10px; color: var(--stone-dim); font-size: 14px; }
-
-  .github { display: flex; flex-wrap: wrap; gap: 12px; }
-  .chip-card {
-    flex: 1 1 220px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border-radius: 6px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 13px;
-  }
-  .chip-card.light { background: #FFFFFF; color: #1F2328; }
-  .chip-card.dark { background: #0D1117; color: #E6EDF3; box-shadow: inset 0 0 0 1px #30363D; }
-  .chip-card span { margin-left: auto; opacity: 0.7; }
-  .avatar { flex: none; border-radius: 50%; }
-  .a64 { width: 64px; height: 64px; }
-  .a32 { width: 32px; height: 32px; }
-  .a20 { width: 20px; height: 20px; }
-
-  /* ---------- control groups ---------- */
-
-  .controls { display: grid; }
-
-  .group { border-top: 1px solid var(--line); }
-  .group > summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 14px 0;
-    font-size: 19px;
-    cursor: pointer;
-    list-style: none;
-  }
-  .group > summary::-webkit-details-marker { display: none; }
-  .group > summary::after { content: "show"; font-size: 13px; color: var(--stone-dim); }
-  .group[open] > summary::after { content: "hide"; }
-  .group-body { display: grid; gap: 18px; padding: 2px 0 26px; }
-
-  .sub { margin: 0 0 8px; font-size: 14px; color: var(--stone-dim); }
-
-  .label {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 6px;
-    font-size: 14px;
-    color: var(--stone-dim);
-  }
-  output { color: var(--stone); font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-  .sr {
-    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
-    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-  }
-
-  :focus-visible { outline: 2px solid var(--stone); outline-offset: 2px; }
-
-  /* ---------- colour choosers ---------- */
-
-  .strip-row, .swatches { display: flex; align-items: center; gap: 10px; }
-
-  .strip { flex: 1; display: flex; height: 56px; border-radius: 6px; overflow: hidden; }
-  .strip input, .swatch-set input { position: absolute; opacity: 0; pointer-events: none; }
-  .strip label {
-    flex: 1 1 0;
-    min-width: 0;
-    position: relative;
-    background: var(--c);
-    cursor: pointer;
-    transition: flex-grow 0.2s ease;
-  }
-  .strip input:checked + label { flex-grow: 3; }
-  .strip input:checked + label::after {
-    content: "";
-    position: absolute;
-    left: 50%; bottom: 9px;
-    width: 8px; height: 8px;
-    margin-left: -4px;
-    border-radius: 50%;
-    background: #fff;
-  }
-  .strip input:focus-visible + label { outline: 2px solid var(--stone); outline-offset: -4px; }
-
-  .picked { margin: 8px 0 0; display: flex; justify-content: space-between; gap: 12px; }
-  .picked span:last-child { color: var(--stone-dim); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
-
-  .swatch-set { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .swatch-set label {
-    width: 30px; height: 30px;
-    border-radius: 6px;
-    background: var(--c);
-    cursor: pointer;
-  }
-  .swatch-set label.text {
-    width: auto;
-    padding: 0 10px;
-    border: 1px solid var(--line);
-    background: none;
-    color: var(--stone-dim);
-    font-size: 14px;
-    line-height: 28px;
-  }
-  .swatch-set input:checked + label { outline: 2px solid var(--stone); outline-offset: 2px; }
-  .swatch-set input:checked + label.text { outline: 0; background: var(--stone); border-color: var(--stone); color: var(--ground); }
-  .swatch-set input:focus-visible + label { outline: 2px solid var(--stone); outline-offset: 4px; }
-
-  input[type="color"] {
-    -webkit-appearance: none; appearance: none;
-    flex: none;
-    width: 34px; height: 34px;
-    padding: 0;
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    background: none;
-    cursor: pointer;
-    overflow: hidden;
-  }
-  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-  input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
-  input[type="color"]::-moz-color-swatch { border: 0; border-radius: 50%; }
-  input[type="color"]:disabled { opacity: 0.35; cursor: default; }
-  input[type="color"].active { outline: 2px solid var(--stone); outline-offset: 2px; }
-
-  .with-well { display: flex; align-items: flex-end; gap: 12px; }
-  .with-well .slider { flex: 1; }
-
-  /* ---------- segmented choices, sliders, checks ---------- */
-
-  .segments { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-  .segments input { position: absolute; opacity: 0; pointer-events: none; }
-  .segments label {
-    flex: 1 1 0;
-    padding: 8px 6px;
-    text-align: center;
-    cursor: pointer;
-    color: var(--stone-dim);
-  }
-  .segments label + input + label { border-left: 1px solid var(--line); }
-  .segments input:checked + label { background: var(--stone); color: var(--ground); }
-  .segments input:focus-visible + label { outline: 2px solid var(--stone); outline-offset: -4px; }
-  .segments input:disabled + label { opacity: 0.4; cursor: default; }
-
-  .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; }
-  .sliders .wide { grid-column: 1 / -1; }
-  input[type="range"] { display: block; width: 100%; margin: 0; accent-color: var(--stone); }
-  .slider.off, .check.off, #ringWrap.off { opacity: 0.4; }
-
-  .check { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-  .check input { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--stone); }
-
-  .presets { display: flex; flex-wrap: wrap; gap: 8px; }
-  .presets button {
-    padding: 6px 12px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: none;
-    color: var(--stone);
-    font: inherit;
-    font-size: 15px;
-    cursor: pointer;
-  }
-  .presets button:hover { border-color: var(--stone-dim); }
-
-  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
-
-  /* ---------- text fields, buttons ---------- */
-
-  .color-row { display: flex; align-items: center; gap: 10px; }
-  .hex, select {
-    height: 40px;
-    padding: 0 12px;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    background: var(--raised);
-    color: var(--stone);
-    font: inherit;
-  }
-  .hex { width: 104px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
-  .hex[aria-invalid="true"] { border-color: var(--warn); }
-
-  .quick { display: flex; gap: 8px; margin-left: auto; }
-  .quick button {
-    width: 26px; height: 26px;
-    padding: 0;
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    background: var(--c);
-    cursor: pointer;
-  }
-
-  .help { margin: 0; font-size: 14px; color: var(--stone-dim); }
-  .hint { margin: 0; font-size: 14px; color: var(--warn); }
-  .hint:empty { display: none; }
-
-  .bg-row { display: flex; align-items: center; gap: 10px; }
-  .bg-row .segments { flex: 1; }
-
-  .btn {
-    height: 46px;
-    padding: 0 16px;
-    border-radius: 6px;
-    font: inherit;
-    cursor: pointer;
-  }
-  .btn.small { height: 36px; padding: 0 14px; font-size: 15px; }
-  .primary { border: 1px solid var(--stone); background: var(--stone); color: var(--ground); }
-  .secondary { border: 1px solid var(--line); background: none; color: var(--stone); }
-  .plain {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--stone-dim);
-    font: inherit;
-    font-size: 14px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    cursor: pointer;
-  }
-
-  .export { display: grid; gap: 10px; padding: 24px 0 0; border-top: 1px solid var(--line); }
-  .export-main { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
-  .export-more { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .export-note { margin: 4px 0 0; font-size: 13px; color: var(--stone-dim); }
-  .status { margin: 0; font-size: 14px; }
-  .status:empty { display: none; }
-
-  @media (max-width: 880px) {
-    .layout { grid-template-columns: minmax(0, 1fr); }
-    .preview { position: static; }
-    .preview-inner { width: 100%; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .strip label { transition: none; }
-  }
-</style>
+<title>Inti</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='4.6' fill='%23E83700'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Sun generator</h1>
-    <p class="lead">Pick a style, shape the rays, bend them into flames, add your own image, then download your sun.</p>
-  </header>
 
-  <div class="layout">
-    <section class="preview" aria-label="Preview">
-      <div class="preview-inner">
-        <div class="stage" id="stageBox">
-          <canvas id="stage" width="1024" height="1024" role="img" aria-label="Sun preview"></canvas>
+<header class="top">
+  <h1>INTI</h1>
+  <p class="top-tag" id="specLine" role="status"></p>
+</header>
+
+<main class="page">
+
+  <!-- ============ LEFT: the sun, and everything about keeping it ============ -->
+  <section class="left" aria-label="Sun">
+
+    <div class="stage-wrap" id="stageWrap" data-part="">
+      <div class="stage" id="stageBox">
+        <canvas id="stage" width="1024" height="1024" role="img" aria-label="Sun preview"></canvas>
+        <svg class="anatomy" id="anatomy" viewBox="0 0 1000 1000" aria-hidden="true">
+          <rect class="a a-frame" x="5" y="5" width="990" height="990"/>
+          <path class="a a-rays" id="aRays"/>
+          <circle class="a a-ring" id="aCore" cx="500" cy="500" r="0"/>
+          <circle class="a a-disc" id="aDisc" cx="500" cy="500" r="0"/>
+          <text class="a a-disc tag" id="lDisc" text-anchor="middle">DISC</text>
+          <text class="a a-ring tag" id="lRing" text-anchor="middle">RING</text>
+          <text class="a a-rays tag" id="lRays">RAYS</text>
+          <text class="a a-tip tag" id="lTip">TIP</text>
+          <text class="a a-frame tag" x="22" y="48">FRAME</text>
+        </svg>
+      </div>
+      <label class="bar-check">
+        <input type="checkbox" id="labelParts"><span>Label the parts</span>
+      </label>
+    </div>
+
+    <!-- keeping it: everything related to saving sits right under the sun -->
+    <div class="dock" id="library">
+      <h2 class="dock-title">Save</h2>
+      <div class="save-row">
+        <input type="text" class="text-input" id="saveName" maxlength="40" spellcheck="false" autocomplete="off" aria-label="Name for this sun">
+        <button type="button" class="btn primary" id="saveSun">Save in browser</button>
+      </div>
+      <p class="note" id="libraryNote" role="status"></p>
+      <ul class="tiles" id="savedList"></ul>
+    </div>
+
+    <div class="dock">
+      <h2 class="dock-title">Export</h2>
+      <div class="export-grid">
+        <button type="button" class="btn primary" id="savePng">Download PNG</button>
+        <select id="pngSize" aria-label="PNG size in pixels">
+          <option value="512">512 px</option>
+          <option value="1024" selected>1024 px</option>
+          <option value="2048">2048 px</option>
+        </select>
+        <button type="button" class="btn" id="saveSvg">Download SVG</button>
+        <button type="button" class="btn" id="copySvg">Copy SVG code</button>
+      </div>
+      <p class="note" id="status" role="status"></p>
+    </div>
+
+    <div class="dock">
+      <h2 class="dock-title">As a profile picture</h2>
+      <div class="github" aria-hidden="true">
+        <div class="chip-card light">
+          <canvas class="avatar a64" width="128" height="128"></canvas>
+          <canvas class="avatar a32" width="64" height="64"></canvas>
+          <canvas class="avatar a20" width="40" height="40"></canvas>
         </div>
-
-        <p class="crop-note">Cropped to a circle, the way GitHub shows it</p>
-        <div class="github" aria-hidden="true">
-          <div class="chip-card light">
-            <canvas class="avatar a64" width="128" height="128"></canvas>
-            <canvas class="avatar a32" width="64" height="64"></canvas>
-            <canvas class="avatar a20" width="40" height="40"></canvas>
-            <span>Light theme</span>
-          </div>
-          <div class="chip-card dark">
-            <canvas class="avatar a64" width="128" height="128"></canvas>
-            <canvas class="avatar a32" width="64" height="64"></canvas>
-            <canvas class="avatar a20" width="40" height="40"></canvas>
-            <span>Dark theme</span>
-          </div>
+        <div class="chip-card dark">
+          <canvas class="avatar a64" width="128" height="128"></canvas>
+          <canvas class="avatar a32" width="64" height="64"></canvas>
+          <canvas class="avatar a20" width="40" height="40"></canvas>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <form class="controls" id="controls" onsubmit="return false">
+  <!-- ============ RIGHT: the controls ============ -->
+  <form class="right" id="controls" onsubmit="return false">
 
-      <details class="group" open>
-        <summary>Rays</summary>
-        <div class="group-body">
-          <div>
-            <p class="sub">Start from a style</p>
-            <div class="presets" id="presets">
-              <button type="button" data-preset="flames">Flames</button>
-              <button type="button" data-preset="lines">Lines</button>
-              <button type="button" data-preset="starburst">Starburst</button>
-              <button type="button" data-preset="sunbeams">Sunbeams</button>
-              <button type="button" data-preset="sparkle">Sparkle</button>
-              <button type="button" data-preset="swirl">Swirl</button>
-              <button type="button" data-preset="disc">Disc only</button>
-            </div>
-          </div>
-          <div class="sliders" id="raySliders">
-            <div class="slider" data-slider="count"></div>
-            <div class="slider" data-slider="len"></div>
-            <div class="slider" data-slider="width"></div>
-            <div class="slider" data-slider="tip"></div>
-            <div class="slider" data-slider="curve"></div>
-            <div class="slider" data-slider="gap"></div>
-            <div class="slider" data-slider="short"></div>
-            <div class="slider" data-slider="rot"></div>
-          </div>
-          <label class="check" for="round"><input type="checkbox" id="round"><span>Round ends</span></label>
+    <details class="blk" open data-part="disc ring">
+      <summary>
+        <span class="n">01</span>
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="12" cy="12" r="5.5" class="solid"/></svg>
+        <span class="t">Disc</span>
+      </summary>
+      <div class="blk-body">
+        <div class="slider" data-slider="discSize"></div>
+        <div>
+          <p class="sub">Disc colour</p>
+          <div id="discColour"></div>
         </div>
-      </details>
-
-      <details class="group" open>
-        <summary>Curves and symmetry</summary>
-        <div class="group-body">
-          <div class="sliders">
-            <div class="slider" data-slider="wave"></div>
-            <div class="slider" data-slider="freq"></div>
-            <div class="slider" data-slider="bend"></div>
-            <div class="slider" data-slider="irr"></div>
-          </div>
-          <div class="row">
-            <label class="check" id="mirrorWrap" for="mirror"><input type="checkbox" id="mirror"><span>Mirror every other ray</span></label>
-            <button type="button" class="btn small secondary" id="shuffle">Shuffle the irregularity</button>
+        <div id="ringWrap">
+          <p class="sub">Between disc and rays</p>
+          <div class="segments">
+            <input type="radio" name="ring" id="ringSolid" value="solid" checked>
+            <label for="ringSolid">Solid</label>
+            <input type="radio" name="ring" id="ringEmpty" value="empty">
+            <label for="ringEmpty">Gap</label>
+            <input type="radio" name="ring" id="ringBlend" value="blend">
+            <label for="ringBlend">Gradient</label>
           </div>
         </div>
-      </details>
+        <p class="note" id="discHint" hidden></p>
+      </div>
+    </details>
 
-      <details class="group" open>
-        <summary>Disc</summary>
-        <div class="group-body">
-          <div class="slider" data-slider="discSize"></div>
-          <div>
-            <p class="sub">Colour</p>
-            <div id="discColour"></div>
+    <details class="blk" open data-part="rays tip">
+      <summary>
+        <span class="n">02</span>
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 1.5v5M12 17.5v5M1.5 12h5M17.5 12h5M4.6 4.6l3.5 3.5M15.9 15.9l3.5 3.5M4.6 19.4l3.5-3.5M15.9 8.1l3.5-3.5"/></svg>
+        <span class="t">Rays</span>
+      </summary>
+      <div class="blk-body">
+        <div>
+          <div class="presets" id="presets">
+            <button type="button" data-preset="flames">Flames</button>
+            <button type="button" data-preset="lines">Lines</button>
+            <button type="button" data-preset="starburst">Starburst</button>
+            <button type="button" data-preset="sunbeams">Sunbeams</button>
+            <button type="button" data-preset="sparkle">Sparkle</button>
+            <button type="button" data-preset="swirl">Swirl</button>
+            <button type="button" data-preset="disc">Disc only</button>
           </div>
-          <div id="ringWrap">
-            <p class="sub">Between the disc and the rays</p>
+        </div>
+        <div class="sliders" id="raySliders">
+          <div class="slider" data-slider="count"></div>
+          <div class="slider" data-slider="len"></div>
+          <div class="slider" data-slider="width"></div>
+          <div class="slider" data-slider="tip"></div>
+          <div class="slider" data-slider="curve"></div>
+          <div class="slider" data-slider="gap"></div>
+          <div class="slider" data-slider="short"></div>
+          <div class="slider" data-slider="rot"></div>
+        </div>
+        <label class="check" for="round"><input type="checkbox" id="round"><span>Round ends</span></label>
+      </div>
+    </details>
+
+    <details class="blk" open data-part="rays">
+      <summary>
+        <span class="n">03</span>
+        <svg class="ico" viewBox="0 0 24 24"><path d="M1.5 13c3-9 5-9 8 0s5 9 8 0 3-5 5-4"/></svg>
+        <span class="t">Curves &amp; symmetry</span>
+      </summary>
+      <div class="blk-body">
+        <div class="sliders">
+          <div class="slider" data-slider="wave"></div>
+          <div class="slider" data-slider="freq"></div>
+          <div class="slider" data-slider="bend"></div>
+          <div class="slider" data-slider="irr"></div>
+        </div>
+        <div class="row">
+          <label class="check" id="mirrorWrap" for="mirror"><input type="checkbox" id="mirror"><span>Mirror every other ray</span></label>
+          <button type="button" class="btn small" id="shuffle">Shuffle irregularity</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="blk" open data-part="rays disc ring tip">
+      <summary>
+        <span class="n">04</span>
+        <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="2" width="12" height="12"/><rect x="10" y="10" width="12" height="12" class="solid"/></svg>
+        <span class="t">Colours</span>
+      </summary>
+      <div class="blk-body">
+        <div>
+          <p class="sub">Rays <span class="picked"><span id="sunName"></span> <span id="sunHex"></span></span></p>
+          <div id="rayColour"></div>
+        </div>
+        <div>
+          <p class="sub">Fade towards the ray tips</p>
+          <div id="tipColour"></div>
+        </div>
+        <div class="with-well">
+          <div class="slider" data-slider="outline"></div>
+          <input type="color" id="outlinePicker" value="#1f0a03" aria-label="Outline colour">
+        </div>
+      </div>
+    </details>
+
+    <details class="blk" open data-part="disc">
+      <summary>
+        <span class="n">05</span>
+        <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18"/><path d="M2 17l6-7 5 5 3-3 6 6"/></svg>
+        <span class="t">Centre image</span>
+      </summary>
+      <div class="blk-body">
+        <div class="row">
+          <button type="button" class="btn small" id="chooseImg">Choose image</button>
+          <button type="button" class="plain" id="removeImg" hidden>Remove image</button>
+          <input type="file" class="sr" id="file" accept="image/*" tabindex="-1" aria-label="Image file">
+        </div>
+        <p class="note" id="imgHelp"></p>
+        <p class="warn" id="imgHint" role="alert"></p>
+
+        <div class="blk-body inner" id="imgOptions" hidden>
+          <div class="slider" data-slider="imgSize"></div>
+          <label class="check" for="clip"><input type="checkbox" id="clip" checked><span>Keep it inside the disc</span></label>
+          <div>
             <div class="segments">
-              <input type="radio" name="ring" id="ringSolid" value="solid" checked>
-              <label for="ringSolid">Solid</label>
-              <input type="radio" name="ring" id="ringEmpty" value="empty">
-              <label for="ringEmpty">Gap</label>
-              <input type="radio" name="ring" id="ringBlend" value="blend">
-              <label for="ringBlend">Gradient</label>
+              <input type="radio" name="tint" id="tintOff" value="off" checked>
+              <label for="tintOff">Original colours</label>
+              <input type="radio" name="tint" id="tintOn" value="on">
+              <label for="tintOn">One colour</label>
             </div>
+            <p class="note" id="tintHelp" hidden>One colour needs an image with a transparent background.</p>
           </div>
-          <p class="help" id="discHint" hidden></p>
-        </div>
-      </details>
-
-      <details class="group" open>
-        <summary>Colours</summary>
-        <div class="group-body">
-          <div>
-            <p class="sub">Rays</p>
-            <div id="rayColour"></div>
-            <p class="picked"><span id="sunName"></span><span id="sunHex"></span></p>
-          </div>
-          <div>
-            <p class="sub">Fade towards the ray tips</p>
-            <div id="tipColour"></div>
-          </div>
-          <div class="with-well">
-            <div class="slider" data-slider="outline"></div>
-            <input type="color" id="outlinePicker" value="#1f0a03" aria-label="Outline colour">
-          </div>
-        </div>
-      </details>
-
-      <details class="group" open>
-        <summary>Centre image</summary>
-        <div class="group-body">
-          <div class="row">
-            <button type="button" class="btn small secondary" id="chooseImg">Choose image</button>
-            <button type="button" class="plain" id="removeImg" hidden>Remove image</button>
-            <input type="file" class="sr" id="file" accept="image/*" tabindex="-1" aria-label="Image file">
-          </div>
-          <p class="help" id="imgHelp"></p>
-          <p class="hint" id="imgHint" role="alert"></p>
-
-          <div class="group-body" id="imgOptions" hidden style="padding:0">
-            <div class="slider" data-slider="imgSize"></div>
-            <label class="check" for="clip"><input type="checkbox" id="clip" checked><span>Keep it inside the disc</span></label>
-            <div>
-              <div class="segments">
-                <input type="radio" name="tint" id="tintOff" value="off" checked>
-                <label for="tintOff">Original colours</label>
-                <input type="radio" name="tint" id="tintOn" value="on">
-                <label for="tintOn">One colour</label>
+          <div id="tintRow" hidden>
+            <div class="color-row">
+              <input type="color" id="tintPicker" value="#ffffff" aria-label="Pick any image colour">
+              <input type="text" class="text-input hex" id="tintHex" value="FFFFFF" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Image colour hex code" aria-describedby="hexHint">
+              <div class="quick">
+                <button type="button" data-c="#FFFFFF" style="--c:#FFFFFF" aria-label="White" title="White"></button>
+                <button type="button" data-c="#FFE3B8" style="--c:#FFE3B8" aria-label="Cream" title="Cream"></button>
+                <button type="button" data-c="#FFC53D" style="--c:#FFC53D" aria-label="Gold" title="Gold"></button>
+                <button type="button" data-c="#14285E" style="--c:#14285E" aria-label="Lapis" title="Lapis"></button>
+                <button type="button" data-c="#1F0A03" style="--c:#1F0A03" aria-label="Ink" title="Ink"></button>
               </div>
-              <p class="help" id="tintHelp" hidden style="margin-top:8px">One colour needs an image with a transparent background.</p>
             </div>
-            <div id="tintRow" hidden>
-              <div class="color-row">
-                <input type="color" id="tintPicker" value="#ffffff" aria-label="Pick any image colour">
-                <input type="text" class="hex" id="tintHex" value="FFFFFF" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Image colour hex code" aria-describedby="hexHint">
-                <div class="quick">
-                  <button type="button" data-c="#FFFFFF" style="--c:#FFFFFF" aria-label="White" title="White"></button>
-                  <button type="button" data-c="#FFE3B8" style="--c:#FFE3B8" aria-label="Cream" title="Cream"></button>
-                  <button type="button" data-c="#FFC53D" style="--c:#FFC53D" aria-label="Gold" title="Gold"></button>
-                  <button type="button" data-c="#14285E" style="--c:#14285E" aria-label="Lapis" title="Lapis"></button>
-                  <button type="button" data-c="#1F0A03" style="--c:#1F0A03" aria-label="Ink" title="Ink"></button>
-                </div>
-              </div>
-              <p class="hint" id="hexHint" role="alert" style="margin-top:8px"></p>
-            </div>
-            <div><button type="button" class="plain" id="centreImg">Move back to the centre</button></div>
+            <p class="warn" id="hexHint" role="alert"></p>
           </div>
+          <div><button type="button" class="plain" id="centreImg">Move back to the centre</button></div>
         </div>
-      </details>
-
-      <details class="group" open>
-        <summary>Frame</summary>
-        <div class="group-body">
-          <div class="slider" data-slider="size"></div>
-          <div>
-            <p class="sub">Background</p>
-            <div class="bg-row">
-              <div class="segments">
-                <input type="radio" name="bg" id="bgNone" value="none" checked>
-                <label for="bgNone">Transparent</label>
-                <input type="radio" name="bg" id="bgFill" value="fill">
-                <label for="bgFill">Colour</label>
-              </div>
-              <input type="color" id="bgPicker" value="#1b2f73" aria-label="Background colour" disabled>
-            </div>
-          </div>
-        </div>
-      </details>
-
-      <div class="export">
-        <div class="export-main">
-          <button type="button" class="btn primary" id="savePng">Download PNG</button>
-          <select id="pngSize" aria-label="PNG size in pixels">
-            <option value="512">512 px</option>
-            <option value="1024" selected>1024 px</option>
-            <option value="2048">2048 px</option>
-          </select>
-        </div>
-        <div class="export-more">
-          <button type="button" class="btn secondary" id="saveSvg">Download SVG</button>
-          <button type="button" class="btn secondary" id="copySvg">Copy SVG code</button>
-        </div>
-        <p class="status" id="status" role="status"></p>
-        <p class="export-note">GitHub only accepts PNG, JPG or GIF for profile pictures, so use the PNG there.</p>
       </div>
-    </form>
-  </div>
-</div>
-
-<script>
-(function () {
-  "use strict";
-
-  const BOX = 1000;          // everything is laid out on a 1000 x 1000 square
-  const C = BOX / 2;
-  const EDGE = 480;          // the sun never reaches past this radius
-  const MAX_IMAGE = 2048;    // larger uploads are scaled down to this
-  const TAU = Math.PI * 2;
-
-  const PALETTE = [
-    ["E04A1C", "Spicy Paprika"],
-    ["E54513", "Molten Orange"],
-    ["E83700", "Scarlet Fire"],
-    ["FF4500", "Crimson Carrot"],
-    ["C13C1B", "Rusty Spice"]
-  ];
-
-  // Each style is only a starting point: it sets the ray sliders, nothing more.
-  const BLANK = { tip: 0, gap: 0, short: 100, curve: 0, round: true, wave: 0, freq: 1.3, bend: 0, irr: 0, mirror: false };
-  const PRESETS = {
-    flames:    { count: 26, len: 185, width: 100, short: 62, curve: -12, wave: 30, freq: 1.1, irr: 8 },
-    lines:     { count: 8,  len: 70,  width: 20, tip: 100, gap: 50, short: 55 },
-    starburst: { count: 20, len: 30,  width: 100 },
-    sunbeams:  { count: 12, len: 120, width: 28, tip: 230, gap: 18, round: false },
-    sparkle:   { count: 8,  len: 330, width: 100, short: 42, curve: 55 },
-    swirl:     { count: 14, len: 110, width: 100, curve: 15, bend: 70 },
-    disc:      { count: 0,  len: 100, width: 100 }
-  };
-
-  const state = Object.assign({
-    ray: "#E04A1C",
-    rayName: "Spicy Paprika",
-    disc: null,          // null = same as the rays
-    discSize: 100,       // disc radius, % of the circle the rays grow from
-    ring: "solid",       // what fills the space around a smaller disc: solid, empty or blend
-    tipColour: null,     // null = no fade
-    outline: 0,
-    outlineColour: "#1F0A03",
-    seed: 20261005,
-    rot: 0,
-    size: 100,
-    img: null,           // { el, url, w, h, opaque, vector, id }
-    imgSize: 62,         // longest side of the image, % of the disc diameter
-    imgX: 0,
-    imgY: 0,
-    clip: true,
-    tintOn: false,
-    tint: "#FFFFFF",
-    bgOn: false,
-    bg: "#1B2F73"
-  }, BLANK, PRESETS.flames);
-
-  const $ = (id) => document.getElementById(id);
-  const n2 = (v) => Math.round(v * 100) / 100;
-  const pt = (q) => n2(q[0]) + "," + n2(q[1]);
-  const pct = (v) => v + "%";
-  const signed = (v) => (v > 0 ? "+" : "") + v;
-
-  /* ---------- geometry ---------- */
-
-  // A steady pseudo-random number in 0..1 for ray k, so a ray keeps its
-  // quirks while other sliders move. Shuffle changes the seed.
-  function hash(k, channel) {
-    let t = (state.seed + Math.imul(k + 1, 374761393) + Math.imul(channel + 1, 668265263)) | 0;
-    t = Math.imul(t ^ (t >>> 13), 1274126177);
-    t ^= t >>> 16;
-    return (t >>> 0) / 4294967296;
-  }
-  const jitter = (k, channel) => (hash(k, channel) * 2 - 1) * (state.irr / 100);
-
-  // Works out every ray with the disc radius fixed at 100, then scales the
-  // whole sun so its furthest point touches the edge of the frame.
-  function buildSun() {
-    const R = 100, n = state.count;
-    const gap = state.gap / 100;
-    const attached = gap < 0.005;
-    const rb = R * (1 + gap);                           // radius where rays begin
-    const turn = -Math.PI / 2 + (state.rot * Math.PI) / 180;
-    const power = Math.pow(2, state.curve / 40);        // >1 hollow sides, <1 full sides
-    const hollow = state.ring === "empty";              // no solid core behind the disc
-    const alternate = state.short < 100;
-    const rays = [];
-    let reach = R;
-
-    for (let k = 0; k < n; k++) {
-      const short = alternate && k % 2 === 1;
-      const angle = turn + (k * TAU) / n + jitter(k, 0) * 0.55 * (TAU / n);
-      const len = Math.max(0, R * (state.len / 100) * (short ? state.short / 100 : 1) * (1 + 0.6 * jitter(k, 1)));
-      const half = Math.min(1, (state.width / 100) * (1 + 0.4 * jitter(k, 2))) * Math.PI / n;
-      const wb = 2 * rb * Math.sin(half);               // width at the base
-      const wt = wb * state.tip / 100;                  // width at the tip
-      const side = state.mirror && k % 2 === 1 ? -1 : 1;
-      const amp = (state.wave / 100) * 0.3 * (1 + 0.5 * jitter(k, 3));
-      const phase = jitter(k, 4) * Math.PI;
-      const bend = (state.bend / 100) * 0.9 * (1 + 0.8 * jitter(k, 5));
-      const freq = state.freq;
-
-      const curvedSides = state.curve !== 0 && wt !== wb;
-      const steps = len < 0.5 ? 1
-        : state.wave > 0 ? Math.min(48, Math.max(10, Math.ceil(freq * 12)))
-        : (state.bend !== 0 || curvedSides) ? 10 : 1;
-
-      const left = [], right = [];
-      let end = [0, 0];
-      for (let i = 0; i <= steps; i++) {
-        const s = i / steps;
-        const a = TAU * freq * s + phase;
-        const x = s * len;
-        const y = side * len * (amp * s * Math.sin(a) + bend * s * s);
-        let dx = len;
-        let dy = side * len * (amp * (Math.sin(a) + s * TAU * freq * Math.cos(a)) + 2 * bend * s);
-        if (len < 0.5) { dx = 1; dy = 0; }
-        const m = Math.hypot(dx, dy);
-        const nx = -dy / m, ny = dx / m;
-        const w = wb + (wt - wb) * (1 - Math.pow(1 - s, power));
-        let l = [x + nx * w / 2, y + ny * w / 2];
-        let r = [x - nx * w / 2, y - ny * w / 2];
-        if (i === 0 && attached) {                      // base corners sit exactly on the disc's edge
-          const inset = -rb * (1 - Math.cos(half));
-          l = [inset, wb / 2];
-          r = [inset, -wb / 2];
-        }
-        left.push(l);
-        right.push(r);
-        reach = Math.max(reach, Math.hypot(rb + l[0], l[1]), Math.hypot(rb + r[0], r[1]));
-        end = [x, y];
-      }
-
-      const capTip = state.round && wt > 0.01 ? wt / 2 : 0;
-      const capBase = state.round && !attached ? wb / 2 : 0;
-      if (capTip) reach = Math.max(reach, Math.hypot(rb + end[0], end[1]) + capTip);
-      rays.push({ angle: angle, left: left, right: right, capTip: capTip, capBase: capBase });
-    }
-
-    const k = Math.max(1, EDGE * state.size / 100 - state.outline) / reach;
-
-    // A smooth curve through a run of points, continuing from the first one.
-    const through = (pts) => {
-      if (pts.length === 2) return "L" + pt(pts[1]);
-      let d = "";
-      for (let i = 0; i < pts.length - 1; i++) {
-        const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
-        d += "C" + pt([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]) + " " +
-                   pt([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]) + " " + pt(p2);
-      }
-      return d;
-    };
-    const arcTo = (radius, to) => "A" + n2(radius) + "," + n2(radius) + " 0 0,0 " + pt(to);
-
-    let d = "";
-    rays.forEach((ray) => {
-      const ux = Math.cos(ray.angle), uy = Math.sin(ray.angle);
-      const place = (q) => [C + k * ((rb + q[0]) * ux - q[1] * uy), C + k * ((rb + q[0]) * uy + q[1] * ux)];
-      const L = ray.left.map(place), Rv = ray.right.map(place).reverse();
-      d += "M" + pt(L[0]) + through(L);
-      d += ray.capTip ? arcTo(ray.capTip * k, Rv[0]) : "L" + pt(Rv[0]);
-      d += through(Rv);
-      if (ray.capBase) d += arcTo(ray.capBase * k, L[0]);
-      else if (attached && hollow) d += "A" + n2(rb * k) + "," + n2(rb * k) + " 0 0,1 " + pt(L[0]);  // base follows the circle
-      else if (attached) d += "L" + C + "," + C;        // tucks the base under the core
-      d += "Z";
-    });
-
-    const core = n2(R * k);                             // the circle the rays grow from
-    const disc = n2(R * k * state.discSize / 100);      // the visible centre disc
-    return {
-      rays: d, core: core, disc: disc, hollow: hollow,
-      blend: state.ring === "blend" && state.discSize < 100,
-      imgR: disc > 1 ? disc : core,                     // what the centre image is measured against
-      fadeFrom: n2(rb * k), fadeTo: n2(reach * k)
-    };
-  }
-
-  /* ---------- centre image ---------- */
-
-  function imageBox(sun) {
-    if (!state.img) return null;
-    const k = (state.imgSize / 100) * (sun.imgR * 2) / Math.max(state.img.w, state.img.h);
-    const w = state.img.w * k, h = state.img.h * k;
-    return { x: n2(C + state.imgX - w / 2), y: n2(C + state.imgY - h / 2), w: n2(w), h: n2(h) };
-  }
-
-  // The image redrawn in a single colour, keeping only its transparency.
-  const tintCache = { key: "", canvas: null };
-  function tintedImage() {
-    const img = state.img, key = img.id + state.tint;
-    if (tintCache.key !== key) {
-      const k = img.vector ? MAX_IMAGE / Math.max(img.w, img.h) : 1;
-      const c = document.createElement("canvas");
-      c.width = Math.max(1, Math.round(img.w * k));
-      c.height = Math.max(1, Math.round(img.h * k));
-      const ctx = c.getContext("2d");
-      ctx.drawImage(img.el, 0, 0, c.width, c.height);
-      ctx.globalCompositeOperation = "source-in";
-      ctx.fillStyle = state.tint;
-      ctx.fillRect(0, 0, c.width, c.height);
-      tintCache.key = key;
-      tintCache.canvas = c;
-    }
-    return tintCache.canvas;
-  }
-
-  const tinting = () => state.tintOn && state.img && !state.img.opaque;
-  const fading = () => state.tipColour && state.count > 0;
-
-  /* ---------- drawing ---------- */
-
-  function paint(canvas) {
-    const sun = buildSun();
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.scale(canvas.width / BOX, canvas.height / BOX);
-
-    if (state.bgOn) {
-      ctx.fillStyle = state.bg;
-      ctx.fillRect(0, 0, BOX, BOX);
-    }
-
-    const rays = sun.rays ? new Path2D(sun.rays) : null;
-    const circle = (r) => { const c = new Path2D(); c.arc(C, C, r, 0, TAU); return c; };
-    const core = sun.hollow ? null : circle(sun.core);
-    const disc = sun.disc > 0 ? circle(sun.disc) : null;
-
-    // The outline is drawn first, twice as wide, so the fills on top leave
-    // only its outer half showing: one clean line around the whole sun.
-    if (state.outline > 0) {
-      ctx.strokeStyle = state.outlineColour;
-      ctx.lineWidth = state.outline * 2;
-      ctx.lineJoin = "round";
-      if (rays) ctx.stroke(rays);
-      if (core) ctx.stroke(core);
-      if (disc) ctx.stroke(disc);
-    }
-
-    if (rays) {
-      if (fading()) {
-        const g = ctx.createRadialGradient(C, C, sun.fadeFrom, C, C, sun.fadeTo);
-        g.addColorStop(0, state.ray);
-        g.addColorStop(1, state.tipColour);
-        ctx.fillStyle = g;
-      } else {
-        ctx.fillStyle = state.ray;
-      }
-      ctx.fill(rays);
-    }
-
-    const discColour = state.disc || state.ray;
-    if (core) {
-      if (sun.blend) {
-        const g = ctx.createRadialGradient(C, C, sun.disc, C, C, sun.core);
-        g.addColorStop(0, discColour);
-        g.addColorStop(1, state.ray);
-        ctx.fillStyle = g;
-      } else {
-        ctx.fillStyle = state.ray;
-      }
-      ctx.fill(core);
-    }
-    if (disc) {
-      ctx.fillStyle = discColour;
-      ctx.fill(disc);
-    }
-
-    const box = imageBox(sun);
-    if (box) {
-      ctx.save();
-      if (state.clip) ctx.clip(circle(sun.imgR));
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(tinting() ? tintedImage() : state.img.el, box.x, box.y, box.w, box.h);
-      ctx.restore();
-    }
-  }
-
-  function svgMarkup() {
-    const sun = buildSun(), box = imageBox(sun);
-    const circle = (r) => '<circle cx="' + C + '" cy="' + C + '" r="' + r + '"';
-    const discColour = state.disc || state.ray;
-    let defs = "", body = "";
-
-    if (state.bgOn) body += '<rect width="' + BOX + '" height="' + BOX + '" fill="' + state.bg + '"/>';
-
-    if (state.outline > 0) {
-      body += '<g fill="none" stroke="' + state.outlineColour + '" stroke-width="' + state.outline * 2 +
-              '" stroke-linejoin="round">' + (sun.rays ? '<path d="' + sun.rays + '"/>' : "") +
-              (sun.hollow ? "" : circle(sun.core) + "/>") + (sun.disc > 0 ? circle(sun.disc) + "/>" : "") + "</g>";
-    }
-
-    if (sun.rays) {
-      let fill = state.ray;
-      if (fading()) {
-        defs += '<radialGradient id="fade" gradientUnits="userSpaceOnUse" cx="' + C + '" cy="' + C + '" r="' + sun.fadeTo +
-                '"><stop offset="' + n2(sun.fadeFrom / sun.fadeTo) + '" stop-color="' + state.ray +
-                '"/><stop offset="1" stop-color="' + state.tipColour + '"/></radialGradient>';
-        fill = "url(#fade)";
-      }
-      body += '<path d="' + sun.rays + '" fill="' + fill + '"/>';
-    }
-
-    if (!sun.hollow) {
-      let fill = state.ray;
-      if (sun.blend) {
-        defs += '<radialGradient id="core" gradientUnits="userSpaceOnUse" cx="' + C + '" cy="' + C + '" r="' + sun.core +
-                '"><stop offset="' + n2(sun.disc / sun.core) + '" stop-color="' + discColour +
-                '"/><stop offset="1" stop-color="' + state.ray + '"/></radialGradient>';
-        fill = "url(#core)";
-      }
-      body += circle(sun.core) + ' fill="' + fill + '"/>';
-    }
-    if (sun.disc > 0) body += circle(sun.disc) + ' fill="' + discColour + '"/>';
-
-    if (box) {
-      let image = '<image x="' + box.x + '" y="' + box.y + '" width="' + box.w + '" height="' + box.h +
-                  '" preserveAspectRatio="none"';
-      if (tinting()) {
-        defs += '<filter id="tint" color-interpolation-filters="sRGB"><feFlood flood-color="' + state.tint +
-                '"/><feComposite in2="SourceAlpha" operator="in"/></filter>';
-        image += ' filter="url(#tint)"';
-      }
-      image += ' xlink:href="' + state.img.url + '"/>';
-      if (state.clip) {
-        defs += '<clipPath id="disc">' + circle(sun.imgR) + "/></clipPath>";
-        image = '<g clip-path="url(#disc)">' + image + "</g>";
-      }
-      body += image;
-    }
-
-    return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ' +
-           BOX + " " + BOX + '" width="' + BOX + '" height="' + BOX + '">' +
-           (defs ? "<defs>" + defs + "</defs>" : "") + body + "</svg>";
-  }
-
-  /* ---------- sliders ---------- */
-
-  const SLIDERS = {
-    count:   { label: "Number", min: 0, max: 64, show: (v) => (v === 0 ? "none" : v) },
-    len:     { label: "Length", min: 0, max: 300, show: pct },
-    width:   { label: "Width", min: 4, max: 100, show: pct },
-    tip:     { label: "Tip width", min: 0, max: 250, show: (v) => (v === 0 ? "pointed" : v + "%") },
-    curve:   { label: "Side curve", min: -100, max: 100, show: (v) => (v === 0 ? "straight" : v > 0 ? "hollow " + v : "full " + -v) },
-    gap:     { label: "Distance from disc", min: 0, max: 150, show: (v) => (v === 0 ? "attached" : v + "%") },
-    short:   { label: "Every other ray", min: 20, max: 100, show: (v) => (v === 100 ? "same length" : v + "% long") },
-    rot:     { label: "Rotation", min: 0, max: 360, step: 0.5, show: (v) => v + "°" },
-    wave:    { label: "Wave height", min: 0, max: 100, show: (v) => (v === 0 ? "none" : v + "%") },
-    freq:    { label: "Waves per ray", min: 0.5, max: 4, step: 0.1, show: (v) => v.toFixed(1) },
-    bend:    { label: "Bend", min: -100, max: 100, show: (v) => (v === 0 ? "none" : signed(v)) },
-    irr:     { label: "Irregularity", min: 0, max: 100, show: (v) => (v === 0 ? "none" : v + "%") },
-    discSize:{ label: "Size", min: 0, max: 100, show: (v) => (v === 100 ? "full" : v === 0 ? "hidden" : v + "%") },
-    outline: { label: "Outline", min: 0, max: 40, show: (v) => (v === 0 ? "none" : v) },
-    size:    { label: "Sun size in the frame", min: 40, max: 100, show: pct },
-    imgSize: { label: "Size", min: 10, max: 400, show: pct }
-  };
-
-  document.querySelectorAll("[data-slider]").forEach((host) => {
-    const key = host.dataset.slider, def = SLIDERS[key];
-    host.innerHTML = '<label class="label" for="' + key + '"><span>' + def.label + '</span><output id="' + key +
-      'Out"></output></label><input type="range" id="' + key + '" min="' + def.min + '" max="' + def.max +
-      '" step="' + (def.step || 1) + '">';
-    def.host = host;
-    def.input = host.querySelector("input");
-    def.out = host.querySelector("output");
-    def.input.addEventListener("input", () => {
-      state[key] = +def.input.value;
-      if (key === "short") evenCount();
-      scheduleRender();
-    });
-  });
-
-  // Alternating long and short rays needs an even number of them.
-  function evenCount() {
-    const alternate = state.short < 100;
-    SLIDERS.count.input.step = alternate ? 2 : 1;
-    if (alternate && state.count % 2 === 1) state.count += 1;
-  }
-
-  function syncControls() {
-    evenCount();
-    Object.keys(SLIDERS).forEach((key) => { SLIDERS[key].input.value = state[key]; });
-    $("round").checked = state.round;
-    $("mirror").checked = state.mirror;
-    $("clip").checked = state.clip;
-  }
-
-  /* ---------- colour choosers ---------- */
-
-  function buildPalette(hostId, cfg) {
-    const row = document.createElement("div");
-    row.className = cfg.big ? "strip-row" : "swatches";
-    const set = document.createElement("div");
-    set.className = cfg.big ? "strip" : "swatch-set";
-    set.setAttribute("role", "radiogroup");
-    set.setAttribute("aria-label", cfg.label);
-    const radios = [];
-
-    const well = document.createElement("input");
-    well.type = "color";
-    well.value = cfg.custom;
-    well.title = "Any other colour";
-    well.setAttribute("aria-label", cfg.label + ": any other colour");
-
-    const add = (value, text, colour) => {
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = cfg.name;
-      input.id = cfg.name + "-" + value;
-      input.checked = value === cfg.start;
-      const label = document.createElement("label");
-      label.htmlFor = input.id;
-      if (colour) {
-        label.style.setProperty("--c", colour);
-        label.title = text;
-        label.innerHTML = '<span class="sr">' + text + "</span>";
-      } else {
-        label.className = "text";
-        label.textContent = text;
-      }
-      input.addEventListener("change", () => {
-        well.classList.remove("active");
-        cfg.pick(colour || null, text);
-      });
-      set.append(input, label);
-      radios.push(input);
-    };
-
-    if (cfg.lead) add("lead", cfg.lead, null);
-    PALETTE.forEach(([hex, name]) => add(hex, name, "#" + hex));
-
-    const useWell = () => {
-      radios.forEach((r) => { r.checked = false; });
-      well.classList.add("active");
-      cfg.pick(well.value.toUpperCase(), "Your own colour");
-    };
-    well.addEventListener("input", useWell);
-    well.addEventListener("click", useWell);
-
-    row.append(set, well);
-    $(hostId).append(row);
-  }
-
-  buildPalette("rayColour", {
-    name: "ray", label: "Ray colour", big: true, start: "E04A1C", custom: "#ffc53d",
-    pick: (colour, name) => { state.ray = colour; state.rayName = name; scheduleRender(); }
-  });
-  buildPalette("discColour", {
-    name: "disc", label: "Disc colour", lead: "Same as rays", start: "lead", custom: "#ffe3b8",
-    pick: (colour) => { state.disc = colour; scheduleRender(); }
-  });
-  buildPalette("tipColour", {
-    name: "tip", label: "Ray tip colour", lead: "No fade", start: "lead", custom: "#ffc53d",
-    pick: (colour) => { state.tipColour = colour; scheduleRender(); }
-  });
-
-  /* ---------- render ---------- */
-
-  const stage = $("stage");
-  const avatars = document.querySelectorAll(".avatar");
-
-  function render() {
-    paint(stage);
-    avatars.forEach((c) => {
-      const ctx = c.getContext("2d");
-      ctx.clearRect(0, 0, c.width, c.height);
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(stage, 0, 0, c.width, c.height);
-    });
-
-    stage.setAttribute("aria-label",
-      state.rayName + " sun with " + (state.count ? state.count + " rays" : "no rays") +
-      (state.img ? " and your image in the centre" : ""));
-
-    Object.keys(SLIDERS).forEach((key) => {
-      const def = SLIDERS[key];
-      if (+def.input.value !== state[key]) def.input.value = state[key];
-      def.out.textContent = def.show(state[key]);
-    });
-    if (state.len === 0 && state.round && state.tip > 0) SLIDERS.len.out.textContent = "dots";
-
-    // Dim what has no effect right now.
-    const none = state.count === 0;
-    ["len", "width", "tip", "curve", "gap", "short", "rot", "wave", "bend", "irr"].forEach((key) => {
-      SLIDERS[key].host.classList.toggle("off", none);
-    });
-    SLIDERS.freq.host.classList.toggle("off", none || state.wave === 0);
-    $("mirrorWrap").classList.toggle("off", none || (state.wave === 0 && state.bend === 0));
-    $("shuffle").disabled = none || state.irr === 0;
-    $("shuffle").style.opacity = $("shuffle").disabled ? 0.4 : 1;
-
-    // The space around the disc only exists once the disc is smaller.
-    $("ringWrap").classList.toggle("off", state.discSize === 100);
-    const unseen = !state.disc && state.discSize < 100 && state.discSize > 0 && state.ring !== "empty";
-    $("discHint").hidden = !unseen;
-    $("discHint").textContent = unseen ? "Give the disc its own colour to see it inside the rays." : "";
-
-    $("sunName").textContent = state.rayName;
-    $("sunHex").textContent = state.ray.slice(1);
-
-    const has = !!state.img;
-    $("chooseImg").textContent = has ? "Replace image" : "Choose image";
-    $("removeImg").hidden = !has;
-    $("imgOptions").hidden = !has;
-    $("imgHelp").textContent = has
-      ? "Drag the image in the preview to move it."
-      : "Or drop one onto the preview, or paste it with ⌘V.";
-    stage.classList.toggle("movable", has);
-    if (has) stage.tabIndex = 0; else stage.removeAttribute("tabindex");
-    if (has) {
-      $("tintOn").disabled = state.img.opaque;
-      $("tintHelp").hidden = !state.img.opaque;
-      $("tintRow").hidden = !tinting();
-    }
-
-    $("bgPicker").disabled = !state.bgOn;
-  }
-
-  let queued = false;
-  function scheduleRender() {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(() => { queued = false; render(); });
-  }
-
-  /* ---------- ray controls ---------- */
-
-  $("presets").addEventListener("click", (e) => {
-    const name = e.target.dataset && e.target.dataset.preset;
-    if (!name) return;
-    Object.assign(state, BLANK, PRESETS[name]);
-    syncControls();
-    render();
-  });
-
-  $("round").addEventListener("change", (e) => { state.round = e.target.checked; render(); });
-  $("mirror").addEventListener("change", (e) => { state.mirror = e.target.checked; render(); });
-  $("shuffle").addEventListener("click", () => {
-    state.seed = (Math.random() * 2147483647) | 0;
-    render();
-  });
-
-  // Choosing a gap or a gradient needs a smaller disc to show anything,
-  // so the disc shrinks the first time one of them is picked.
-  document.querySelectorAll('input[name="ring"]').forEach((el) => {
-    el.addEventListener("change", () => {
-      state.ring = el.value;
-      if (state.discSize === 100 && el.value !== "solid") state.discSize = el.value === "empty" ? 78 : 55;
-      render();
-    });
-  });
-
-  $("outlinePicker").addEventListener("input", (e) => {
-    state.outlineColour = e.target.value.toUpperCase();
-    scheduleRender();
-  });
-
-  /* ---------- loading an image ---------- */
-
-  let imageCount = 0;
-
-  function hasTransparency(el) {
-    const c = document.createElement("canvas");
-    c.width = c.height = 64;
-    const ctx = c.getContext("2d", { willReadFrequently: true });
-    ctx.drawImage(el, 0, 0, 64, 64);
-    try {
-      const data = ctx.getImageData(0, 0, 64, 64).data;
-      for (let i = 3; i < data.length; i += 4) if (data[i] < 250) return true;
-    } catch (err) { /* treated as opaque */ }
-    return false;
-  }
-
-  function useImage(el, url, type) {
-    const vector = type === "image/svg+xml";
-    let w = el.naturalWidth || 512, h = el.naturalHeight || 512;
-
-    // Very large photos are scaled down so the page and the SVG stay light.
-    if (!vector && Math.max(w, h) > MAX_IMAGE) {
-      const k = MAX_IMAGE / Math.max(w, h);
-      const c = document.createElement("canvas");
-      c.width = Math.round(w * k);
-      c.height = Math.round(h * k);
-      const ctx = c.getContext("2d");
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(el, 0, 0, c.width, c.height);
-      url = type === "image/jpeg" ? c.toDataURL("image/jpeg", 0.92) : c.toDataURL("image/png");
-      el = c; w = c.width; h = c.height;
-    }
-
-    const opaque = !hasTransparency(el);
-    state.img = { el: el, url: url, w: w, h: h, opaque: opaque, vector: vector, id: ++imageCount };
-    // A photo fills the disc; a cut-out symbol sits inside it with some air.
-    state.imgSize = opaque ? Math.min(400, Math.ceil(100 * Math.max(w, h) / Math.min(w, h))) : 62;
-    state.imgX = state.imgY = 0;
-    if (opaque) { state.tintOn = false; $("tintOff").checked = true; }
-    $("imgHint").textContent = "";
-    render();
-  }
-
-  function loadFile(file) {
-    if (!file) return;
-    if (!/^image\//.test(file.type)) {
-      $("imgHint").textContent = "That file is not an image. Choose a PNG, JPG, SVG, WebP or GIF.";
-      return;
-    }
-    const reader = new FileReader();
-    reader.onerror = () => { $("imgHint").textContent = "The file could not be read. Try choosing it again."; };
-    reader.onload = () => {
-      const el = new Image();
-      el.onload = () => useImage(el, reader.result, file.type);
-      el.onerror = () => {
-        $("imgHint").textContent = "This browser cannot open that image. Save it as a PNG or JPG and try again.";
-      };
-      el.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  $("chooseImg").addEventListener("click", () => $("file").click());
-  $("file").addEventListener("change", (e) => { loadFile(e.target.files[0]); e.target.value = ""; });
-  $("removeImg").addEventListener("click", () => { state.img = null; render(); $("chooseImg").focus(); });
-  $("centreImg").addEventListener("click", () => { state.imgX = state.imgY = 0; render(); });
-
-  const stageBox = $("stageBox");
-  ["dragenter", "dragover"].forEach((type) => stageBox.addEventListener(type, (e) => {
-    e.preventDefault();
-    stageBox.classList.add("over");
-  }));
-  ["dragleave", "drop"].forEach((type) => stageBox.addEventListener(type, (e) => {
-    e.preventDefault();
-    stageBox.classList.remove("over");
-  }));
-  stageBox.addEventListener("drop", (e) => loadFile(e.dataTransfer.files[0]));
-  // Dropping a file anywhere else should not navigate away from the page.
-  ["dragover", "drop"].forEach((type) => window.addEventListener(type, (e) => e.preventDefault()));
-
-  document.addEventListener("paste", (e) => {
-    const files = e.clipboardData && e.clipboardData.files;
-    if (files && files.length) { e.preventDefault(); loadFile(files[0]); }
-  });
-
-  /* ---------- moving the image ---------- */
-
-  const clampOffset = (v) => Math.max(-600, Math.min(600, v));
-  let drag = null;
-
-  stage.addEventListener("pointerdown", (e) => {
-    if (!state.img) return;
-    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: state.imgX, oy: state.imgY };
-    stage.setPointerCapture(e.pointerId);
-    stage.classList.add("dragging");
-  });
-  stage.addEventListener("pointermove", (e) => {
-    if (!drag || e.pointerId !== drag.id) return;
-    const k = BOX / stage.clientWidth;
-    state.imgX = clampOffset(drag.ox + (e.clientX - drag.x) * k);
-    state.imgY = clampOffset(drag.oy + (e.clientY - drag.y) * k);
-    scheduleRender();
-  });
-  ["pointerup", "pointercancel"].forEach((type) => stage.addEventListener(type, () => {
-    drag = null;
-    stage.classList.remove("dragging");
-  }));
-
-  stage.addEventListener("keydown", (e) => {
-    if (!state.img) return;
-    const step = e.shiftKey ? 25 : 5;
-    const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
-    const move = moves[e.key];
-    if (!move) return;
-    e.preventDefault();
-    state.imgX = clampOffset(state.imgX + move[0]);
-    state.imgY = clampOffset(state.imgY + move[1]);
-    render();
-  });
-
-  /* ---------- image and frame controls ---------- */
-
-  function normaliseHex(value) {
-    let v = value.trim().replace(/^#/, "");
-    if (/^[0-9a-f]{3}$/i.test(v)) v = v.replace(/./g, "$&$&");
-    return /^[0-9a-f]{6}$/i.test(v) ? "#" + v.toUpperCase() : null;
-  }
-
-  function setTint(hex, from) {
-    state.tint = hex;
-    if (from !== "picker") $("tintPicker").value = hex.toLowerCase();
-    if (from !== "text") $("tintHex").value = hex.slice(1);
-    $("tintHex").removeAttribute("aria-invalid");
-    $("hexHint").textContent = "";
-    scheduleRender();
-  }
-
-  $("clip").addEventListener("change", (e) => { state.clip = e.target.checked; render(); });
-
-  document.querySelectorAll('input[name="tint"]').forEach((el) => {
-    el.addEventListener("change", () => { state.tintOn = el.value === "on"; render(); });
-  });
-
-  $("tintPicker").addEventListener("input", (e) => setTint(e.target.value.toUpperCase(), "picker"));
-  $("tintHex").addEventListener("input", (e) => {
-    const hex = normaliseHex(e.target.value);
-    if (hex) setTint(hex, "text"); else e.target.setAttribute("aria-invalid", "true");
-  });
-  $("tintHex").addEventListener("blur", (e) => {
-    if (normaliseHex(e.target.value)) {
-      e.target.value = state.tint.slice(1);
-    } else {
-      $("hexHint").textContent = "Enter a hex code such as FFC53D. Still showing " + state.tint.slice(1) + ".";
-    }
-  });
-  document.querySelectorAll(".quick button").forEach((btn) => {
-    btn.addEventListener("click", () => setTint(btn.dataset.c, "quick"));
-  });
-
-  document.querySelectorAll('input[name="bg"]').forEach((el) => {
-    el.addEventListener("change", () => { state.bgOn = el.value === "fill"; render(); });
-  });
-  $("bgPicker").addEventListener("input", (e) => { state.bg = e.target.value.toUpperCase(); scheduleRender(); });
-
-  /* ---------- export ---------- */
-
-  const say = (text) => { $("status").textContent = text; };
-
-  function download(blob, name) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    say("Downloading " + name);
-  }
-
-  const fileName = (ext) => "sun-" + state.ray.slice(1) + "." + ext;
-
-  $("savePng").addEventListener("click", () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = +$("pngSize").value;
-    paint(canvas);
-    canvas.toBlob((blob) => {
-      if (blob) download(blob, fileName("png"));
-      else say("The PNG could not be created. Reload the page and try again.");
-    }, "image/png");
-  });
-
-  $("saveSvg").addEventListener("click", () => {
-    const file = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgMarkup() + "\n";
-    download(new Blob([file], { type: "image/svg+xml;charset=utf-8" }), fileName("svg"));
-  });
-
-  $("copySvg").addEventListener("click", () => {
-    const code = svgMarkup();
-    const fallback = () => {
-      const area = document.createElement("textarea");
-      area.value = code;
-      area.style.position = "fixed";
-      area.style.opacity = "0";
-      document.body.appendChild(area);
-      area.select();
-      let ok = false;
-      try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
-      area.remove();
-      say(ok ? "SVG code copied" : "Copying is blocked here. Use Download SVG instead.");
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(code).then(() => say("SVG code copied"), fallback);
-    } else {
-      fallback();
-    }
-  });
-
-  syncControls();
-  render();
-})();
-</script>
+    </details>
+
+    <details class="blk" open data-part="frame">
+      <summary>
+        <span class="n">06</span>
+        <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="5"/></svg>
+        <span class="t">Frame</span>
+      </summary>
+      <div class="blk-body">
+        <div class="slider" data-slider="size"></div>
+        <div>
+          <p class="sub">Background</p>
+          <div class="bg-row">
+            <div class="segments">
+              <input type="radio" name="bg" id="bgNone" value="none" checked>
+              <label for="bgNone">Transparent</label>
+              <input type="radio" name="bg" id="bgFill" value="fill">
+              <label for="bgFill">Colour</label>
+            </div>
+            <input type="color" id="bgPicker" value="#1b2f73" aria-label="Background colour" disabled>
+          </div>
+        </div>
+      </div>
+    </details>
+
+  </form>
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/draw.js"></script>
+<script src="js/view.js"></script>
+<script src="js/controls.js"></script>
+<script src="js/library.js"></script>
+<script src="js/export.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
