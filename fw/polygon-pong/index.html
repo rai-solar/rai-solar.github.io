@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polygon Pong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* One black stage, the arena centred and scaled to fit; a single line of help at the bottom. */
+  :root {
+    --bg: #000;
+    --fg: #fff;
+    --dim: #8a8a8a;
+    --faint: #3a3a3a;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); overflow: hidden; }
+  body { font-family: var(--mono); font-size: 12px; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.home { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; z-index: 50; padding: 4px 8px; font: 400 22px/1 "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--fg); text-decoration: none; opacity: .75; cursor: pointer; }
+.home:hover { opacity: 1; }
+  #help {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    color: var(--dim); text-align: center; letter-spacing: .04em; line-height: 1.6;
+    pointer-events: none;
+  }
+  #help b { color: var(--fg); font-weight: 500; }
+</style>
+
+<canvas id="c"></canvas>
+<a class="home" href="../" aria-label="Back to the homepage">←</a>
+<div id="help">
+  <b>← →</b> or mouse: move your paddle &nbsp;·&nbsp; every person who opens this page adds a side &nbsp;·&nbsp; <b>Space</b> restart
+</div>
+
+<script>window.playhtmlReady = new Promise(r => { window.__playhtmlResolve = r; });</script>
+<script type="module">
+  // the table is shared through playhtml (https://playhtml.fun): presence is live and clears when a person leaves
+  try {
+    const { playhtml } = await import("https://unpkg.com/playhtml@2.15.0");
+    await playhtml.init({
+      room: "polygon-pong",   // a fixed room, so everyone meets whatever form of the address they typed
+      events: { restart: { type: "polygon-pong-restart", onEvent: () => window.__pongRestart && window.__pongRestart() } }
+    });
+    window.__playhtml = playhtml;
+    window.__playhtmlResolve(playhtml);
+  } catch (e) { console.warn("playhtml unavailable", e); window.__playhtmlResolve(null); }
+</script>
+
+<script>
+(() => {
+  const cv = document.getElementById("c");
+  const ctx = cv.getContext("2d");
+  let W = 0, H = 0, DPR = 1;
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * DPR; cv.height = H * DPR;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // ---------- tuning ----------
+  const SIDE = 360;          // every side keeps this length; the arena grows with players
+  const PADDLE = 74;         // paddle length
+  const PADDLE_T = 8;        // paddle thickness (drawn)
+  const R = 7;               // ball radius
+  const LIVES = 3;
+  const START_SPEED = 210;
+  const HIT_BOOST = 1.05;    // speed x per paddle hit
+  const DRIFT_BOOST = 0.012; // speed +1.2% per second, always
+  const MAX_SPEED = 950;
+  const YOU_SPEED = 560;
+  const BOT_SPEED = 360;
+
+  let players = [], sides = [], balls = [];
+  let state = "play";        // play | over
+  let msgKind = "", msgArg = 0, messageT = 0;
+  let viewScale = 1, targetScale = 1;
+  let worldExtent = 1;
+
+  const keys = {};
+  let mouse = null, mouseActive = false;
+
+  // ---------- the table (online) ----------
+  // Everyone who opens the page takes a seat. The person who arrived first runs the game (host) and sends the table
+  // about 15 times a second; everyone else sends only their paddle. One person alone plays against two bots.
+  let net = null, netText = "connecting to the table…";
+  const SINCE = Date.now();
+  let roster = [], rosterKey = "", myId = null, hostId = null, isHost = false, myIdx = 0;
+  let padS = SIDE / 2;       // my paddle, along my side
+  const padOf = new Map();   // peer -> paddle position (read by the host)
+  let lastTable = 0, lastPad = 0, lastPadSent = -1;
+  let tableAt = 0;           // when the last table arrived (guests)
+
+  // ---------- arena ----------
+  function layout(n) {
+    sides = [];
+    if (n === 2) {
+      // classic Pong: two goals facing each other, two plain walls
+      const w = SIDE, h = SIDE * 1.25;
+      sides.push(seg(-w/2,  h/2,  w/2,  h/2, 0));   // bottom
+      sides.push(seg( w/2, -h/2, -w/2, -h/2, 1));   // top
+      sides.push(seg(-w/2, -h/2, -w/2,  h/2, -1));  // wall
+      sides.push(seg( w/2,  h/2,  w/2, -h/2, -1));  // wall
+      worldExtent = h / 2;
+    } else {
+      const rad = SIDE / (2 * Math.sin(Math.PI / n));
+      for (let i = 0; i < n; i++) {
+        const a0 = Math.PI / 2 + Math.PI / n + 2 * Math.PI * i / n;
+        const a1 = Math.PI / 2 - Math.PI / n + 2 * Math.PI * i / n;
+        sides.push(seg(Math.cos(a0) * rad, Math.sin(a0) * rad, Math.cos(a1) * rad, Math.sin(a1) * rad, i));
+      }
+      worldExtent = rad;
+    }
+  }
+
+  // host only: a new game for whoever is at the table
+  function build() {
+    const humans = roster.length || 1;
+    const bots = humans === 1 ? 2 : 0;       // alone: a triangle against two bots; two people: classic pong
+    const n = humans + bots;
+    players = [];
+    for (let i = 0; i < n; i++) {
+      const human = i < humans;
+      players.push({ id: i, bot: !human, peer: human ? (roster[i] ? roster[i].id : myId) : "",
+        name: human ? "player " + (i + 1) : "bot " + (i - humans + 1),
+        lives: LIVES, out: false, s: SIDE / 2, aimErr: 0, flash: 0 });
+    }
+    layout(n);
+    myIdx = Math.max(0, players.findIndex(p => p.peer === myId));
+    balls = [];
+    for (let i = 0; i < n; i++) balls.push(newBall(0.8 + i * 0.7));
+    state = "play";
+    say("shape", n, 2);
+  }
+
+  function seg(ax, ay, bx, by, owner) {
+    const L = Math.hypot(bx - ax, by - ay);
+    const tx = (bx - ax) / L, ty = (by - ay) / L;
+    // inward normal points toward the centre (0,0)
+    let nx = -ty, ny = tx;
+    const mx = (ax + bx) / 2, my = (ay + by) / 2;
+    if (nx * -mx + ny * -my < 0) { nx = -nx; ny = -ny; }
+    return { ax, ay, bx, by, L, tx, ty, nx, ny, owner };
+  }
+
+  function nameOf(p) { return p.peer && p.peer === myId ? "you" : p.name; }
+  function messageText() {
+    if (msgKind === "shape") return msgArg === 2 ? "a line: classic pong" : polyName(msgArg);
+    const p = players[msgArg];
+    if (msgKind === "out") return !p ? "" : p.peer && p.peer === myId ? "you're out. the others play on" : p.name + " is out";
+    if (msgKind === "win") return !p ? "nobody wins" : p.peer && p.peer === myId ? "you win" : p.name + " wins";
+    return "";
+  }
+  function polyName(n) {
+    return ({3: "a triangle", 4: "a square", 5: "a pentagon", 6: "a hexagon", 7: "a heptagon", 8: "an octagon"})[n] || n + " sides";
+  }
+
+  function newBall(delay) {
+    return { x: 0, y: 0, vx: 0, vy: 0, speed: START_SPEED, wait: delay, passing: -1 };
+  }
+
+  function serve(b) {
+    // aim at a living player's side, with some spread
+    const live = sides.filter(s => s.owner >= 0 && !players[s.owner].out);
+    const target = live[Math.floor(Math.random() * live.length)] || sides[0];
+    const tx = (target.ax + target.bx) / 2, ty = (target.ay + target.by) / 2;
+    let ang = Math.atan2(ty, tx) + (Math.random() - 0.5) * 0.9;
+    b.x = 0; b.y = 0; b.speed = START_SPEED;
+    b.vx = Math.cos(ang) * b.speed; b.vy = Math.sin(ang) * b.speed;
+    b.passing = -1;
+  }
+
+  function say(kind, arg, secs) { msgKind = kind; msgArg = arg; messageT = secs; }
+
+  // ---------- simulation ----------
+  // my paddle: keys or mouse, on every screen (the host copies it into the game, a guest sends it)
+  function movePaddle(dt) {
+    const me = players[myIdx], s0 = sides.find(s => s.owner === myIdx);
+    if (!me || !s0 || me.out) return;
+    const dir = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
+    if (dir) { mouseActive = false; padS += dir * YOU_SPEED * dt; }
+    else if (mouseActive && mouse) {
+      const target = (mouse.x - s0.ax) * s0.tx + (mouse.y - s0.ay) * s0.ty;
+      const d = target - padS;
+      padS += Math.sign(d) * Math.min(Math.abs(d), YOU_SPEED * 1.6 * dt);
+    }
+    padS = clamp(padS, PADDLE / 2, s0.L - PADDLE / 2);
+    me.s = padS;
+  }
+
+  // guests don't run the game: they keep the host's balls moving between tables
+  function tickGuest(dt) {
+    for (const b of balls) if (b.wait > 0) b.wait -= dt; else { b.x += b.vx * dt; b.y += b.vy * dt; }
+    for (const p of players) p.flash = Math.max(0, p.flash - dt);
+    if (messageT > 0) messageT -= dt;
+  }
+
+  function step(dt) {
+    // the other people at the table
+    for (const p of players) {
+      if (p.bot || p.out || p.peer === myId) continue;
+      const v = padOf.get(p.peer);
+      if (Number.isFinite(v)) p.s = clamp(v, PADDLE / 2, SIDE - PADDLE / 2);
+    }
+
+    // computer players
+    for (const p of players) {
+      if (!p.bot || p.out) continue;
+      const sd = sides.find(s => s.owner === p.id);
+      let best = null, bestT = Infinity;
+      for (const b of balls) {
+        if (b.wait > 0 || b.passing >= 0) continue;
+        const vn = b.vx * sd.nx + b.vy * sd.ny;
+        if (vn >= 0) continue; // moving away from this side
+        const d = (b.x - sd.ax) * sd.nx + (b.y - sd.ay) * sd.ny - R;
+        const t = d / -vn;
+        if (t < bestT) { bestT = t; best = b; }
+      }
+      let target = sd.L / 2;
+      if (best) {
+        const px = best.x + best.vx * bestT, py = best.y + best.vy * bestT;
+        target = (px - sd.ax) * sd.tx + (py - sd.ay) * sd.ty + p.aimErr;
+      }
+      const d = target - p.s;
+      p.s += Math.sign(d) * Math.min(Math.abs(d), BOT_SPEED * dt);
+      p.s = clamp(p.s, PADDLE / 2, sd.L - PADDLE / 2);
+    }
+
+    // balls
+    for (let i = balls.length - 1; i >= 0; i--) {
+      const b = balls[i];
+      if (b.wait > 0) { b.wait -= dt; if (b.wait <= 0) serve(b); continue; }
+      b.speed = Math.min(MAX_SPEED, b.speed * (1 + DRIFT_BOOST * dt));
+      setSpeed(b);
+      b.x += b.vx * dt; b.y += b.vy * dt;
+
+      if (b.passing >= 0) {
+        const sd = sides[b.passing];
+        const d = (b.x - sd.ax) * sd.nx + (b.y - sd.ay) * sd.ny;
+        if (d < -R * 3) { goal(sd.owner); recycle(i); }
+        continue;
+      }
+
+      for (let k = 0; k < sides.length; k++) {
+        const sd = sides[k];
+        const d = (b.x - sd.ax) * sd.nx + (b.y - sd.ay) * sd.ny;
+        const vn = b.vx * sd.nx + b.vy * sd.ny;
+        if (d >= R || vn >= 0) continue;
+        const solid = sd.owner < 0 || players[sd.owner].out;
+        if (solid) { reflect(b, sd, d); continue; }
+        const p = players[sd.owner];
+        const along = (b.x - sd.ax) * sd.tx + (b.y - sd.ay) * sd.ty;
+        const off = along - p.s;
+        const reach = PADDLE / 2 + R;
+        if (Math.abs(off) <= reach && d > -R) {
+          // paddle hit: the further from the centre, the sharper the angle
+          const ang = (off / reach) * 1.0;
+          b.speed = Math.min(MAX_SPEED, b.speed * HIT_BOOST);
+          const c = Math.cos(ang), s = Math.sin(ang);
+          b.vx = (sd.nx * c + sd.tx * s) * b.speed;
+          b.vy = (sd.ny * c + sd.ty * s) * b.speed;
+          b.x += sd.nx * (R - d); b.y += sd.ny * (R - d);
+          p.flash = 0.12;
+          if (p.bot) p.aimErr = (Math.random() - 0.5) * PADDLE * 1.1;
+        } else {
+          b.passing = k;
+          break;
+        }
+      }
+      // safety: a ball that ends up far outside comes back to the centre
+      if (Math.hypot(b.x, b.y) > worldExtent * 2) recycle(i);
+    }
+
+    for (const p of players) p.flash = Math.max(0, p.flash - dt);
+    if (messageT > 0) messageT -= dt;
+  }
+
+  function reflect(b, sd, d) {
+    const vn = b.vx * sd.nx + b.vy * sd.ny;
+    b.vx -= 2 * vn * sd.nx; b.vy -= 2 * vn * sd.ny;
+    b.x += sd.nx * (R - d); b.y += sd.ny * (R - d);
+  }
+
+  function setSpeed(b) {
+    const m = Math.hypot(b.vx, b.vy) || 1;
+    b.vx = b.vx / m * b.speed; b.vy = b.vy / m * b.speed;
+  }
+
+  function goal(owner) {
+    if (owner < 0) return;
+    const p = players[owner];
+    if (p.out) return;
+    p.lives--;
+    p.flash = 0.5;
+    if (p.lives <= 0) {
+      p.out = true;
+      say("out", owner, 2.2);
+    }
+    const alive = players.filter(q => !q.out);
+    if (alive.length <= 1 && state === "play") {
+      state = "over";
+      const w = alive[0];
+      say("win", w ? w.id : -1, 999);
+    }
+  }
+
+  function recycle(i) {
+    const alive = players.filter(q => !q.out).length;
+    if (state === "over") { balls.splice(i, 1); return; }
+    // one ball per living player: a knocked-out player takes their ball with them
+    if (balls.length > alive) { balls.splice(i, 1); return; }
+    balls[i] = newBall(0.9);
+  }
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  // ---------- drawing ----------
+  function draw() {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, W, H);
+
+    targetScale = Math.min(W, H - 60) / (worldExtent * 2 + 110);
+    viewScale += (targetScale - viewScale) * 0.12;
+    ctx.translate(W / 2, (H - 40) / 2);
+    ctx.scale(viewScale, viewScale);
+    const px = 1 / viewScale;
+    const rot = viewRot();     // turn the arena so my own side is at the bottom
+    ctx.rotate(rot);
+
+    // sides
+    for (const sd of sides) {
+      const owner = sd.owner >= 0 ? players[sd.owner] : null;
+      const solid = !owner || owner.out;
+      ctx.beginPath(); ctx.moveTo(sd.ax, sd.ay); ctx.lineTo(sd.bx, sd.by);
+      if (solid) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 3 * px; ctx.setLineDash([]); }
+      else {
+        const f = owner.flash > 0.15 ? 1 : 0;
+        ctx.strokeStyle = f ? "#fff" : "#3a3a3a"; ctx.lineWidth = (f ? 2 : 1) * px;
+        ctx.setLineDash([4 * px, 6 * px]);
+      }
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // paddles, labels and lives
+    ctx.font = `${11 * px}px "IBM Plex Mono", Menlo, monospace`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (const sd of sides) {
+      if (sd.owner < 0) continue;
+      const p = players[sd.owner];
+      const mx = (sd.ax + sd.bx) / 2, my = (sd.ay + sd.by) / 2;
+      const lx = mx - sd.nx * 36, ly = my - sd.ny * 36;
+      ctx.fillStyle = p.out ? "#3a3a3a" : (p.bot ? "#8a8a8a" : "#fff");
+      ctx.save(); ctx.translate(lx, ly); ctx.rotate(-rot); // labels stay upright
+      ctx.fillText(nameOf(p), 0, -7);
+      // lives as a row of small squares under the label
+      for (let k = 0; k < LIVES; k++) {
+        const qx = (k - (LIVES - 1) / 2) * 11, qy = 9;
+        if (k < p.lives) ctx.fillRect(qx - 3, qy - 3, 6, 6);
+        else { ctx.strokeStyle = "#3a3a3a"; ctx.lineWidth = px; ctx.strokeRect(qx - 3, qy - 3, 6, 6); }
+      }
+      ctx.restore();
+      if (p.out) continue;
+      const cx = sd.ax + sd.tx * p.s, cy = sd.ay + sd.ty * p.s;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.atan2(sd.ty, sd.tx));
+      if (p.bot) {
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5 * px;
+        ctx.strokeRect(-PADDLE / 2, -PADDLE_T / 2, PADDLE, PADDLE_T);
+        if (p.flash > 0) { ctx.fillStyle = "#fff"; ctx.fillRect(-PADDLE / 2, -PADDLE_T / 2, PADDLE, PADDLE_T); }
+      } else {
+        ctx.fillStyle = "#fff"; ctx.fillRect(-PADDLE / 2, -PADDLE_T / 2, PADDLE, PADDLE_T);
+      }
+      ctx.restore();
+    }
+
+    // balls
+    for (const b of balls) {
+      if (b.wait > 0) {
+        if (state === "over") continue;
+        const blink = Math.sin(b.wait * 18) > 0;
+        if (!blink) continue;
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = px;
+        ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.stroke();
+        continue;
+      }
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // message in the middle
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (messageT > 0) {
+      ctx.globalAlpha = Math.min(1, messageT);
+      ctx.fillStyle = "#fff";
+      ctx.font = `500 15px "IBM Plex Mono", Menlo, monospace`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(messageText(), W / 2, 28);
+      if (state === "over") {
+        ctx.fillStyle = "#8a8a8a"; ctx.font = `12px "IBM Plex Mono", Menlo, monospace`;
+        ctx.fillText("press space to play again", W / 2, 50);
+      }
+      ctx.globalAlpha = 1;
+    }
+    // ball speed readout
+    ctx.fillStyle = "#3a3a3a"; ctx.font = `11px "IBM Plex Mono", Menlo, monospace`;
+    ctx.textAlign = "left";
+    const live = balls.filter(b => b.wait <= 0);
+    const top = live.length ? Math.max(...live.map(b => b.speed)) : 0;
+    const here = roster.length;
+    ctx.fillText(`${here} ${here === 1 ? "person" : "people"} here · ${balls.length} balls · fastest ×${(top / START_SPEED || 0).toFixed(1)}`, 48, 20);
+    if (!net || !players.length) {
+      ctx.fillStyle = "#fff"; ctx.font = `500 15px "IBM Plex Mono", Menlo, monospace`; ctx.textAlign = "center";
+      ctx.fillText(netText, W / 2, H / 2);
+    }
+  }
+
+  function viewRot() {
+    const sd = sides.find(s => s.owner === myIdx);
+    if (!sd) return 0;
+    return Math.PI / 2 - Math.atan2((sd.ay + sd.by) / 2, (sd.ax + sd.bx) / 2);
+  }
+
+  // ---------- input ----------
+  window.addEventListener("keydown", e => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === "ArrowLeft" || k === "ArrowRight" || k === " ") e.preventDefault();
+    keys[k] = true;
+    if (k === " ") restart();
+  });
+  function restart() {
+    if (!net) return;
+    if (isHost) build();
+    else try { window.__playhtml.dispatchPlayEvent({ type: "polygon-pong-restart" }); } catch {}
+  }
+  window.__pongRestart = () => { if (isHost) build(); };
+  window.addEventListener("keyup", e => { keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false; });
+  function toWorld(cx, cy) {
+    const x = (cx - W / 2) / viewScale, y = (cy - (H - 40) / 2) / viewScale, r = -viewRot();
+    return { x: x * Math.cos(r) - y * Math.sin(r), y: x * Math.sin(r) + y * Math.cos(r) };
+  }
+  cv.addEventListener("pointermove", e => { mouse = toWorld(e.clientX, e.clientY); mouseActive = true; });
+  cv.addEventListener("pointerdown", e => { mouse = toWorld(e.clientX, e.clientY); mouseActive = true; });
+
+  // ---------- network ----------
+  function syncRoster() {
+    if (!net) return;
+    const list = [];
+    for (const [id, e] of net.getPresences()) {
+      if (!e.pong || !Number.isFinite(e.pong.since)) continue;
+      list.push({ id, since: e.pong.since, isMe: !!e.isMe });
+      if (e.pad && Number.isFinite(e.pad.s) && !e.isMe) padOf.set(id, e.pad.s);
+    }
+    list.sort((a, b) => a.since - b.since || (a.id < b.id ? -1 : 1));
+    const me = list.find(p => p.isMe);
+    if (!me) return;                       // my own seat hasn't come back yet
+    myId = me.id; roster = list;
+    hostId = list[0].id; isHost = list[0].isMe;
+    for (const id of [...padOf.keys()]) if (!list.some(p => p.id === id)) padOf.delete(id);
+    const key = list.map(p => p.id).join("|");
+    if (key !== rosterKey) {
+      rosterKey = key;
+      if (isHost) build();                 // someone came or left: a new arena for everyone
+      else { players = []; tableAt = 0; }   // wait for the host's table
+    }
+    if (!isHost) readTable();
+  }
+
+  // guests: take the host's table
+  function readTable() {
+    if (isHost || !net) return;
+    const e = net.getPresences().get(hostId), t = e && e.table;
+    if (!t || !Array.isArray(t.pl) || !Array.isArray(t.b) || t.t === tableAt) return;
+    tableAt = t.t;
+    if (sides.length !== (t.n === 2 ? 4 : t.n) || players.length !== t.n) layout(t.n);
+    const humans = t.pl.filter(r => !r[1]).length;
+    players = t.pl.map((r, i) => ({ id: i, bot: !!r[1], peer: r[0], name: r[1] ? "bot " + (i - humans + 1) : "player " + (i + 1),
+      lives: r[2], out: !!r[3], s: r[4], flash: r[5] || 0, aimErr: 0 }));
+    myIdx = Math.max(0, players.findIndex(p => p.peer === myId));
+    if (players[myIdx]) players[myIdx].s = padS;
+    balls = t.b.map(r => ({ x: r[0], y: r[1], vx: r[2], vy: r[3], speed: r[4], wait: r[5], passing: r[6] }));
+    state = t.st === "over" ? "over" : "play";
+    msgKind = t.mk || ""; msgArg = t.ma || 0; messageT = t.mt || 0;
+  }
+
+  function sendNet(now) {
+    if (!net || !myId) return;
+    if (isHost) {
+      if (now - lastTable < 66 || !players.length) return;
+      lastTable = now;
+      net.setMyPresence("table", {
+        t: Date.now(), n: players.length, st: state, mk: msgKind, ma: msgArg, mt: Math.round(messageT * 10) / 10,
+        pl: players.map(p => [p.peer || "", p.bot ? 1 : 0, p.lives, p.out ? 1 : 0, Math.round(p.s), Math.round(p.flash * 100) / 100]),
+        b: balls.map(b => [Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(b.speed), Math.round(b.wait * 100) / 100, b.passing])
+      });
+    } else if (now - lastPad > 50 && Math.round(padS) !== lastPadSent) {
+      lastPad = now; lastPadSent = Math.round(padS);
+      net.setMyPresence("pad", { s: lastPadSent });
+    }
+  }
+
+  (async () => {
+    const ph = await window.playhtmlReady;
+    let pr = null;
+    try { pr = ph && ph.presence; } catch {}
+    if (!pr) { netText = "can't reach the table"; return; }
+    net = pr;
+    net.setMyPresence("pong", { since: SINCE });
+    net.onPresenceChange("pong", syncRoster);
+    net.onPresenceChange("pad", syncRoster);
+    net.onPresenceChange("table", readTable);
+    setInterval(syncRoster, 1000);        // also notices people who leave
+    syncRoster();
+  })();
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    let dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (players.length) {
+      movePaddle(dt);
+      if (isHost) {
+        const steps = Math.ceil(dt / (1 / 240));
+        for (let i = 0; i < steps; i++) step(dt / steps);
+      } else tickGuest(dt);
+    }
+    sendNet(now);
+    draw();
+    requestAnimationFrame(frame);
+  }
+  viewScale = Math.min(W, H - 60) / (SIDE * 1.2 + 110);
+  requestAnimationFrame(frame);
+})();
+</script>

@@ -1,0 +1,28 @@
+{
+  "about": "A Joyful Noise exhibit scene. Bodies with a 'planet' key orbit the first body (the Sun) at their squeezed real distance. 'sound' is either a synth recipe or {\"src\": \"sounds/file.mp3\"} to loop a recording. Move the cursor close to a body to hear it; hearingRadius is in screen pixels.",
+  "hearingRadius": 170,
+  "opacity": 100,
+  "sublime": 0,
+  "bodies": [
+    { "name": "Sun", "mass": 333000, "x": 0, "y": 0,
+      "sound": { "wave": "sawtooth", "freq": 55, "harmonic": 1.5, "detune": 6, "cutoff": 260, "noise": 0.35, "lfo": 0.07, "depth": 0.5, "volume": 0.9 } },
+    { "planet": "me", "angle": 0.4,
+      "sound": { "wave": "sine", "freq": 880, "harmonic": 1.5, "detune": 3, "cutoff": 4000, "noise": 0, "lfo": 7, "depth": 0.6, "volume": 0.35 } },
+    { "planet": "ve", "angle": 2.1,
+      "sound": { "wave": "triangle", "freq": 110, "harmonic": 2, "detune": 9, "cutoff": 600, "noise": 0.45, "lfo": 0.15, "depth": 0.5, "volume": 0.7 } },
+    { "planet": "ea", "angle": 3.6,
+      "sound": { "wave": "sine", "freq": 220, "harmonic": 1.5, "detune": 2, "cutoff": 1400, "noise": 0.05, "lfo": 0.25, "depth": 0.3, "volume": 0.6 } },
+    { "planet": "ma", "angle": 5.0,
+      "sound": { "wave": "square", "freq": 165, "harmonic": 1.335, "detune": 5, "cutoff": 420, "noise": 0.25, "lfo": 0.4, "depth": 0.4, "volume": 0.5 } },
+    { "planet": "ju", "angle": 1.0,
+      "sound": { "wave": "sawtooth", "freq": 73.4, "harmonic": 2, "detune": 7, "cutoff": 480, "noise": 0.15, "lfo": 0.09, "depth": 0.6, "volume": 0.8 } },
+    { "planet": "sa", "angle": 4.2,
+      "sound": { "wave": "triangle", "freq": 98, "harmonic": 20, "detune": 4, "cutoff": 2400, "noise": 0.05, "lfo": 0.12, "depth": 0.4, "volume": 0.65 } },
+    { "planet": "ur", "angle": 2.8,
+      "sound": { "wave": "sine", "freq": 261.6, "harmonic": 1.5, "detune": 12, "cutoff": 1800, "noise": 0.1, "lfo": 0.05, "depth": 0.3, "volume": 0.55 } },
+    { "planet": "ne", "angle": 0.1,
+      "sound": { "wave": "sine", "freq": 123.5, "harmonic": 2, "detune": 6, "cutoff": 900, "noise": 0.5, "lfo": 0.2, "depth": 0.5, "volume": 0.6 } },
+    { "planet": "pl", "angle": 5.7,
+      "sound": { "wave": "sine", "freq": 1046.5, "harmonic": 1.5, "detune": 1, "cutoff": 5000, "noise": 0, "lfo": 0.5, "depth": 0.9, "volume": 0.3 } }
+  ]
+}
