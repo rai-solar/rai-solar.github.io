@@ -1,27 +1,17 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>future web · cabz</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
-<style>
-  html, body { height: 100%; margin: 0; background: #000; color: #fff; }
-  body { display: grid; place-content: center; padding: 16px; box-sizing: border-box; }
-  nav { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(20px, 6vw, 64px); }
-  a { position: relative; font-size: clamp(44px, 10vw, 88px); line-height: 1; text-decoration: none; filter: grayscale(.25); transition: transform .25s, filter .25s; }
-  a:hover, a:focus-visible { transform: scale(1.15); filter: none; outline: none; }
-  a::after { content: attr(data-name); position: absolute; left: 50%; top: 100%; margin-top: 14px; transform: translateX(-50%); white-space: nowrap; font: 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em; color: #777; opacity: 0; transition: opacity .25s; }
-  a:hover::after, a:focus-visible::after { opacity: 1; }
-  @media (prefers-reduced-motion: reduce) { a { transition: none; } }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-</style>
+<link rel="stylesheet" href="../cabz.css">
 <h1 class="sr">future web</h1>
-<nav>
-  <a href="a-joyful-noise/" data-name="a joyful noise" aria-label="A Joyful Noise">🪐</a>
-  <a href="langues/" data-name="langues" aria-label="Langues">🌋</a>
-  <a href="polygon-pong/" data-name="polygon pong" aria-label="Polygon Pong">🏓</a>
-  <a href="aya-traces/" data-name="aya traces" aria-label="Aya Traces">✨</a>
-  <a href="pesca/" data-name="pesca" aria-label="Pesca, the idea log">🎣</a>
-</nav>
+<ul class="tiles grid">
+  <li><a href="a-joyful-noise/" data-name="a joyful noise" aria-label="A Joyful Noise">🪐</a></li>
+  <li><a href="langues/" data-name="langues" aria-label="Langues">🌋</a></li>
+  <li><a href="polygon-pong/" data-name="polygon pong" aria-label="Polygon Pong">🏓</a></li>
+  <li><a href="aya-traces/" data-name="aya traces" aria-label="Aya Traces">✨</a></li>
+  <li><a href="pesca/" data-name="pesca" aria-label="Pesca, the idea log">🎣</a></li>
+</ul>
 <script src="../site.js" defer></script>
 <script src="../nav.js" data-path="fw/index.html" defer></script>

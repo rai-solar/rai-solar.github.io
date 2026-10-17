@@ -1,10 +1,15 @@
-/* cabz · shared by / and /pp/ */
+/* cabz · shared by the home page, fw/ and pp/
+   Layout: 8 columns, 8px gap, 16px page margin (the same grid nav.js draws and overlays). */
 :root {
   color-scheme: dark;
   --bg: #000;
   --fg: #fff;
   --dim: #555;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --cols: 8;
+  --gap: 8px;
+  --margin: 16px;
+  --bar: 32px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -16,29 +21,31 @@ body {
   min-height: 100svh;
   display: grid;
   align-content: center;
-  padding: 72px 16px;
-  padding-left: clamp(16px, 9vw, 140px);
+  padding: calc(var(--bar) + 64px) var(--margin) 64px;
   font: 400 15px/1.4 var(--mono);
   -webkit-font-smoothing: antialiased;
 }
 
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* the grid: every list is 8 columns, its rows are subgrids so things line up across rows */
+.grid {
   display: grid;
-  justify-items: start;
-  gap: .12em;
-  line-height: 1.08;
-  letter-spacing: -.02em;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gap);
 }
-.list.big { font-size: clamp(30px, 7.6vw, 112px); }
-.list.mid { font-size: clamp(26px, 5vw, 64px); }
+
+.list { list-style: none; margin: 0; padding: 0; row-gap: .12em; line-height: 1.08; letter-spacing: -.02em; }
+.list > li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
+.list.big { font-size: clamp(28px, 7vw, 104px); }
+.list.mid { font-size: clamp(26px, 4.6vw, 64px); }
+
+/* titles start on column 2, the small notes sit on column 7 */
+.list a { grid-column: 2 / 7; justify-self: start; }
+.list .meta { grid-column: 7 / -1; }
+.list.big a { grid-column: 2 / -1; }
 
 .list a {
-  display: inline-block;
   color: var(--fg);
   text-decoration: none;
   white-space: nowrap;
@@ -49,20 +56,54 @@ body {
 .list:has(a:focus-visible) a:not(:focus-visible) { color: var(--dim); }
 .list a:focus-visible { outline: none; }
 
-.list small {
-  margin-left: .9em;
-  font-size: 13px;
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 11px;
   letter-spacing: .08em;
   color: var(--dim);
-  vertical-align: middle;
 }
 
-.list .vers { display: inline-flex; align-items: center; }
+.vers { display: inline-flex; align-items: center; }
 .vers i { position: relative; width: 6px; height: 6px; border: 1px solid var(--dim); border-radius: 50%; }
-.vers i + i { margin-left: 9px; }
-.vers i + i::before { content: ""; position: absolute; right: 100%; top: 50%; width: 9px; height: 1px; margin-right: 1px; background: var(--dim); }
+.vers i + i { margin-left: 8px; }
+.vers i + i::before { content: ""; position: absolute; right: 100%; top: 50%; width: 8px; height: 1px; margin-right: 1px; background: var(--dim); }
 .vers i:last-child { background: var(--dim); }
 
+/* fw: one emoji per column, from column 2 */
+.tiles { list-style: none; margin: 0; padding: 0; row-gap: 48px; }
+.tiles li { grid-column: span 1; display: grid; justify-items: center; }
+.tiles li:first-child { grid-column-start: 2; }
+.tiles a {
+  position: relative;
+  font-size: clamp(36px, 6vw, 88px);
+  line-height: 1;
+  text-decoration: none;
+  filter: grayscale(.25);
+  transition: transform .25s, filter .25s;
+}
+.tiles a:hover, .tiles a:focus-visible { transform: scale(1.15); filter: none; outline: none; }
+.tiles a::after {
+  content: attr(data-name);
+  position: absolute; left: 50%; top: 100%; margin-top: 16px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font: 11px/1 var(--mono); letter-spacing: .08em; color: #777;
+  opacity: 0; transition: opacity .25s;
+}
+.tiles a:hover::after, .tiles a:focus-visible::after { opacity: 1; }
+
+/* phones: still 8 columns, everything starts on column 1 */
+@media (max-width: 600px) {
+  body { padding-top: calc(var(--bar) + 48px); }
+  .list a, .list.big a { grid-column: 1 / -1; }
+  .list.big { font-size: min(20vw, 96px); }
+  .list .meta { grid-column: 1 / -1; margin-top: 4px; }
+  .list .meta:empty { display: none; }
+  .tiles li, .tiles li:first-child { grid-column: span 2; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .list a { transition: none; }
+  .list a, .tiles a { transition: none; }
 }
