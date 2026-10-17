@@ -66,6 +66,12 @@ body {
   vertical-align: middle;
 }
 
+.list .vers { display: inline-flex; align-items: center; }
+.vers i { position: relative; width: 6px; height: 6px; border: 1px solid var(--dim); border-radius: 50%; }
+.vers i + i { margin-left: 9px; }
+.vers i + i::before { content: ""; position: absolute; right: 100%; top: 50%; width: 9px; height: 1px; margin-right: 1px; background: var(--dim); }
+.vers i:last-child { background: var(--dim); }
+
 @media (prefers-reduced-motion: reduce) {
   .list a { transition: none; }
 }

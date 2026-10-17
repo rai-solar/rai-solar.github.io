@@ -18,3 +18,18 @@
 </ul>
 
 <script src="../morph.js"></script>
+<script>
+  // a small git line next to the projects that have older versions
+  fetch("/versions.json").then((r) => (r.ok ? r.json() : null)).then((all) => {
+    if (!all) return;
+    document.querySelectorAll(".list a[data-morph]").forEach((a) => {
+      const p = all["pp/" + a.getAttribute("href").replace(/\/$/, "")];
+      if (!p || p.versions.length < 2) return;
+      const s = document.createElement("small");
+      s.className = "vers";
+      s.title = p.versions.length + " versions";
+      s.innerHTML = p.versions.map(() => "<i></i>").join("");
+      a.after(s);
+    });
+  }).catch(() => {});
+</script>
