@@ -35,6 +35,31 @@
     el._raf = requestAnimationFrame(tick);
   }
 
+  // letters on the grid: measure the monospace letter width, then give each name
+  // exactly the columns its letters need so whatever follows starts on the next column
+  const probe = document.createElement("span");
+  probe.textContent = "0".repeat(100);
+  probe.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;font:400 100px/1 " +
+    (getComputedStyle(document.documentElement).getPropertyValue("--mono") || "monospace");
+  document.body.appendChild(probe);
+  document.documentElement.style.setProperty("--adv", (probe.getBoundingClientRect().width / 10000).toFixed(4));
+  probe.remove();
+
+  function spans() {
+    document.querySelectorAll(".list").forEach((list) => {
+      const cs = getComputedStyle(list);
+      const k = parseFloat(cs.getPropertyValue("--k")) || 3;
+      const start = parseInt(cs.getPropertyValue("--start"), 10) || 2;
+      list.querySelectorAll(":scope > li > a").forEach((a) => {
+        const m = a.querySelector(".m");
+        if (!a.dataset.n) a.dataset.n = (m || a).textContent.length;
+        a.style.gridColumn = start + " / span " + Math.max(1, Math.ceil(a.dataset.n / k));
+      });
+    });
+  }
+  spans();
+  addEventListener("resize", spans);
+
   document.querySelectorAll("[data-morph]").forEach((link) => {
     const label = link.querySelector(".m");
     if (!label) return;

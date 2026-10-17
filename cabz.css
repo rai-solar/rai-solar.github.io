@@ -10,6 +10,10 @@
   --gap: 8px;
   --margin: 16px;
   --bar: 32px;
+  /* one column + one gap: type is sized so letters fall on this rhythm */
+  --step: calc((100vw - 2 * var(--margin) + var(--gap)) / var(--cols));
+  --adv: 0.6;          /* width of a monospace letter in em, measured by morph.js */
+  --start: 2;          /* lists start on column 2 */
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -35,15 +39,18 @@ body {
   column-gap: var(--gap);
 }
 
-.list { list-style: none; margin: 0; padding: 0; row-gap: .12em; line-height: 1.08; letter-spacing: -.02em; }
+/* Letters on the grid: --k letters per column step, so words begin and end on columns.
+   big (home): 3 letters a column · mid (pp): 4 letters a column */
+.list { list-style: none; margin: 0; padding: 0; line-height: 1.12; letter-spacing: 0;
+  font-size: calc(var(--step) / var(--k) / var(--adv)); }
+.list.big { --k: 3; }
+.list.mid { --k: 4; }
 .list > li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
-.list.big { font-size: clamp(28px, 7vw, 104px); }
-.list.mid { font-size: clamp(26px, 4.6vw, 64px); }
 
-/* titles start on column 2, the small notes sit on column 7 */
-.list a { grid-column: 2 / 7; justify-self: start; }
-.list .meta { grid-column: 7 / -1; }
-.list.big a { grid-column: 2 / -1; }
+/* the name spans the columns its letters need (set by morph.js), the versions sit in the next one */
+.list a { grid-column: var(--start) / -1; justify-self: start; }
+.list .meta { grid-column: auto / span 1; white-space: nowrap; transition: opacity .2s; }
+.list li:has(a[data-morph]:hover) .meta, .list li:has(a[data-morph]:focus-visible) .meta { opacity: 0; }
 
 .list a {
   color: var(--fg);
@@ -60,7 +67,7 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: .08em;
   color: var(--dim);
 }
@@ -85,11 +92,11 @@ body {
 
 /* fw: one emoji per column, from column 2 */
 .tiles { list-style: none; margin: 0; padding: 0; row-gap: 48px; }
-.tiles li { grid-column: span 1; display: grid; justify-items: center; }
+.tiles li { grid-column: span 1; display: grid; justify-items: start; }
 .tiles li:first-child { grid-column-start: 2; }
 .tiles a {
   position: relative;
-  font-size: clamp(36px, 6vw, 88px);
+  font-size: calc(var(--step) * 0.5);
   line-height: 1;
   text-decoration: none;
   filter: grayscale(.25);
@@ -98,10 +105,9 @@ body {
 .tiles a:hover, .tiles a:focus-visible { transform: scale(1.15); filter: none; outline: none; }
 .tiles a::after {
   content: attr(data-name);
-  position: absolute; left: 50%; top: 100%; margin-top: 16px;
-  transform: translateX(-50%);
+  position: absolute; left: 0; top: 100%; margin-top: 16px;
   white-space: nowrap;
-  font: 11px/1 var(--mono); letter-spacing: .08em; color: #777;
+  font: 13px/1 var(--mono); letter-spacing: .06em; color: #777;
   opacity: 0; transition: opacity .25s;
 }
 .tiles a:hover::after, .tiles a:focus-visible::after { opacity: 1; }
@@ -109,10 +115,10 @@ body {
 /* phones: still 8 columns, everything starts on column 1 */
 @media (max-width: 600px) {
   body { padding-top: calc(var(--bar) + 48px); }
-  .list a, .list.big a { grid-column: 1 / -1; }
-  .list.big { font-size: min(20vw, 96px); }
-  .list .meta { grid-column: 1 / -1; margin-top: 4px; }
-  .list .meta:empty { display: none; }
+  :root { --start: 1; }
+  .list.big { --k: 1; }
+  .list.mid { --k: 2; }
+  .tiles a { font-size: calc(var(--step) * 1.1); }
   .tiles li, .tiles li:first-child { grid-column: span 2; }
   .sun { width: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 + var(--gap)); }
 }

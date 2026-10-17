@@ -80,7 +80,7 @@ def main():
     site = {"sections": []}
 
     # the home page's own projects form a section without a folder of its own
-    sections = [{"id": "", "short": "cabz", "title": "origin", "projects": conf.get("home", [])}] + conf["sections"]
+    sections = [{"id": "", "short": "–CABeZa", "title": "origin", "projects": conf.get("home", [])}] + conf["sections"]
 
     for sec in sections:
         s = {"id": sec["id"], "short": sec.get("short", sec["id"]), "title": sec["title"], "projects": []}
@@ -105,6 +105,8 @@ def main():
                      "href": pid + "/" + p.get("href", ""), "versions": []}
             if p.get("note"):
                 entry["note"] = p["note"]
+            if p.get("offset"):
+                entry["offset"] = p["offset"]  # pages that start below the bar instead of under it
 
             paths = [pid] + p.get("former", [])
             commits = history(paths) if has_git else []

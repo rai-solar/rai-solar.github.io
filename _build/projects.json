@@ -9,7 +9,8 @@
     },
     {
       "name": "soleil",
-      "title": "soleil"
+      "title": "soleil",
+      "offset": true
     }
   ],
   "sections": [
@@ -20,19 +21,23 @@
       "projects": [
         {
           "name": "a-joyful-noise",
-          "title": "a joyful noise"
+          "title": "a joyful noise",
+          "offset": true
         },
         {
           "name": "langues",
-          "title": "langues"
+          "title": "langues",
+          "offset": true
         },
         {
           "name": "polygon-pong",
-          "title": "polygon pong"
+          "title": "polygon pong",
+          "offset": true
         },
         {
           "name": "aya-traces",
-          "title": "aya traces"
+          "title": "aya traces",
+          "offset": true
         },
         {
           "name": "pesca",
@@ -47,11 +52,15 @@
       "projects": [
         {
           "name": "perros",
-          "title": "connected wild dogs"
+          "title": "connected wild dogs",
+          "offset": true
         },
         {
           "name": "mouna",
-          "title": "wetland hotspots"
+          "title": "wetland hotspots",
+          "offset": [
+            "email.html"
+          ]
         },
         {
           "name": "wild-dogs",
