@@ -126,14 +126,28 @@
           </div>
 
           <div class="toggle-list">
-            <div class="toggle-row">
+            <div class="toggle-row is-off">
+              <span class="toggle-text">Background</span>
+              <button
+                id="toggleBackground"
+                class="toggle toggle-horizontal"
+                type="button"
+                aria-label="Toggle satellite background"
+                aria-pressed="false"
+              >
+                <span class="toggle-line"></span>
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+
+            <div class="toggle-row is-off">
               <span class="toggle-text">Vegetation</span>
               <button
                 id="toggleVegetation"
-                class="toggle toggle-horizontal is-on"
+                class="toggle toggle-horizontal"
                 type="button"
                 aria-label="Toggle vegetation"
-                aria-pressed="true"
+                aria-pressed="false"
               >
                 <span class="toggle-line"></span>
                 <span class="toggle-thumb"></span>

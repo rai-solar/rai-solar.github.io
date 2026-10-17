@@ -140,8 +140,11 @@ const state = {
   isPlaying: false,
   playbackLastMs: performance.now(),
   playbackAccMs: 0,
+  // v01: starts on a black screen with only rivers and roads; the satellite
+  // background and the vegetation come back with their toggles
   layersVisible: {
-    vegetation: true,
+    background: false,
+    vegetation: false,
     roads: true,
     rivers: true,
   },
@@ -172,6 +175,7 @@ const dom = {
   overlayVegCanvas: document.getElementById("overlayVegCanvas"),
   overlayHabitatLabel: document.getElementById("overlayHabitatLabel"),
   toggleVegetation: document.getElementById("toggleVegetation"),
+  toggleBackground: document.getElementById("toggleBackground"),
   toggleRoads: document.getElementById("toggleRoads"),
   toggleRivers: document.getElementById("toggleRivers"),
   datasetSwitch: document.getElementById("datasetSwitch"),
@@ -775,7 +779,10 @@ function createMap() {
           attribution: "Imagery © Esri and contributors",
         },
       },
-      layers: [{ id: "satellite", type: "raster", source: "satellite" }],
+      layers: [
+        { id: "black", type: "background", paint: { "background-color": "#000000" } },
+        { id: "satellite", type: "raster", source: "satellite", layout: { visibility: "none" } },
+      ],
     },
     center: [32, -7],
     zoom: 6,
@@ -1232,6 +1239,13 @@ function setToggleState(button, isOn) {
 }
 
 function applyLayerVisibility() {
+  if (map.getLayer("satellite")) {
+    map.setLayoutProperty(
+      "satellite",
+      "visibility",
+      state.layersVisible.background ? "visible" : "none",
+    );
+  }
   if (map.getLayer(MAP_IDS.lyrVegFill)) {
     map.setLayoutProperty(
       MAP_IDS.lyrVegFill,
@@ -1537,6 +1551,12 @@ function bindUi() {
     setIndex(state.wheelTarget);
   });
 
+  dom.toggleBackground.addEventListener("click", () => {
+    state.layersVisible.background = !state.layersVisible.background;
+    setToggleState(dom.toggleBackground, state.layersVisible.background);
+    applyLayerVisibility();
+  });
+
   dom.toggleVegetation.addEventListener("click", () => {
     state.layersVisible.vegetation = !state.layersVisible.vegetation;
     setToggleState(dom.toggleVegetation, state.layersVisible.vegetation);
@@ -1584,6 +1604,7 @@ function bindUi() {
 
   bindWheelScrub();
 
+  setToggleState(dom.toggleBackground, state.layersVisible.background);
   setToggleState(dom.toggleVegetation, state.layersVisible.vegetation);
   setToggleState(dom.toggleRoads, state.layersVisible.roads);
   setToggleState(dom.toggleRivers, state.layersVisible.rivers);
@@ -1661,9 +1682,9 @@ async function initVegetationAndContext() {
         type: "line",
         source: MAP_IDS.srcRivers,
         paint: {
-          "line-color": "#1976d2",
-          "line-width": 1.2,
-          "line-opacity": 0.9,
+          "line-color": "#a6a6a6",
+          "line-width": 2,
+          "line-opacity": 1,
         },
       });
     }
@@ -1682,9 +1703,9 @@ async function initVegetationAndContext() {
         type: "line",
         source: MAP_IDS.srcRoads,
         paint: {
-          "line-color": "#111111",
-          "line-width": 1.0,
-          "line-opacity": 0.85,
+          "line-color": "#6e6e6e",
+          "line-width": 1.6,
+          "line-opacity": 1,
         },
       });
     }

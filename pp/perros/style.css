@@ -392,6 +392,7 @@ tbody tr.active {
 }
 
 #map {
+  background: #000;
   position: absolute;
   inset: 0;
 }
