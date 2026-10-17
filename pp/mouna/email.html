@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Outlook — Mail</title>
     <link rel="stylesheet" href="email.css" />
-  </head>
+  <script src="/versions.js" data-project="pp/mouna" defer></script>
+</head>
 
   <body>
     <div class="ow" role="application" aria-label="Outlook web clone">
@@ -292,8 +293,8 @@ Instagram : _
       const to = "tom@hotmail.com";
       const subject = encodeURIComponent("Compte-rendu — Communication animale");
       const body = encodeURIComponent(bodyText);
-      document.getElementById("mailto-btn").href =
-        `mailto:${to}?subject=${subject}&body=${body}`;
+      const mailtoBtn = document.getElementById("mailto-btn");
+      if (mailtoBtn) mailtoBtn.href = `mailto:${to}?subject=${subject}&body=${body}`;
     </script>
   </body>
 </html>
