@@ -71,6 +71,18 @@ body {
 .vers i + i::before { content: ""; position: absolute; right: 100%; top: 50%; width: 8px; height: 1px; margin-right: 1px; background: var(--dim); }
 .vers i:last-child { background: var(--dim); }
 
+/* home: the sun sits in the top-right column, under the bar */
+.sun {
+  position: absolute;
+  top: calc(var(--bar) + 16px);
+  right: var(--margin);
+  width: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  aspect-ratio: 1;
+}
+.sun img { display: block; width: 100%; height: auto; transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
+.sun:hover img, .sun:focus-visible img { transform: rotate(30deg) scale(1.06); }
+.sun:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
+
 /* fw: one emoji per column, from column 2 */
 .tiles { list-style: none; margin: 0; padding: 0; row-gap: 48px; }
 .tiles li { grid-column: span 1; display: grid; justify-items: center; }
@@ -102,8 +114,9 @@ body {
   .list .meta { grid-column: 1 / -1; margin-top: 4px; }
   .list .meta:empty { display: none; }
   .tiles li, .tiles li:first-child { grid-column: span 2; }
+  .sun { width: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 + var(--gap)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .list a, .tiles a { transition: none; }
+  .list a, .tiles a, .sun img { transition: none; }
 }

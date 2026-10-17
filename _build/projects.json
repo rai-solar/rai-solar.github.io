@@ -1,4 +1,17 @@
 {
+  "home": [
+    {
+      "name": "lisiere",
+      "title": "lisière",
+      "former": [
+        "pp/v00"
+      ]
+    },
+    {
+      "name": "soleil",
+      "title": "soleil"
+    }
+  ],
   "sections": [
     {
       "id": "fw",
@@ -39,10 +52,6 @@
         {
           "name": "mouna",
           "title": "wetland hotspots"
-        },
-        {
-          "name": "v00",
-          "title": "lisière"
         },
         {
           "name": "wild-dogs",

@@ -11,28 +11,11 @@
 <h1 class="sr">portafolio personal</h1>
 
 <ul class="list mid grid">
-  <li><a href="perros/" data-morph="connected wild dogs" aria-label="perros, connected wild dogs"><span class="m" aria-hidden="true">perros</span></a><small class="meta"></small></li>
-  <li><a href="mouna/" data-morph="wetland hotspots" aria-label="mouna, wetland hotspots"><span class="m" aria-hidden="true">mouna</span></a><small class="meta"></small></li>
-  <li><a href="v00/" data-morph="lisière" aria-label="v00, lisière"><span class="m" aria-hidden="true">v00</span></a><small class="meta"></small></li>
-  <li><a href="wild-dogs/" data-morph="portfolio" aria-label="wild dogs, portfolio (pdf)"><span class="m" aria-hidden="true">wild-dogs</span></a><small class="meta">pdf</small></li>
+  <li data-project="pp/perros"><a href="perros/" data-morph="connected wild dogs" aria-label="perros, connected wild dogs"><span class="m" aria-hidden="true">perros</span></a><small class="meta"></small></li>
+  <li data-project="pp/mouna"><a href="mouna/" data-morph="wetland hotspots" aria-label="mouna, wetland hotspots"><span class="m" aria-hidden="true">mouna</span></a><small class="meta"></small></li>
+  <li data-project="pp/wild-dogs"><a href="wild-dogs/" data-morph="portfolio" aria-label="wild dogs, portfolio (pdf)"><span class="m" aria-hidden="true">wild-dogs</span></a><small class="meta">pdf</small></li>
 </ul>
 
 <script src="../morph.js"></script>
-<script>
-  // a small git line next to the projects that have older versions (data from site.js)
-  addEventListener("DOMContentLoaded", () => {
-    const pp = window.CABZ && window.CABZ.sections.find((s) => s.id === "pp");
-    if (!pp) return;
-    document.querySelectorAll(".list a[data-morph]").forEach((a) => {
-      const p = pp.projects.find((x) => a.getAttribute("href").startsWith(x.name + "/"));
-      if (!p || p.versions.length < 2) return;
-      const s = document.createElement("span");
-      s.className = "vers";
-      s.title = p.versions.length + " versions";
-      s.innerHTML = p.versions.map(() => "<i></i>").join("");
-      a.parentElement.querySelector(".meta").append(s);
-    });
-  });
-</script>
 <script src="../site.js" defer></script>
 <script src="../nav.js" data-path="pp/index.html" defer></script>

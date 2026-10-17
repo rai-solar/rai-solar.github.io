@@ -50,13 +50,22 @@ def inject(html, snippet):
     return html.rstrip("\n") + "\n" + snippet
 
 
-def versions_of(project):
+def history(paths):
+    """All commits touching any of the paths, oldest first."""
     try:
-        log = git("log", "--reverse", "--format=%H%x1f%aI%x1f%s", "--", project + "/").splitlines()
+        log = git("log", "--reverse", "--format=%H%x1f%aI%x1f%s", "--", *[p + "/" for p in paths]).splitlines()
     except subprocess.CalledProcessError:
         return []
-    commits = [dict(zip(("sha", "date", "msg"), l.split("\x1f"))) for l in log]
-    return [c for c in commits if "[minor]" not in c["msg"]]
+    return [dict(zip(("sha", "date", "msg"), l.split("\x1f"))) for l in log]
+
+
+def tree_any(rev, pid, paths):
+    """The project's files at a commit, keyed as if it already lived at pid (handles moves)."""
+    for path in paths:
+        files = tree(rev, path)
+        if files:
+            return {pid + f[len(path):]: blob for f, blob in files.items()}
+    return {}
 
 
 def main():
@@ -70,21 +79,25 @@ def main():
     conf = json.loads((ROOT / "_build" / "projects.json").read_text("utf-8"))
     site = {"sections": []}
 
-    for sec in conf["sections"]:
+    # the home page's own projects form a section without a folder of its own
+    sections = [{"id": "", "short": "cabz", "title": "origin", "projects": conf.get("home", [])}] + conf["sections"]
+
+    for sec in sections:
         s = {"id": sec["id"], "short": sec.get("short", sec["id"]), "title": sec["title"], "projects": []}
-        listed = [p["name"] for p in sec["projects"]]
-        on_disk = sorted(d.name for d in (ROOT / sec["id"]).iterdir() if d.is_dir() and d.name not in SKIP_DIRS and not d.name.startswith((".", "_")))
-        for extra in on_disk:
-            if extra not in listed:
-                print(f"  note: {sec['id']}/{extra} is not in projects.json, added at the end")
-                sec["projects"].append({"name": extra, "title": extra})
+        if sec["id"]:
+            listed = [p["name"] for p in sec["projects"]]
+            on_disk = sorted(d.name for d in (ROOT / sec["id"]).iterdir() if d.is_dir() and d.name not in SKIP_DIRS and not d.name.startswith((".", "_")))
+            for extra in on_disk:
+                if extra not in listed:
+                    print(f"  note: {sec['id']}/{extra} is not in projects.json, added at the end")
+                    sec["projects"].append({"name": extra, "title": extra})
 
         for p in sec["projects"]:
-            d = ROOT / sec["id"] / p["name"]
+            pid = (sec["id"] + "/" if sec["id"] else "") + p["name"]
+            d = ROOT / pid
             if not d.is_dir():
-                print(f"  note: {sec['id']}/{p['name']} is in projects.json but not on disk, skipped")
+                print(f"  note: {pid} is in projects.json but not on disk, skipped")
                 continue
-            pid = f"{sec['id']}/{p['name']}"
             if (d / "_v").exists():
                 shutil.rmtree(d / "_v")
 
@@ -93,13 +106,18 @@ def main():
             if p.get("note"):
                 entry["note"] = p["note"]
 
-            vs = versions_of(pid) if has_git else []
-            if len(vs) >= 2:
+            paths = [pid] + p.get("former", [])
+            commits = history(paths) if has_git else []
+            vidx = [k for k, c in enumerate(commits) if "[minor]" not in c["msg"]]
+            if len(vidx) >= 2:
                 live = tree("HEAD", pid)
-                for i, c in enumerate(vs):
-                    is_live = i == len(vs) - 1
+                for n, k in enumerate(vidx):
+                    c = commits[k]
+                    is_live = n == len(vidx) - 1
                     vid = c["sha"][:7]
-                    files = live if is_live else tree(c["sha"], pid)
+                    # a version is its commit plus the [minor] fixes made before the next version
+                    end = commits[vidx[n + 1] - 1]["sha"] if not is_live else None
+                    files = live if is_live else tree_any(end, pid, paths)
                     pages = sorted(f[len(pid) + 1:] for f in files if f.endswith(".html"))
                     msg = re.sub(r"^\s*[\w./-]+\s*[·:]\s*", "", c["msg"]).strip() or c["msg"]
                     entry["versions"].append({"id": vid, "date": c["date"], "msg": msg, "pages": pages, "live": is_live})
@@ -109,7 +127,7 @@ def main():
                         rel = path[len(pid) + 1:]
                         is_html = rel.endswith(".html")
                         if not is_html and live.get(path) == blob:
-                            continue
+                            continue  # same as today: served from the live folder
                         data = git("cat-file", "blob", blob, binary=True)
                         if is_html:
                             depth = path.count("/") + 2  # + _v/<id>/
@@ -117,7 +135,7 @@ def main():
                         dest = d / "_v" / vid / rel
                         dest.parent.mkdir(parents=True, exist_ok=True)
                         dest.write_bytes(data)
-                print(f"{pid}: {len(vs)} versions")
+                print(f"{pid}: {len(vidx)} versions (v00–v{len(vidx) - 1:02d})")
             s["projects"].append(entry)
         site["sections"].append(s)
 

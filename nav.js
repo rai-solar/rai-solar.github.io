@@ -20,8 +20,10 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const ddmmyy = (iso) => { const [y, m, d] = iso.slice(0, 10).split("-"); return `${d}/${m}/${y.slice(2)}`; };
 
-  const section = S.sections.find((s) => path.startsWith(s.id + "/"));
-  const project = section && section.projects.find((p) => path.startsWith(p.id + "/"));
+  // the home page's own projects (lisière, soleil) sit in a section with an empty id
+  let project, section;
+  for (const s of S.sections) for (const p of s.projects) if (path.startsWith(p.id + "/")) { project = p; section = s; }
+  if (!section) section = S.sections.find((s) => s.id && path.startsWith(s.id + "/"));
   const page = project ? path.slice(project.id.length + 1) : "";
   const pinned = !project; // home and section indexes keep the bar open
 
@@ -34,7 +36,8 @@
     const keep = page !== "index.html" && v.pages.includes(page) ? page : "";
     return url(project.id + "/" + (v.live ? "" : "_v/" + v.id + "/") + keep);
   };
-  const vLabel = (i) => `<b>v${i + 1}</b> ${ddmmyy(vs[i].date)} <span>${esc(vs[i].msg)}</span>`;
+  const vName = (i) => "v" + String(i).padStart(2, "0");
+  const vLabel = (i) => `<b>${vName(i)}</b> ${ddmmyy(vs[i].date)} <span>${esc(vs[i].msg)}</span>`;
 
   // neighbours inside the section
   let prev, next;
@@ -46,13 +49,13 @@
   const pHref = (p) => url(p.href);
 
   const crumbs = [`<a class="c home${!section && path === "index.html" ? " here" : ""}" href="${url("")}">cabz</a>`];
-  if (section) crumbs.push(`<i>/</i><a class="c${project ? "" : " here"}" href="${url(section.id + "/")}" title="${esc(section.title)}">${esc(section.short)}</a>`);
+  if (section && section.id) crumbs.push(`<i>/</i><a class="c${project ? "" : " here"}" href="${url(section.id + "/")}" title="${esc(section.title)}">${esc(section.short)}</a>`);
   if (project) crumbs.push(`<i>/</i><a class="c here" href="${url(project.id + "/")}" title="${esc(project.title)}">${esc(project.name)}</a>`);
   if (page && page !== "index.html") crumbs.push(`<span class="pg"><i>/</i> ${esc(page.replace(/\.html$/, ""))}</span>`);
 
   const panel = S.sections.map((s) => `
     <section>
-      <a class="sh${s === section && !project ? " here" : ""}" href="${url(s.id + "/")}"><b>${esc(s.short)}</b> ${esc(s.title)}</a>
+      <a class="sh${s === section && !project ? " here" : ""}" href="${url(s.id ? s.id + "/" : "")}"><b>${esc(s.short)}</b> ${esc(s.title)}</a>
       <ol>${s.projects.map((p) => `
         <li><a href="${pHref(p)}"${p === project ? ' class="here" aria-current="page"' : ""}>
           <span class="n">${esc(p.name)}</span>
@@ -166,7 +169,7 @@
   <nav class="bar cols" aria-label="cabz">
     <div class="crumbs">${crumbs.join("")}</div>
     <div class="vg">${vs.length > 1 ? `
-      <ol class="v" aria-label="versions">${vs.map((v, i) => `<li><a class="dot${i === cur ? " cur" : ""}" href="${vHref(v)}" data-i="${i}"${i === cur ? ' aria-current="true"' : ""}><span class="sr">v${i + 1}, ${ddmmyy(v.date)}, ${esc(v.msg)}</span></a></li>`).join("")}</ol>
+      <ol class="v" aria-label="versions">${vs.map((v, i) => `<li><a class="dot${i === cur ? " cur" : ""}" href="${vHref(v)}" data-i="${i}"${i === cur ? ' aria-current="true"' : ""}><span class="sr">${vName(i)}, ${ddmmyy(v.date)}, ${esc(v.msg)}</span></a></li>`).join("")}</ol>
       <span class="info" aria-hidden="true">${vLabel(cur)}</span>
       ${past ? `<a class="latest" href="${vHref(vs[vs.length - 1])}">latest →</a>` : ""}` : ""}
       ${local ? `<span class="warn" title="pages that load data need a local server: double-click open-locally.command">local file</span>` : ""}
@@ -229,4 +232,17 @@
   addEventListener("pointermove", (e) => { if (e.clientY < 6) unfold(); }, { passive: true });
 
   fold(past ? 4000 : 2200);
+
+  // index pages: a small git line next to every project that has older versions
+  document.querySelectorAll("[data-project]").forEach((el) => {
+    let p;
+    for (const s of S.sections) for (const q of s.projects) if (q.id === el.dataset.project) p = q;
+    const meta = el.querySelector(".meta");
+    if (!p || !meta || p.versions.length < 2) return;
+    const g = document.createElement("span");
+    g.className = "vers";
+    g.title = p.versions.length + " versions, v00–" + "v" + String(p.versions.length - 1).padStart(2, "0");
+    g.innerHTML = p.versions.map(() => "<i></i>").join("");
+    meta.prepend(g);
+  });
 })();
