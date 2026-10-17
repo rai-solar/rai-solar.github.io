@@ -140,7 +140,7 @@ const state = {
   isPlaying: false,
   playbackLastMs: performance.now(),
   playbackAccMs: 0,
-  // v01: starts on a black screen with only rivers and roads; the satellite
+  // v01: starts on a black screen with only rivers (blue) and roads (gray); the satellite
   // background and the vegetation come back with their toggles
   layersVisible: {
     background: false,
@@ -1682,7 +1682,7 @@ async function initVegetationAndContext() {
         type: "line",
         source: MAP_IDS.srcRivers,
         paint: {
-          "line-color": "#a6a6a6",
+          "line-color": "#1976d2",
           "line-width": 2,
           "line-opacity": 1,
         },
