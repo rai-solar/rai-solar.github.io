@@ -40,7 +40,7 @@
       const wt = wb * s.tip / 100;                      // width at the tip
       const side = s.mirror && k % 2 === 1 ? -1 : 1;
       const amp = (s.wave / 100) * 0.3 * (1 + 0.5 * jitter(s, k, 3));
-      const phase = jitter(s, k, 4) * Math.PI;
+      const phase = jitter(s, k, 4) * Math.PI + (s.wavePhase || 0);   // wavePhase: v02 ripple animation
       const bend = (s.bend / 100) * 0.9 * (1 + 0.8 * jitter(s, k, 5));
       const freq = s.freq;
 

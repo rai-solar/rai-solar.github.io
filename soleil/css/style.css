@@ -52,6 +52,40 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
   line-height: 0.8;
   letter-spacing: -0.04em;
 }
+/* v02: the name of the app changes, one creator of the Sun after another */
+.brand { flex: 1; min-width: 0; }
+.top h1 {
+  height: calc(clamp(56px, 11vw, 150px) * 0.8);
+  display: flex;
+  align-items: flex-end;
+  white-space: nowrap;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+}
+.top h1:focus-visible { outline-offset: 6px; }
+.typing h1::after {
+  content: "";
+  display: inline-block;
+  width: 0.07em;
+  height: 0.72em;
+  margin-left: 0.05em;
+  background: currentColor;
+  animation: caret 0.9s steps(1) infinite;
+}
+@keyframes caret { 50% { opacity: 0; } }
+.myth {
+  margin: 12px 0 0;
+  min-height: calc(2 * 1.35em);
+  max-width: 62ch;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+.myth-origin { color: #E83700; }
+.myth-origin:not(:empty)::after { content: " — "; color: var(--mute); }
+
 .top-tag {
   margin: 0;
   font-family: var(--mono);
@@ -141,6 +175,8 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
 
 .save-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 .export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gif-motions { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-bottom: 14px; }
+#gifPreview[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
 .note { margin: 4px 0 0; min-height: 1em; font-family: var(--mono); font-size: 12px; color: var(--mute); }
 .note:empty { display: none; }

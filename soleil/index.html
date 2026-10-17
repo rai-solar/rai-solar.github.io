@@ -3,14 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Inti</title>
+<title>Soleil</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='4.6' fill='%23E83700'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header class="top">
-  <h1>INTI</h1>
+  <div class="brand" id="appNameBox">
+    <h1 id="appName" tabindex="0" title="next">Inti</h1>
+    <p class="myth" aria-hidden="true"><span class="myth-origin" id="mythOrigin"></span><span class="myth-text" id="mythText"></span></p>
+    <p class="sr" id="mythLive" aria-live="polite"></p>
+  </div>
   <p class="top-tag" id="specLine" role="status"></p>
 </header>
 
@@ -63,6 +67,31 @@
         <button type="button" class="btn" id="copySvg">Copy SVG code</button>
       </div>
       <p class="note" id="status" role="status"></p>
+    </div>
+
+    <div class="dock">
+      <h2 class="dock-title">Animated GIF</h2>
+      <div class="gif-motions">
+        <label class="check" for="gifSpin"><input type="checkbox" id="gifSpin" checked><span>Spin</span></label>
+        <label class="check" for="gifPulse"><input type="checkbox" id="gifPulse"><span>Pulse</span></label>
+        <label class="check" for="gifRipple"><input type="checkbox" id="gifRipple"><span>Ripple</span></label>
+      </div>
+      <div class="export-grid">
+        <select id="gifLength" aria-label="Length of the loop">
+          <option value="2">2 s loop</option>
+          <option value="3" selected>3 s loop</option>
+          <option value="4">4 s loop</option>
+          <option value="6">6 s loop</option>
+        </select>
+        <select id="gifSize" aria-label="GIF size in pixels">
+          <option value="256">256 px</option>
+          <option value="512" selected>512 px</option>
+          <option value="768">768 px</option>
+        </select>
+        <button type="button" class="btn" id="gifPreview" aria-pressed="false">Preview</button>
+        <button type="button" class="btn primary" id="gifRecord">Record GIF</button>
+      </div>
+      <p class="note" id="gifStatus" role="status"></p>
     </div>
 
     <div class="dock">
@@ -266,6 +295,10 @@
 <script src="js/controls.js"></script>
 <script src="js/library.js"></script>
 <script src="js/export.js"></script>
+<script src="js/gif.js"></script>
 <script src="js/main.js"></script>
+<script src="js/names.js"></script>
+<script src="../site.js" defer></script>
+<script src="../nav.js" data-path="soleil/index.html" defer></script>
 </body>
 </html>
