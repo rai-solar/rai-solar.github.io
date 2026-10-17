@@ -1,0 +1,55 @@
+{
+  "sections": [
+    {
+      "id": "fw",
+      "short": "fw",
+      "title": "future web",
+      "projects": [
+        {
+          "name": "a-joyful-noise",
+          "title": "a joyful noise"
+        },
+        {
+          "name": "langues",
+          "title": "langues"
+        },
+        {
+          "name": "polygon-pong",
+          "title": "polygon pong"
+        },
+        {
+          "name": "aya-traces",
+          "title": "aya traces"
+        },
+        {
+          "name": "pesca",
+          "title": "pesca"
+        }
+      ]
+    },
+    {
+      "id": "pp",
+      "short": "pp",
+      "title": "portafolio personal",
+      "projects": [
+        {
+          "name": "perros",
+          "title": "connected wild dogs"
+        },
+        {
+          "name": "mouna",
+          "title": "wetland hotspots"
+        },
+        {
+          "name": "v00",
+          "title": "lisière"
+        },
+        {
+          "name": "wild-dogs",
+          "title": "portfolio",
+          "note": "pdf"
+        }
+      ]
+    }
+  ]
+}

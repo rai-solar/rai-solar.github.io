@@ -10,6 +10,12 @@ Options -Indexes
 RedirectMatch 404 /\.DS_Store$
 RedirectMatch 404 /\.(user\.ini|htaccess|gitignore)$
 RedirectMatch 404 ^/_build/
+RedirectMatch 404 \.command$
+
+# map data: proper type + compression (perros' vegetation goes from 5.5 MB to 1.5 MB)
+AddType application/geo+json .geojson
+AddType text/csv .csv
+AddOutputFilterByType DEFLATE application/geo+json text/csv
 
 # versions: an archived page (<project>/_v/<id>/...) only stores the files that changed;
 # anything it doesn't have is served from the live project folder

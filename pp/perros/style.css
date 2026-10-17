@@ -162,7 +162,6 @@ textarea {
 
 .pane-left .pane-header {
   justify-content: flex-start;
-  padding-left: 46px; /* room for the cabz back arrow */
   padding-right: calc(10px + var(--scrubber-w));
 }
 

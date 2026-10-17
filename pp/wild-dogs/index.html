@@ -1,8 +1,25 @@
 <!doctype html>
 <html lang="fr">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>wild dogs · portfolio</title>
-<meta http-equiv="refresh" content="0; url=portfolio_02.pdf">
-<style>html,body{margin:0;background:#000;color:#fff;font:15px/1.4 ui-monospace,Menlo,monospace}body{padding:16px}a{color:inherit}</style>
-<a href="portfolio_02.pdf">portfolio (pdf)</a> · <a href="../">←</a>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>wild dogs · portfolio · cabz</title>
+<style>
+  html, body { height: 100%; margin: 0; background: #1a1a1a; color: #fff; }
+  body { display: flex; flex-direction: column; font: 400 11px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .06em; }
+  object { flex: 1; width: 100%; border: 0; padding-top: 33px; box-sizing: border-box; }
+  .dl { position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 7px 10px; background: rgba(0,0,0,.86); color: #ccc; text-decoration: none; border: 1px solid #444; border-radius: 2px; }
+  .dl:hover { color: #fff; border-color: #fff; }
+  .fallback { margin: auto; padding: 80px 16px; text-align: center; line-height: 1.8; }
+  .fallback a { color: #fff; }
+</style>
+</head>
+<body>
+<object data="portfolio_02.pdf#view=FitH" type="application/pdf" aria-label="wild dogs, portfolio">
+  <p class="fallback">this browser can't show the pdf here.<br><a href="portfolio_02.pdf">open the portfolio (pdf, 4.3 MB)</a></p>
+</object>
+<a class="dl" href="portfolio_02.pdf" download>download pdf ↓</a>
+<script src="../../site.js" defer></script>
+<script src="../../nav.js" data-path="pp/wild-dogs/index.html" defer></script>
+</body>
+</html>

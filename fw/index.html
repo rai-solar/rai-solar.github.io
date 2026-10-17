@@ -12,12 +12,10 @@
   a:hover, a:focus-visible { transform: scale(1.15); filter: none; outline: none; }
   a::after { content: attr(data-name); position: absolute; left: 50%; top: 100%; margin-top: 14px; transform: translateX(-50%); white-space: nowrap; font: 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em; color: #777; opacity: 0; transition: opacity .25s; }
   a:hover::after, a:focus-visible::after { opacity: 1; }
-  h1 a { color: inherit; text-decoration: none; }
-  h1 a:hover, h1 a:focus-visible { color: #777; outline: none; }
   @media (prefers-reduced-motion: reduce) { a { transition: none; } }
-  h1 { position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 16px; margin: 0; font: 400 15px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em; color: #fff; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>
-<h1><a href="../" aria-label="back to cabz">←</a> future web</h1>
+<h1 class="sr">future web</h1>
 <nav>
   <a href="a-joyful-noise/" data-name="a joyful noise" aria-label="A Joyful Noise">🪐</a>
   <a href="langues/" data-name="langues" aria-label="Langues">🌋</a>
@@ -25,3 +23,5 @@
   <a href="aya-traces/" data-name="aya traces" aria-label="Aya Traces">✨</a>
   <a href="pesca/" data-name="pesca" aria-label="Pesca, the idea log">🎣</a>
 </nav>
+<script src="../site.js" defer></script>
+<script src="../nav.js" data-path="fw/index.html" defer></script>

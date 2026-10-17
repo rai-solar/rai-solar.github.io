@@ -1,36 +1,40 @@
-# cabz · versions
+# cabz · how the site works
 
-The site is a git repository. Each commit that touches a project (a folder in pp/ or fw/)
-is one version of it, and projects with 2 or more versions get a bar at the top that
-shows their history as a line of dots.
+## Look at it locally
+
+Double-click `open-locally.command` (in the site folder). It rebuilds the bar and the
+versions, starts a small server and opens http://localhost:8000. Close the Terminal
+window to stop it.
+
+Opening the html files directly (file://) only half works: browsers block the data
+that perros, mouna and langues load, and the bar shows "local file" as a reminder.
+
+## Navigation
+
+Every page gets the same bar on top: cabz / section / project, ‹ › to the neighbouring
+projects, "index" for the full list, and the version dots when a project has history.
+On project pages it folds into a thin line; hover the top edge (or tap it) to bring it back.
+
+The order and titles come from `_build/projects.json`. A new folder in fw/ or pp/ is
+picked up automatically (added at the end); add it to projects.json to give it a title
+and a place in the order.
 
 ## Adding a version
 
-1. Edit the project files.
-2. Commit, starting the message with the project's name, e.g.
+    git add -A
+    git commit -m "v00 · new hero image"
+    python3 _build/build.py          (or just double-click open-locally.command)
 
-       git add -A
-       git commit -m "v00 · new hero image"
+Start the message with the project's name. Put [minor] in it for fixes that shouldn't
+show up as a version. To backdate one: git commit --date="2026-02-24T13:58" -m "…"
 
-   For a fix that shouldn't count as a version, put [minor] in the message:
+## What gets generated (git-ignored, rebuilt every time)
 
-       git commit -m "v00 · typo [minor]"
+- `site.js`: the map of the site the bar reads
+- `<project>/_v/<id>/`: older versions, only the files that differ from today's;
+  anything else is served from the live folder (.htaccess online, serve.py locally)
 
-3. Rebuild and preview:
+## Uploading
 
-       python3 _build/versions.py
-       python3 _build/serve.py        → http://localhost:8000
-
-4. Upload the site. Leave out .git/ and _build/ (the server hides them anyway).
-
-To backdate a version (e.g. one found in an old folder), give the commit the date of the files:
-
-       git commit --date="2026-02-24T13:58" -m "v00 · …"
-
-## What gets generated
-
-- `<project>/_v/<id>/` holds older versions, with only the files that differ from
-  today's. Anything else is served from the live folder (.htaccess RewriteRule).
-- `versions.json` is what the bar reads.
-
-Both are git-ignored and rebuilt from scratch on every run.
+Upload everything except .git/, _build/ and open-locally.command (the server hides
+them anyway). Run the build first so site.js and _v/ are up to date.

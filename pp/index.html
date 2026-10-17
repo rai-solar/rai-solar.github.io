@@ -8,22 +8,23 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐸</text></svg>">
 <link rel="stylesheet" href="../cabz.css">
 
-<h1 class="top"><a href="../" aria-label="back to cabz">←</a> portafolio personal</h1>
+<h1 class="sr">portafolio personal</h1>
 
 <ul class="list mid">
   <li><a href="perros/" data-morph="connected wild dogs" aria-label="perros, connected wild dogs"><span class="m" aria-hidden="true">perros</span></a></li>
   <li><a href="mouna/" data-morph="wetland hotspots" aria-label="mouna, wetland hotspots"><span class="m" aria-hidden="true">mouna</span></a></li>
   <li><a href="v00/" data-morph="lisière" aria-label="v00, lisière"><span class="m" aria-hidden="true">v00</span></a></li>
-  <li><a href="wild-dogs/portfolio_02.pdf" data-morph="portfolio" aria-label="wild dogs, portfolio (pdf)"><span class="m" aria-hidden="true">wild-dogs</span></a><small>pdf</small></li>
+  <li><a href="wild-dogs/" data-morph="portfolio" aria-label="wild dogs, portfolio (pdf)"><span class="m" aria-hidden="true">wild-dogs</span></a><small>pdf</small></li>
 </ul>
 
 <script src="../morph.js"></script>
 <script>
-  // a small git line next to the projects that have older versions
-  fetch("/versions.json").then((r) => (r.ok ? r.json() : null)).then((all) => {
-    if (!all) return;
+  // a small git line next to the projects that have older versions (data from site.js)
+  addEventListener("DOMContentLoaded", () => {
+    const pp = window.CABZ && window.CABZ.sections.find((s) => s.id === "pp");
+    if (!pp) return;
     document.querySelectorAll(".list a[data-morph]").forEach((a) => {
-      const p = all["pp/" + a.getAttribute("href").replace(/\/$/, "")];
+      const p = pp.projects.find((x) => a.getAttribute("href").startsWith(x.name + "/"));
       if (!p || p.versions.length < 2) return;
       const s = document.createElement("small");
       s.className = "vers";
@@ -31,5 +32,7 @@
       s.innerHTML = p.versions.map(() => "<i></i>").join("");
       a.after(s);
     });
-  }).catch(() => {});
+  });
 </script>
+<script src="../site.js" defer></script>
+<script src="../nav.js" data-path="pp/index.html" defer></script>
