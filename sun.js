@@ -4,7 +4,7 @@
 // The mouse carries a moon: a disc the colour of the background, a touch bigger than the sun's body,
 // always under the pointer (it hides whatever it passes over). Bring it onto the centre of
 // the sun and the rays fade with the distance: gone when it sits on the centre (almost exactly).
-// The whole page darkens with it: sunset orange → black, black type → flashy blue.
+// The whole page darkens with it: pink → black, black type → flashy blue.
 (() => {
   "use strict";
   const Sun = window.Sun;
@@ -56,9 +56,9 @@
   const MARGIN = 0.12;               // within this share of the sun's radius from the centre: rays fully gone
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // the page follows the eclipse: sunset orange with black type → black with flashy blue type
+  // the page follows the eclipse: pink with black type → black with flashy blue type
   const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const SKY = { bg: [hex("#F7934C"), hex("#000000")], fg: [hex("#000000"), hex("#1E3CFF")] };
+  const SKY = { bg: [hex("#FFB7AF"), hex("#000000")], fg: [hex("#000000"), hex("#1E3CFF")] };
   const mix = (pair, k) => "rgb(" + pair[0].map((v, i) => Math.round(v + (pair[1][i] - v) * k)).join(",") + ")";
   const root = document.documentElement.style;
   let lastK = -1;
