@@ -10,7 +10,10 @@
     {
       "name": "soleil",
       "title": "soleil",
-      "offset": true
+      "offset": true,
+      "names": {
+        "v02": "☀︎.gif"
+      }
     }
   ],
   "sections": [

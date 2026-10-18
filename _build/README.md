@@ -28,6 +28,11 @@ and a place in the order.
 Start the message with the project's name. Put [minor] in it for fixes that shouldn't
 show up as a version. To backdate one: git commit --date="2026-02-24T13:58" -m "…"
 
+## Renaming a version
+
+Versions are named after their commit message. To give one another name, add it to the
+project in `_build/projects.json`, e.g. `"names": { "v02": "☀︎.gif" }`, then rebuild.
+
 ## What gets generated (git-ignored, rebuilt every time)
 
 - `site.js`: the map of the site the bar reads

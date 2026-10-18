@@ -122,6 +122,7 @@ def main():
                     files = live if is_live else tree_any(end, pid, paths)
                     pages = sorted(f[len(pid) + 1:] for f in files if f.endswith(".html"))
                     msg = re.sub(r"^\s*[\w./-]+\s*[·:]\s*", "", c["msg"]).strip() or c["msg"]
+                    msg = p.get("names", {}).get(f"v{n:02d}", msg)  # a version can be renamed in projects.json
                     entry["versions"].append({"id": vid, "date": c["date"], "msg": msg, "pages": pages, "live": is_live})
                     if is_live:
                         continue
