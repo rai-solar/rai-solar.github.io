@@ -346,14 +346,6 @@
   const showParts = () => {
     wrap.dataset.part = ($("labelParts").checked ? all + " " : "") + hover;
   };
-  document.querySelectorAll("[data-part]").forEach((block) => {
-    if (block === wrap) return;
-    const on = () => { hover = block.dataset.part; showParts(); };
-    const off = () => { hover = ""; showParts(); };
-    block.addEventListener("mouseenter", on);
-    block.addEventListener("mouseleave", off);
-    block.addEventListener("focusin", on);
-    block.addEventListener("focusout", off);
-  });
+  // (v02: no more outlines while hovering the controls, they hid the sun; only "Label the parts")
   $("labelParts").addEventListener("change", showParts);
 })(window.Sun);

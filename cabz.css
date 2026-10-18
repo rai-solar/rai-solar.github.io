@@ -86,8 +86,9 @@ body {
   width: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols));
   aspect-ratio: 1;
 }
-.sun img { display: block; width: 100%; height: auto; transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
-.sun:hover img, .sun:focus-visible img { transform: rotate(30deg) scale(1.06); }
+.sun img, .sun canvas { display: block; width: 100%; height: auto; transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
+.sun.live img { display: none; }   /* sun.js draws it live, rippling */
+.sun:hover img, .sun:focus-visible img, .sun:hover canvas, .sun:focus-visible canvas { transform: rotate(30deg) scale(1.06); }
 .sun:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
 
 /* fw: one emoji per column, from column 1 */
@@ -122,5 +123,5 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .list a, .tiles a, .sun img { transition: none; }
+  .list a, .tiles a, .sun img, .sun canvas { transition: none; }
 }

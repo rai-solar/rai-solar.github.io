@@ -1,5 +1,5 @@
 /* v02 · the app's name evolves: one creator of the Sun after another.
-   Each name types itself in, then where it comes from and what they did.
+   Each name types itself in, then what they did, then where it comes from (in brackets).
    Click the name for the next one. */
 (function () {
   "use strict";
@@ -71,15 +71,15 @@
       fit(m.name);
       title.textContent = m.name; origin.textContent = m.origin; text.textContent = m.text;
     } else {
-      await untype(text, 4, id);
       origin.textContent = "";
+      await untype(text, 4, id);
       await untype(title, OUT_MS, id);
       if (id !== run) return;
       fit(m.name);
       await type(title, m.name, NAME_MS, id);
       await wait(250, id);
-      await type(origin, m.origin, TEXT_MS * 2, id);
       await type(text, m.text, TEXT_MS, id);
+      await type(origin, m.origin, TEXT_MS * 2, id);   // where it comes from, last, in ()
     }
     if (id !== run) return;
     box.classList.remove("typing");

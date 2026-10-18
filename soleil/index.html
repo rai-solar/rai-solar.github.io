@@ -12,7 +12,7 @@
 <header class="top">
   <div class="brand" id="appNameBox">
     <h1 id="appName" tabindex="0" title="next">Inti</h1>
-    <p class="myth" aria-hidden="true"><span class="myth-origin" id="mythOrigin"></span><span class="myth-text" id="mythText"></span></p>
+    <p class="myth" aria-hidden="true"><span class="myth-text" id="mythText"></span><span class="myth-origin" id="mythOrigin"></span></p>
     <p class="sr" id="mythLive" aria-live="polite"></p>
   </div>
   <p class="top-tag" id="specLine" role="status"></p>
@@ -43,9 +43,8 @@
       </label>
     </div>
 
-    <!-- keeping it: saving, export, GIF and the profile preview, next to the sun -->
-    <div class="docks">
-    <div class="dock" id="library">
+    <!-- saving stays right under the sun -->
+    <div class="dock save-dock" id="library">
       <h2 class="dock-title">Save</h2>
       <div class="save-row">
         <input type="text" class="text-input" id="saveName" maxlength="40" spellcheck="false" autocomplete="off" aria-label="Name for this sun">
@@ -54,6 +53,9 @@
       <p class="note" id="libraryNote" role="status"></p>
       <ul class="tiles" id="savedList"></ul>
     </div>
+
+    <!-- export, GIF and the profile preview, next to the sun -->
+    <div class="docks">
 
     <div class="dock">
       <h2 class="dock-title">Export</h2>
