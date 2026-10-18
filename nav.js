@@ -19,7 +19,18 @@
   const url = (p) => root + p + (local && (p === "" || p.endsWith("/")) ? "index.html" : "");
   const BRAND = "–CABeZa";
   // C A B Z evenly spaced, the small e and a falling in the gaps after B and Z
-  const BRAND_HTML = '<span class="brand" aria-label="CABeZa"><b>–</b><b>C</b><i></i><b>A</b><i></i><b>B</b><small>e</small><b>Z</b><small>a</small></span>';
+  // set like the "—HEAD" wordmark: a long dash, then capitals with one even gap between them
+  // (Spectral); the small e and a sit in the gaps after B and after Z
+  const BRAND_HTML = '<span class="brand" aria-label="CABeZa"><b class="dash">—</b><b>C</b><b>A</b><b>B<small>e</small></b><b>Z<small>a</small></b></span>';
+
+  // Spectral has to be declared on the page itself (fonts don't load from inside a shadow root)
+  if (!document.querySelector("link[data-cabz-font]")) {
+    const f = document.createElement("link");
+    f.rel = "stylesheet";
+    f.href = "https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&display=swap";
+    f.setAttribute("data-cabz-font", "");
+    document.head.appendChild(f);
+  }
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const ddmmyy = (iso) => { const [y, m, d] = iso.slice(0, 10).split("-"); return `${d}/${m}/${y.slice(2)}`; };
 
@@ -94,9 +105,14 @@
   .here-group { grid-column: 1 / 7; display: flex; align-items: center; gap: 16px; min-width: 0; }
   .crumbs { flex: none; max-width: 60%; display: flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; overflow: hidden; }
   .crumbs > i, .pg i { font-style: normal; color: #555; }
-  .brand { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 0.62em; align-items: baseline; }
-  .brand b { font-weight: 400; text-align: center; }
-  .brand small { font-size: 0.62em; text-align: center; }
+  .brand { --g: 0.42em; display: inline-flex; align-items: baseline;
+    font: 600 16px/1 Spectral, Georgia, "Times New Roman", serif; letter-spacing: 0; }
+  .brand b { position: relative; font-weight: inherit; }
+  .brand b + b { margin-left: var(--g); }
+  .brand .dash { font-weight: 500; }
+  .brand small { position: absolute; left: calc(100% + var(--g) / 2); bottom: 0; transform: translateX(-50%);
+    font-size: 0.5em; font-weight: 500; }
+  .brand b:last-child { margin-right: calc(var(--g) * 0.8); }
   .c { color: #999; }
   .c:hover, .c.here { color: #fff; }
   .pg { color: #777; overflow: hidden; text-overflow: ellipsis; }
