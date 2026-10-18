@@ -1,10 +1,12 @@
 /* cabz · shared by the home page, fw/ and pp/
    Layout: 8 columns, 8px gap, 16px page margin (the same grid nav.js draws and overlays). */
 :root {
-  color-scheme: dark;
-  --bg: #140C1D;
-  --fg: #fff;
-  --dim: #5f5470;
+  color-scheme: light;
+  /* a warm sunset orange with black type; on the home page sun.js turns it all black,
+     with flashy blue type, as the moon eclipses the sun */
+  --bg: #F7934C;
+  --fg: #000;
+  --dim: rgba(0, 0, 0, .42);
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --cols: 8;
   --gap: 8px;
@@ -74,6 +76,7 @@ body {
 
 .vers { display: inline-flex; align-items: center; }
 .vers i { position: relative; width: 6px; height: 6px; border: 1px solid var(--dim); border-radius: 50%; }
+.vers i + i::before, .vers i:last-child { background: var(--dim); }
 .vers i + i { margin-left: 8px; }
 .vers i + i::before { content: ""; position: absolute; right: 100%; top: 50%; width: 8px; height: 1px; margin-right: 1px; background: var(--dim); }
 .vers i:last-child { background: var(--dim); }
@@ -111,7 +114,7 @@ body {
   content: attr(data-name);
   position: absolute; left: 0; top: 100%; margin-top: 16px;
   white-space: nowrap;
-  font: 13px/1 var(--mono); letter-spacing: .06em; color: #777;
+  font: 13px/1 var(--mono); letter-spacing: .06em; color: var(--dim);
   opacity: 0; transition: opacity .25s;
 }
 .tiles a:hover::after, .tiles a:focus-visible::after { opacity: 1; }

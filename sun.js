@@ -4,6 +4,7 @@
 // The mouse carries a moon: a disc the colour of the background, a touch bigger than the sun's body,
 // always under the pointer (it hides whatever it passes over). Bring it onto the centre of
 // the sun and the rays fade with the distance: gone when it sits on the centre (almost exactly).
+// The whole page darkens with it: sunset orange → black, black type → flashy blue.
 (() => {
   "use strict";
   const Sun = window.Sun;
@@ -55,6 +56,22 @@
   const MARGIN = 0.12;               // within this share of the sun's radius from the centre: rays fully gone
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // the page follows the eclipse: sunset orange with black type → black with flashy blue type
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const SKY = { bg: [hex("#F7934C"), hex("#000000")], fg: [hex("#000000"), hex("#1E3CFF")] };
+  const mix = (pair, k) => "rgb(" + pair[0].map((v, i) => Math.round(v + (pair[1][i] - v) * k)).join(",") + ")";
+  const root = document.documentElement.style;
+  let lastK = -1;
+  function setSky(k) {
+    const q = Math.round(k * 100) / 100;
+    if (q === lastK) return;
+    lastK = q;
+    root.setProperty("--bg", mix(SKY.bg, q));
+    root.setProperty("--fg", mix(SKY.fg, q));
+    const [r, g, b] = mix(SKY.fg, q).match(/\d+/g);
+    root.setProperty("--dim", `rgba(${r},${g},${b},${0.42 + 0.3 * q})`);
+  }
+
   function draw(now) {
     // how far is the moon from the sun's centre? the rays follow that distance directly:
     // fully there while the moon doesn't touch the sun, gone once it sits on the centre
@@ -63,6 +80,7 @@
     const R = r.width * built.core / BOX;                  // the sun's body, in screen pixels
     const far = R + discPx() / 2, near = R * MARGIN;       // moon just touching → centred
     const k = Math.max(0, Math.min(1, (far - off) / (far - near)));
+    setSky(k);
 
     const t = reduce ? 0 : (now % LOOP) / LOOP;
     Sun.paint(canvas, Object.assign({}, s, { wavePhase: -2 * Math.PI * t }));
