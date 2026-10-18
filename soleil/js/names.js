@@ -5,12 +5,12 @@
   "use strict";
 
   const MYTHS = [
-    { name: "Viracocha", origin: "Inca (Andean)", text: "Created the Sun, Moon, and stars, bringing light into a dark world." },
-    { name: "Izanagi", origin: "Japanese (Shinto)", text: "Gave birth to the Sun goddess Amaterasu while washing his left eye." },
+    { name: "Viracocha", origin: "Inca", text: "Created the Sun, Moon, and stars, bringing light into a dark world." },
+    { name: "Izanagi", origin: "Japanese", text: "Gave birth to the Sun goddess Amaterasu while washing his left eye." },
     { name: "Pangu", origin: "Chinese", text: "After his death, his left eye became the Sun and his right eye the Moon." },
-    { name: "Nanahuatzin", origin: "Aztec (Mexica)", text: "Sacrificed himself in a sacred fire and transformed into the Fifth Sun." },
+    { name: "Nanahuatzin", origin: "Aztec", text: "Sacrificed himself in a sacred fire and transformed into the Fifth Sun." },
     { name: "Odin × Vili × Vé", origin: "Norse", text: "Placed sparks from the fiery realm of Muspelheim in the heavens to illuminate the world." },
-    { name: "Purusha", origin: "Vedic (Hindu)", text: "The Sun emerged from the eye of the primordial cosmic being during a cosmic sacrifice." }
+    { name: "Purusha", origin: "Vedic", text: "The Sun emerged from the eye of the primordial cosmic being during a cosmic sacrifice." }
   ];
 
   const NAME_MS = 60;     // per letter of the name

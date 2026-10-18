@@ -19,9 +19,9 @@
   const url = (p) => root + p + (local && (p === "" || p.endsWith("/")) ? "index.html" : "");
   const BRAND = "–CABeZa";
   // C A B Z evenly spaced, the small e and a falling in the gaps after B and Z
-  // set like the "—HEAD" wordmark: a long dash, then capitals with one even gap between them
-  // (Spectral); the small e and a sit in the gaps after B and after Z
-  const BRAND_HTML = '<span class="brand" aria-label="CABeZa"><b class="dash">—</b><b>C</b><b>A</b><b>B<small>e</small></b><b>Z<small>a</small></b></span>';
+  // set like the "—HEAD" wordmark, in Spectral: capitals with one even gap between them,
+  // then the long dash (the tabs still say CABeZa)
+  const BRAND_HTML = '<span class="brand" aria-label="CABeZa"><b>C</b><b>A</b><b>B</b><b>Z</b><b class="dash">—</b></span>';
 
   // Spectral has to be declared on the page itself (fonts don't load from inside a shadow root)
   if (!document.querySelector("link[data-cabz-font]")) {
@@ -110,8 +110,6 @@
   .brand b { position: relative; font-weight: inherit; }
   .brand b + b { margin-left: var(--g); }
   .brand .dash { font-weight: 500; }
-  .brand small { position: absolute; left: calc(100% + var(--g) / 2); bottom: 0; transform: translateX(-50%);
-    font-size: 0.5em; font-weight: 500; }
   .brand b:last-child { margin-right: calc(var(--g) * 0.8); }
   .c { color: #999; }
   .c:hover, .c.here { color: #fff; }

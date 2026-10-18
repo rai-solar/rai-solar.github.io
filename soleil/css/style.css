@@ -109,16 +109,17 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
   align-items: start;
   padding: 0 var(--margin);
 }
-/* left: 5 columns, the sun on 3 of them and the docks on 2 */
+/* left: 5 columns. The sun's preview on all 5, Save right under it, then export, GIF and
+   the profile pictures, every row split on the same 5 columns */
 .left { grid-column: 1 / 6; min-width: 0; display: grid; grid-template-columns: subgrid; align-items: start; }
-.stage-wrap { grid-column: 1 / 4; grid-row: 1; }
-.save-dock { grid-column: 1 / 4; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--gap); align-content: start; }
-.save-dock > * { grid-column: 1 / -1; }
-.docks { grid-column: 4 / 6; grid-row: 1 / span 2; align-self: stretch; position: relative; min-width: 0; }
+.stage-wrap, .save-dock, .docks { grid-column: 1 / -1; }
+.docks { display: grid; grid-template-columns: subgrid; min-width: 0; }
+.dock { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-content: start; }
+.dock > * { grid-column: 1 / -1; }
 /* right: the controls on the last 3 */
 .right { grid-column: 6 / -1; min-width: 0; position: relative; }
 /* the dividing lines run down the middle of the 8px gaps */
-.docks::before, .right::before {
+.right::before {
   content: ""; position: absolute; top: 0; bottom: 0;
   left: calc(var(--gap) / -2 - 1px);
   border-left: var(--line);
@@ -189,10 +190,11 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
 }
 
 /* under the sun: the name on 2 columns, the button on the third */
-.save-row { display: grid; grid-template-columns: subgrid; }
-.save-row .text-input { grid-column: 1 / 3; }
-.export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
-.gif-motions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px var(--gap); margin-bottom: 12px; }
+/* inside the docks: one item per column */
+.save-row, .export-grid, .gif-motions, .github { display: grid; grid-template-columns: subgrid; row-gap: var(--gap); }
+.save-row .text-input { grid-column: 1 / 5; }      /* the name on 4 columns, the button on the 5th */
+.gif-motions { margin-bottom: 12px; }
+.github .chip-card { grid-column: span 2; }
 #gifPreview[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
 .note { margin: 4px 0 0; min-height: 1em; font-family: var(--mono); font-size: 12px; color: var(--mute); }
@@ -202,7 +204,7 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
 
 .tiles {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));   /* saved suns: one per column under the sun */
+  grid-template-columns: repeat(5, minmax(0, 1fr));   /* saved suns: one per column */
   gap: var(--gap);
   margin: 12px 0 0;
   padding: 0;
@@ -441,10 +443,14 @@ input[type="range"]:focus-visible { outline-offset: 4px; }
 
 /* ---------- small screens ---------- */
 
-@media (max-width: 900px) {
-  .brand, .top-tag, .left, .right, .stage-wrap, .docks, .save-dock { grid-column: 1 / -1; grid-row: auto; }
+@media (max-width: 640px) {
+  .brand, .top-tag, .left, .right { grid-column: 1 / -1; }
+  .export-grid > *, .gif-motions > *, .github .chip-card { grid-column: span 4; }   /* two a row */
+  .save-row .text-input { grid-column: 1 / 6; }
+  .save-row .btn { grid-column: 6 / -1; }
+  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .left { border-bottom: var(--line); }
-  .docks::before, .right::before { display: none; }
+  .right::before { display: none; }
   .sliders { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* 4 + 4 columns */
 }
 

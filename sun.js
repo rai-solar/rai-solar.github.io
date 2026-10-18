@@ -1,10 +1,12 @@
 // CABeZa · the sun on the home page, drawn live with soleil's own engine
 // (soleil/js/config, state, geometry, draw) and rippling: the waves run along its rays.
 //
-// Hovering it does one of three things (try them with the debug button under the sun):
-//   extend  the disc's colour spreads out over the rays to the edge
-//   shrink  the sun shrinks until it's gone
-//   eclipse the mouse becomes a huge black ball
+// Hovering it does one of three things; the sun keeps its shape, only its colours change
+// (try them with the debug button under the sun):
+//   extend   the disc's orange spreads out through the rays
+//   shrink   the disc's orange shrinks until it's gone
+//   eclipse  a disc the colour of the background follows the mouse, appearing at once
+//            as soon as it would touch the sun
 (() => {
   "use strict";
   const Sun = window.Sun;
@@ -44,25 +46,36 @@
   debug.addEventListener("click", () => {
     mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
     try { localStorage.setItem("cabz-sun-hover", mode); } catch (e) {}
+    ball.style.visibility = "hidden";
     label();
   });
   link.after(debug);
 
-  // the black ball that replaces the mouse
+  // eclipse: the background-coloured disc that follows the mouse
   const ball = document.createElement("div");
   ball.className = "sun-ball";
   ball.setAttribute("aria-hidden", "true");
   document.body.appendChild(ball);
+  const ballSize = () => link.clientWidth * 0.75;
+  addEventListener("pointermove", (e) => {
+    if (mode !== "eclipse") { ball.style.visibility = "hidden"; return; }
+    const r = link.getBoundingClientRect(), d = ballSize();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    // shows up in one go, as soon as the disc would reach the sun's rays
+    const near = Math.hypot(e.clientX - cx, e.clientY - cy) < r.width / 2 + d / 2;
+    ball.style.width = ball.style.height = d + "px";
+    ball.style.transform = `translate(${e.clientX - d / 2}px, ${e.clientY - d / 2}px)`;
+    ball.style.visibility = near ? "visible" : "hidden";
+  }, { passive: true });
+  document.addEventListener("pointerleave", () => { ball.style.visibility = "hidden"; });
 
-  /* ---------- hover amount h: 0 → 1, eased ---------- */
+  /* ---------- hover amount h: 0 → 1, eased (extend, shrink) ---------- */
 
   let target = 0, h = 0, last = performance.now();
-  link.addEventListener("pointerenter", (e) => { target = 1; moveBall(e); });
+  link.addEventListener("pointerenter", () => { target = 1; });
   link.addEventListener("pointerleave", () => { target = 0; });
-  link.addEventListener("pointermove", moveBall);
   link.addEventListener("focus", () => { target = 1; });
   link.addEventListener("blur", () => { target = 0; });
-  function moveBall(e) { ball.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`; }
 
   /* ---------- drawing ---------- */
 
@@ -76,30 +89,21 @@
     const t = reduce ? 0 : (now % LOOP) / LOOP;
     const f = Object.assign({}, s, { wavePhase: -2 * Math.PI * t });
 
-    if (mode === "shrink" && k > 0) {
-      // the whole sun shrinks into its centre
-      f.size = s.size * (1 - k);
-      if (f.size < 0.5) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
-    }
+    // shrink: the disc gets smaller until only the ray colour is left
+    if (mode === "shrink") f.discSize = s.discSize * (1 - k);
     Sun.paint(canvas, f);
 
-    if (mode === "extend" && k > 0) {
-      // the disc's colour grows past the rays, out to the edge of the square
-      const box = Sun.config.BOX, c = Sun.config.C, sc = canvas.width / box;
+    // extend: the disc colour grows outwards, painted only where the sun already is
+    if (mode === "extend" && k > 0.001) {
+      const sc = canvas.width / Sun.config.BOX, c = Sun.config.C;
       const r = built.disc + k * (c - built.disc);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalCompositeOperation = "source-atop";
       ctx.beginPath();
       ctx.arc(c * sc, c * sc, r * sc, 0, Math.PI * 2);
       ctx.fillStyle = s.disc;
       ctx.fill();
-    }
-
-    if (mode === "eclipse") {
-      const size = link.clientWidth * 0.75 * k;
-      ball.style.width = ball.style.height = size + "px";
-      ball.style.opacity = k > 0.01 ? 1 : 0;
-    } else {
-      ball.style.opacity = 0;
+      ctx.globalCompositeOperation = "source-over";
     }
   }
 

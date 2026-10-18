@@ -2,9 +2,9 @@
    Layout: 8 columns, 8px gap, 16px page margin (the same grid nav.js draws and overlays). */
 :root {
   color-scheme: dark;
-  --bg: rgb(88, 88, 88);   /* a gray, so the black eclipse ball shows */
+  --bg: #1F0A03;   /* soleil's ink: a very dark brown */
   --fg: #fff;
-  --dim: #333;
+  --dim: #6a5249;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --cols: 8;
   --gap: 8px;
@@ -86,15 +86,13 @@ body {
   width: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols));
   aspect-ratio: 1;
 }
-.sun img, .sun canvas { display: block; width: 100%; height: auto; transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
+.sun img, .sun canvas { display: block; width: 100%; height: auto; }
 .sun.live img { display: none; }   /* sun.js draws it live, rippling */
-.sun:hover img, .sun:focus-visible img, .sun:hover canvas, .sun:focus-visible canvas { transform: rotate(30deg) scale(1.06); }
-.sun[data-hover="extend"]:hover canvas, .sun[data-hover="extend"]:focus-visible canvas { transform: none; }
+/* the sun keeps its shape on hover: only its colours change (sun.js) */
 .sun:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
-.sun[data-hover="eclipse"] { cursor: none; }
-/* the mouse as a huge black ball (eclipse mode) */
-.sun-ball { position: fixed; left: 0; top: 0; width: 0; height: 0; border-radius: 50%; background: #000;
-  pointer-events: none; opacity: 0; z-index: 10; }
+/* eclipse mode: a disc the colour of the background follows the mouse over the sun */
+.sun-ball { position: fixed; left: 0; top: 0; border-radius: 50%; background: var(--bg);
+  pointer-events: none; visibility: hidden; z-index: 10; }
 /* debug: pick what hovering the sun does */
 .sun-debug {
   position: absolute;
@@ -110,6 +108,7 @@ body {
   cursor: pointer;
 }
 .sun-debug:hover { border-color: #fff; }
+.sun-debug { z-index: 11; }
 
 /* fw: one emoji per column, from column 1 */
 .tiles { list-style: none; margin: 0; padding: 0; row-gap: 48px; }
