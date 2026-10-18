@@ -13,7 +13,7 @@
   /* one column + one gap: type is sized so letters fall on this rhythm */
   --step: calc((100vw - 2 * var(--margin) + var(--gap)) / var(--cols));
   --adv: 0.6;          /* width of a monospace letter in em, measured by morph.js */
-  --start: 2;          /* lists start on column 2 */
+  --start: 1;          /* lists start on column 1, flush left */
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -24,8 +24,8 @@ body {
   min-height: 100vh;
   min-height: 100svh;
   display: grid;
-  align-content: center;
-  padding: calc(var(--bar) + 64px) var(--margin) 64px;
+  align-content: start;
+  padding: calc(var(--bar) + 24px) var(--margin) 64px;
   font: 400 15px/1.4 var(--mono);
   -webkit-font-smoothing: antialiased;
 }
@@ -40,16 +40,16 @@ body {
 }
 
 /* Letters on the grid: --k letters per column step, so words begin and end on columns.
-   big (home): 3 letters a column · mid (pp): 4 letters a column */
+   big (home): 6 letters a column · mid (pp): 8 letters a column */
 .list { list-style: none; margin: 0; padding: 0; line-height: 1.12; letter-spacing: 0;
   font-size: calc(var(--step) / var(--k) / var(--adv)); }
-.list.big { --k: 3; }
-.list.mid { --k: 4; }
+.list.big { --k: 6; }
+.list.mid { --k: 8; }
 .list > li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
 
 /* the name spans the columns its letters need (set by morph.js), the versions sit in the next one */
 .list a { grid-column: var(--start) / -1; justify-self: start; }
-.list .meta { grid-column: auto / span 1; white-space: nowrap; transition: opacity .2s; }
+.list .meta { grid-column: auto / span 1; padding-left: 4px; white-space: nowrap; transition: opacity .2s; }
 .list li:has(a[data-morph]:hover) .meta, .list li:has(a[data-morph]:focus-visible) .meta { opacity: 0; }
 
 .list a {
@@ -90,13 +90,13 @@ body {
 .sun:hover img, .sun:focus-visible img { transform: rotate(30deg) scale(1.06); }
 .sun:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
 
-/* fw: one emoji per column, from column 2 */
+/* fw: one emoji per column, from column 1 */
 .tiles { list-style: none; margin: 0; padding: 0; row-gap: 48px; }
 .tiles li { grid-column: span 1; display: grid; justify-items: start; }
-.tiles li:first-child { grid-column-start: 2; }
+.tiles li:first-child { grid-column-start: 1; }
 .tiles a {
   position: relative;
-  font-size: calc(var(--step) * 0.5);
+  font-size: calc(var(--step) * 0.3);
   line-height: 1;
   text-decoration: none;
   filter: grayscale(.25);
@@ -114,11 +114,9 @@ body {
 
 /* phones: still 8 columns, everything starts on column 1 */
 @media (max-width: 600px) {
-  body { padding-top: calc(var(--bar) + 48px); }
-  :root { --start: 1; }
-  .list.big { --k: 1; }
-  .list.mid { --k: 2; }
-  .tiles a { font-size: calc(var(--step) * 1.1); }
+  .list.big { --k: 2; }
+  .list.mid { --k: 3; }
+  .tiles a { font-size: calc(var(--step) * 0.8); }
   .tiles li, .tiles li:first-child { grid-column: span 2; }
   .sun { width: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 + var(--gap)); }
 }
