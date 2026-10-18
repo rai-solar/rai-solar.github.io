@@ -88,10 +88,11 @@
   const sh = host.attachShadow({ mode: "open" });
   sh.innerHTML = `
 <style>
-  /* the bar takes the page's own colours when it has them (CABeZa pages, and the eclipse
-     on the home page); on the projects it falls back to the pink and black */
+  /* the bar is painted with the same sky as the site's pages, black type, one line under it;
+     on the home page it follows the eclipse (--night, --fg) */
   :host { all: initial; --cols: ${GRID.cols}; --gap: ${GRID.gap}px; --m: ${GRID.margin}px;
-    --nbg: var(--bg, rgb(255, 183, 175)); --nfg: var(--fg, #000); }
+    --nbg: var(--bg, #d99a76); --nfg: var(--fg, #000);
+    --nsky: linear-gradient(rgba(0, 0, 0, var(--night, 0)), rgba(0, 0, 0, var(--night, 0))), url("${root}sky.jpg") center / cover fixed, var(--nbg); }
   * { box-sizing: border-box; }
   a, button { color: inherit; text-decoration: none; font: inherit; letter-spacing: inherit; }
   button { background: none; border: 0; padding: 0; cursor: pointer; }
@@ -100,7 +101,7 @@
 
   .wrap { position: fixed; top: 0; left: 0; right: 0; z-index: 2147483646;
     font: 400 13px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .06em; color: var(--nfg); }
-  .bar { height: 32px; align-items: center; background: var(--nbg);
+  .bar { height: 32px; align-items: center; background: var(--nsky);   /* the same painted sky as the page */
     border-bottom: ${past ? "3px solid #cb5f3c" : "1px solid var(--nfg)"}; }
 
   /* columns 1–6: where you are + versions · 7–8: tools */
@@ -139,7 +140,7 @@
   .btn:hover, .btn[aria-expanded="true"], .btn[aria-pressed="true"] { opacity: 1; }
   .btn[aria-pressed="true"] { background: var(--nfg); color: var(--nbg); }
 
-  .panel { background: var(--nbg); padding-top: 32px; padding-bottom: 40px; row-gap: 32px;
+  .panel { background: var(--nsky); padding-top: 32px; padding-bottom: 40px; row-gap: 32px;
     max-height: calc(100vh - 32px); overflow: auto; border-bottom: 1px solid var(--nfg); }
   .panel[hidden] { display: none; }
   .panel section { grid-column: span 4; display: grid; grid-template-columns: subgrid; align-content: start; }
@@ -252,22 +253,16 @@
   }
 
 
-  // index pages: every row gets the project's big dot, then, a little to the right,
-  // one small dot per version, each a link to that version
-  document.querySelectorAll(".list > li").forEach((el) => {
+  // index pages: the versions of each project as small dots, each a link to that version
+  document.querySelectorAll(".list > li[data-project]").forEach((el) => {
     const meta = el.querySelector(".meta");
-    if (!meta) return;
-    const big = document.createElement("span");
-    big.className = "big";
-    big.setAttribute("aria-hidden", "true");
-    meta.prepend(big);
     let p;
     for (const s of S.sections) for (const q of s.projects) if (q.id === el.dataset.project) p = q;
-    if (!p || p.versions.length < 2) return;
+    if (!meta || !p || p.versions.length < 2) return;
     const g = document.createElement("span");
     g.className = "vers";
     g.innerHTML = p.versions.map((v, i) =>
       `<a href="${url(p.id + "/" + (v.live ? "" : "_v/" + v.id + "/"))}" title="${vNameOf(i)} · ${ddmmyy(v.date)} · ${esc(v.msg)}" aria-label="${vNameOf(i)}, ${esc(v.msg)}"><i></i></a>`).join("");
-    big.after(g);
+    meta.prepend(g);
   });
 })();

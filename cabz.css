@@ -2,9 +2,12 @@
    Layout: 8 columns, 8px gap, 16px page margin (the same grid nav.js draws and overlays). */
 :root {
   color-scheme: light;
-  /* pink with black type; on the home page sun.js turns it all black, with flashy blue
-     type, as the moon eclipses the sun */
-  --bg: rgb(255, 183, 175);
+  /* a pastel sunset sky, painted in horizontal strokes (sky.jpg), black type. On the home
+     page sun.js darkens it to night (--night 0 → 1) and turns the type neon purple as the
+     moon eclipses the sun. --bg is the sky's average colour, for the few solid fills. */
+  --bg: #d99a76;
+  --night: 0;
+  --sky: linear-gradient(rgba(0, 0, 0, var(--night)), rgba(0, 0, 0, var(--night))), url("sky.jpg") center / cover fixed, var(--bg);
   --fg: #000;
   --dim: rgba(0, 0, 0, .45);
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -18,7 +21,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html, body { margin: 0; background: var(--bg); color: var(--fg); }
+html { background: var(--sky); color: var(--fg); }
+body { margin: 0; color: var(--fg); }
 
 body {
   min-height: 100vh;
@@ -39,30 +43,24 @@ body {
   column-gap: var(--gap);
 }
 
-/* ---------- the index: a table on hairlines, top-aligned ----------
-   number (col 1) · name (cols 2–3) · title (cols 4–6) · project dot + versions (cols 7–8)
-   the whole row is the link and inverts on hover */
+/* ---------- the index: rows on hairlines, top-aligned ----------
+   the project's dot at the far left, a small space, its short name (hover: the real name,
+   descending shear) · its versions as small dots on column 7. The whole row is the link. */
 .list { list-style: none; margin: 0; padding: 0; font: 400 16px/1.35 var(--mono); }
 .list > li {
   grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center;
   position: relative; border-top: 1px solid var(--fg); padding: 8px 0 10px;
 }
 .list > li:last-child { border-bottom: 1px solid var(--fg); }
-.list .num { grid-column: 1; color: var(--dim); }
-.list a.name { grid-column: 2 / 4; color: var(--fg); text-decoration: none; white-space: nowrap; }
+.list a.name { grid-column: 1 / 7; display: flex; align-items: center; gap: 10px;
+  color: var(--fg); text-decoration: none; white-space: nowrap; }
 .list a.name::after { content: ""; position: absolute; inset: 0; }        /* the row is the link */
-.list .ttl { grid-column: 4 / 7; color: var(--dim); }
 .list .meta { grid-column: 7 / -1; position: relative; z-index: 1; }    /* above the row link: its dots are links */
-.list > li:hover { background: var(--fg); }
-.list > li:hover, .list > li:hover * { color: var(--bg) !important; }
-.list > li:hover .big, .list > li:hover .vers a:last-child i { background-color: var(--bg); }
-.list > li:hover .vers i { border-color: var(--bg); }
-.list > li:hover .vers a + a i::before { background: var(--bg); }
 
-/* the project: a big dot · its versions: small dots, a little to the right, each one a link */
+/* the project: a big dot · its versions: small dots, each one a link */
+.big { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--fg); flex: none; }
 .meta { display: flex; align-items: center; gap: 16px; font-size: 13px; letter-spacing: .06em; color: var(--dim); }
-.big { display: block; width: 14px; height: 14px; border-radius: 50%; background: var(--fg); flex: none; }
-.vers { display: inline-flex; align-items: center; margin-left: 4px; }
+.vers { display: inline-flex; align-items: center; }
 .vers a { display: grid; place-items: center; width: 14px; height: 14px; }   /* easy to hit */
 .vers i { position: relative; display: block; width: 7px; height: 7px; border: 1px solid var(--fg); border-radius: 50%; }
 .vers a + a { margin-left: 4px; }
@@ -70,20 +68,22 @@ body {
 .vers a:last-child i { background: var(--fg); }
 .vers a:hover i { transform: scale(1.4); }
 
+/* the descending shear (shear.js): the real text plus hidden copies stacked on it */
+.shear { position: relative; display: inline-block; white-space: nowrap; }
+.shear .t { display: inline-block; }
+.shear .in, .shear .strip {
+  position: absolute; left: 0; top: 0; display: inline-block; white-space: nowrap;
+  visibility: hidden; user-select: none; -webkit-user-select: none; pointer-events: none; }
+
 /* ---------- home: the name at the top left, the sun in column 8 ---------- */
 .name-line {
   grid-column: 1 / 8; margin: 0;
   font: 400 calc(var(--col) * 0.42)/1.15 var(--serif); letter-spacing: -0.03em;
   color: var(--fg); white-space: nowrap;
 }
-/* the word after "p": a slot that opens, then the descending shear (name.js) */
-.name-line .slot { display: inline-block; width: 0; white-space: nowrap; vertical-align: baseline;
-  transition: width .9s cubic-bezier(.6, 0, .2, 1); }
-.name-line .shear { position: relative; display: inline-block; }
-.name-line .shear .t { display: inline-block; }
-.name-line .shear .in, .name-line .shear .strip {
-  position: absolute; left: 0; top: 0; display: inline-block; white-space: nowrap;
-  visibility: hidden; user-select: none; -webkit-user-select: none; pointer-events: none; }
+/* the p-word: its slot is as wide as the word, so " solar" keeps one space after it (name.js) */
+.name-line .slot { display: inline-block; white-space: nowrap; vertical-align: baseline;
+  transition: width .35s cubic-bezier(.45, 0, .25, 1); }
 @media (prefers-reduced-motion: reduce) { .name-line .slot { transition: none; } }
 
 .sun {
@@ -97,19 +97,17 @@ body {
 .sun.live img { display: none; }   /* sun.js draws it live, rippling */
 .sun:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
 /* the moon: a disc the colour of the background, always under the mouse (sun.js) */
-.sun-ball { position: fixed; left: 0; top: 0; border-radius: 50%; background: var(--bg);
+.sun-ball { position: fixed; left: 0; top: 0; border-radius: 50%; background: var(--sky);   /* the same sky, so it hides what's under it */
   pointer-events: none; visibility: hidden; z-index: 10; }
 /* on home the sun owns column 8: the index stops at 7 */
 .home .list > li { grid-column: 1 / 8; }
 .home .list .meta { grid-column: 7 / 8; }
 
 @media (max-width: 600px) {
-  .list .num { display: none; }
-  .list a.name { grid-column: 1 / 4; }
-  .list .ttl { grid-column: 4 / 7; }
-  .list .meta { grid-column: 7 / -1; }
+  .list a.name { grid-column: 1 / 6; }
+  .list .meta { grid-column: 6 / -1; }
   .home .list > li { grid-column: 1 / -1; }
-  .home .list .meta { grid-column: 7 / -1; }
+  .home .list .meta { grid-column: 6 / -1; }
   .name-line { grid-column: 1 / 7; font-size: calc(var(--col) * 0.9); white-space: normal; }
   .sun { width: calc(var(--col) * 2 + var(--gap)); }
 }

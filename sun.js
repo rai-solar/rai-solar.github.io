@@ -4,7 +4,7 @@
 // The mouse carries a moon: a disc the colour of the background, a touch bigger than the sun's body,
 // always under the pointer (it hides whatever it passes over). Bring it onto the centre of
 // the sun and the rays fade with the distance: gone when it sits on the centre (almost exactly).
-// The whole page darkens with it: pink → black, black type → flashy blue.
+// The whole page darkens with it: the painted sky goes to night, black type → neon purple.
 (() => {
   "use strict";
   const Sun = window.Sun;
@@ -45,7 +45,8 @@
     mx = e.clientX; my = e.clientY;
     const d = discPx();
     moon.style.width = moon.style.height = d + "px";
-    moon.style.transform = `translate(${mx - d / 2}px, ${my - d / 2}px)`;
+    moon.style.left = (mx - d / 2) + "px";      // left/top, not a transform: a transform would
+    moon.style.top = (my - d / 2) + "px";       // break the fixed sky it shows
     moon.style.visibility = "visible";
   }, { passive: true });
   document.documentElement.addEventListener("pointerleave", () => { moon.style.visibility = "hidden"; mx = my = -1e4; });
@@ -56,9 +57,9 @@
   const MARGIN = 0.12;               // within this share of the sun's radius from the centre: rays fully gone
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // the page follows the eclipse: pink with black type → black with flashy blue type
+  // the page follows the eclipse: the painted sky with black type → night with neon purple type
   const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const SKY = { bg: [hex("#FFB7AF"), hex("#000000")], fg: [hex("#000000"), hex("#1E3CFF")] };
+  const SKY = { bg: [hex("#D99A76"), hex("#000000")], fg: [hex("#000000"), hex("#B026FF")] };   // type: black → neon purple
   const mix = (pair, k) => "rgb(" + pair[0].map((v, i) => Math.round(v + (pair[1][i] - v) * k)).join(",") + ")";
   const root = document.documentElement.style;
   let lastK = -1;
@@ -66,6 +67,7 @@
     const q = Math.round(k * 100) / 100;
     if (q === lastK) return;
     lastK = q;
+    root.setProperty("--night", q);                       // the painted sky darkens to black
     root.setProperty("--bg", mix(SKY.bg, q));
     root.setProperty("--fg", mix(SKY.fg, q));
     const [r, g, b] = mix(SKY.fg, q).match(/\d+/g);
