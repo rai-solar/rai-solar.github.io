@@ -2,9 +2,9 @@
    Layout: 8 columns, 8px gap, 16px page margin (the same grid nav.js draws and overlays). */
 :root {
   color-scheme: dark;
-  --bg: #1F0A03;   /* soleil's ink: a very dark brown */
+  --bg: #140C1D;
   --fg: #fff;
-  --dim: #6a5249;
+  --dim: #5f5470;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --cols: 8;
   --gap: 8px;
@@ -90,25 +90,9 @@ body {
 .sun.live img { display: none; }   /* sun.js draws it live, rippling */
 /* the sun keeps its shape on hover: only its colours change (sun.js) */
 .sun:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
-/* eclipse mode: a disc the colour of the background follows the mouse over the sun */
+/* the moon: a disc the colour of the background, always under the mouse (sun.js) */
 .sun-ball { position: fixed; left: 0; top: 0; border-radius: 50%; background: var(--bg);
   pointer-events: none; visibility: hidden; z-index: 10; }
-/* debug: pick what hovering the sun does */
-.sun-debug {
-  position: absolute;
-  top: calc(var(--bar) + 16px + (100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) + 8px);
-  right: var(--margin);
-  padding: 4px 8px;
-  border: 1px solid rgba(255, 255, 255, .4);
-  border-radius: 2px;
-  background: none;
-  color: #fff;
-  font: 400 13px/1 var(--mono);
-  letter-spacing: .04em;
-  cursor: pointer;
-}
-.sun-debug:hover { border-color: #fff; }
-.sun-debug { z-index: 11; }
 
 /* fw: one emoji per column, from column 1 */
 .tiles { list-style: none; margin: 0; padding: 0; row-gap: 48px; }
@@ -139,7 +123,6 @@ body {
   .tiles a { font-size: calc(var(--step) * 0.8); }
   .tiles li, .tiles li:first-child { grid-column: span 2; }
   .sun { width: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 + var(--gap)); }
-  .sun-debug { top: calc(var(--bar) + 16px + (100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 + var(--gap) + 8px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

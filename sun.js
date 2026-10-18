@@ -1,12 +1,9 @@
 // CABeZa · the sun on the home page, drawn live with soleil's own engine
 // (soleil/js/config, state, geometry, draw) and rippling: the waves run along its rays.
 //
-// Hovering it does one of three things; the sun keeps its shape, only its colours change
-// (try them with the debug button under the sun):
-//   extend   the disc's orange spreads out through the rays
-//   shrink   the disc's orange shrinks until it's gone
-//   eclipse  a disc the colour of the background follows the mouse, appearing at once
-//            as soon as it would touch the sun
+// The mouse carries a moon: a disc the colour of the background, as big as the sun's disc,
+// always under the pointer (it hides whatever it passes over). Bring it onto the centre of
+// the sun, almost exactly, and the rays go out: an eclipse.
 (() => {
   "use strict";
   const Sun = window.Sun;
@@ -32,82 +29,60 @@
   resize();
   addEventListener("resize", resize);
 
-  /* ---------- hover mode, chosen with the debug button ---------- */
+  /* ---------- the moon under the mouse ---------- */
 
-  const MODES = ["extend", "shrink", "eclipse"];
-  let mode = "extend";
-  try { if (MODES.includes(localStorage.getItem("cabz-sun-hover"))) mode = localStorage.getItem("cabz-sun-hover"); } catch (e) {}
+  const BOX = Sun.config.BOX, C = Sun.config.C;
+  const moon = document.createElement("div");
+  moon.className = "sun-ball";
+  moon.setAttribute("aria-hidden", "true");
+  document.body.appendChild(moon);
+  const discPx = () => link.clientWidth * (2 * built.disc) / BOX;   // the disc's diameter on screen
 
-  const debug = document.createElement("button");
-  debug.type = "button";
-  debug.className = "sun-debug";
-  const label = () => { debug.textContent = "debug · hover: " + mode; link.dataset.hover = mode; };
-  label();
-  debug.addEventListener("click", () => {
-    mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
-    try { localStorage.setItem("cabz-sun-hover", mode); } catch (e) {}
-    ball.style.visibility = "hidden";
-    label();
-  });
-  link.after(debug);
-
-  // eclipse: the background-coloured disc that follows the mouse
-  const ball = document.createElement("div");
-  ball.className = "sun-ball";
-  ball.setAttribute("aria-hidden", "true");
-  document.body.appendChild(ball);
-  const ballSize = () => link.clientWidth * 0.75;
+  let mx = -1e4, my = -1e4;
   addEventListener("pointermove", (e) => {
-    if (mode !== "eclipse") { ball.style.visibility = "hidden"; return; }
-    const r = link.getBoundingClientRect(), d = ballSize();
-    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    // shows up in one go, as soon as the disc would reach the sun's rays
-    const near = Math.hypot(e.clientX - cx, e.clientY - cy) < r.width / 2 + d / 2;
-    ball.style.width = ball.style.height = d + "px";
-    ball.style.transform = `translate(${e.clientX - d / 2}px, ${e.clientY - d / 2}px)`;
-    ball.style.visibility = near ? "visible" : "hidden";
+    mx = e.clientX; my = e.clientY;
+    const d = discPx();
+    moon.style.width = moon.style.height = d + "px";
+    moon.style.transform = `translate(${mx - d / 2}px, ${my - d / 2}px)`;
+    moon.style.visibility = "visible";
   }, { passive: true });
-  document.addEventListener("pointerleave", () => { ball.style.visibility = "hidden"; });
-
-  /* ---------- hover amount h: 0 → 1, eased (extend, shrink) ---------- */
-
-  let target = 0, h = 0, last = performance.now();
-  link.addEventListener("pointerenter", () => { target = 1; });
-  link.addEventListener("pointerleave", () => { target = 0; });
-  link.addEventListener("focus", () => { target = 1; });
-  link.addEventListener("blur", () => { target = 0; });
+  document.documentElement.addEventListener("pointerleave", () => { moon.style.visibility = "hidden"; mx = my = -1e4; });
 
   /* ---------- drawing ---------- */
 
-  const LOOP = 3000;   // one ripple every 3 s
+  const LOOP = 3000;                 // one ripple every 3 s
+  const MARGIN = 0.14;               // how close to the centre counts, as a share of the disc's radius
   const ease = (x) => x * x * (3 - 2 * x);
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let e = 0, last = performance.now();
 
   function draw(now) {
     const dt = Math.min(64, now - last); last = now;
-    h += (target - h) * Math.min(1, dt / 220);           // smooth follow
-    const k = ease(Math.max(0, Math.min(1, h)));
+    // is the moon on the sun's centre?
+    const r = link.getBoundingClientRect();
+    const off = Math.hypot(mx - (r.left + r.width / 2), my - (r.top + r.height / 2));
+    const aligned = off < (r.width * built.disc / BOX) * MARGIN;
+    e += ((aligned ? 1 : 0) - e) * Math.min(1, dt / (aligned ? 260 : 420));
+    const k = ease(Math.max(0, Math.min(1, e)));
+
     const t = reduce ? 0 : (now % LOOP) / LOOP;
-    const f = Object.assign({}, s, { wavePhase: -2 * Math.PI * t });
+    Sun.paint(canvas, Object.assign({}, s, { wavePhase: -2 * Math.PI * t }));
 
-    // shrink: the disc gets smaller until only the ray colour is left
-    if (mode === "shrink") f.discSize = s.discSize * (1 - k);
-    Sun.paint(canvas, f);
-
-    // extend: the disc colour grows outwards, painted only where the sun already is
-    if (mode === "extend" && k > 0.001) {
-      const sc = canvas.width / Sun.config.BOX, c = Sun.config.C;
-      const r = built.disc + k * (c - built.disc);
+    if (k > 0.002) {
+      // totality: the rays fade out, the round body of the sun stays (under the moon)
+      const sc = canvas.width / BOX;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.globalCompositeOperation = "source-atop";
-      ctx.beginPath();
-      ctx.arc(c * sc, c * sc, r * sc, 0, Math.PI * 2);
-      ctx.fillStyle = s.disc;
-      ctx.fill();
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = `rgba(0,0,0,${k})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.globalCompositeOperation = "source-over";
+      ctx.beginPath(); ctx.arc(C * sc, C * sc, built.core * sc, 0, Math.PI * 2);
+      ctx.fillStyle = s.ray; ctx.fill();
+      ctx.beginPath(); ctx.arc(C * sc, C * sc, built.disc * sc, 0, Math.PI * 2);
+      ctx.fillStyle = s.disc; ctx.fill();
     }
   }
 
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const tick = (now) => {
     if (!document.hidden) draw(now);
     requestAnimationFrame(tick);
