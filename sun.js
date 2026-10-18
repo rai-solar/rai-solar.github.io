@@ -1,9 +1,9 @@
 // CABeZa · the sun on the home page, drawn live with soleil's own engine
 // (soleil/js/config, state, geometry, draw) and rippling: the waves run along its rays.
 //
-// The mouse carries a moon: a disc the colour of the background, as big as the sun's disc,
+// The mouse carries a moon: a disc the colour of the background, a touch bigger than the sun's body,
 // always under the pointer (it hides whatever it passes over). Bring it onto the centre of
-// the sun, almost exactly, and the rays go out: an eclipse.
+// the sun and the rays fade with the distance: gone when it sits on the centre (almost exactly).
 (() => {
   "use strict";
   const Sun = window.Sun;
@@ -36,7 +36,8 @@
   moon.className = "sun-ball";
   moon.setAttribute("aria-hidden", "true");
   document.body.appendChild(moon);
-  const discPx = () => link.clientWidth * (2 * built.disc) / BOX;   // the disc's diameter on screen
+  // the moon covers the whole round body of the sun (the circle the rays grow from), plus a hair
+  const discPx = () => link.clientWidth * (2 * built.core * 1.06) / BOX;
 
   let mx = -1e4, my = -1e4;
   addEventListener("pointermove", (e) => {
@@ -51,19 +52,17 @@
   /* ---------- drawing ---------- */
 
   const LOOP = 3000;                 // one ripple every 3 s
-  const MARGIN = 0.14;               // how close to the centre counts, as a share of the disc's radius
-  const ease = (x) => x * x * (3 - 2 * x);
+  const MARGIN = 0.12;               // within this share of the sun's radius from the centre: rays fully gone
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let e = 0, last = performance.now();
 
   function draw(now) {
-    const dt = Math.min(64, now - last); last = now;
-    // is the moon on the sun's centre?
+    // how far is the moon from the sun's centre? the rays follow that distance directly:
+    // fully there while the moon doesn't touch the sun, gone once it sits on the centre
     const r = link.getBoundingClientRect();
     const off = Math.hypot(mx - (r.left + r.width / 2), my - (r.top + r.height / 2));
-    const aligned = off < (r.width * built.disc / BOX) * MARGIN;
-    e += ((aligned ? 1 : 0) - e) * Math.min(1, dt / (aligned ? 260 : 420));
-    const k = ease(Math.max(0, Math.min(1, e)));
+    const R = r.width * built.core / BOX;                  // the sun's body, in screen pixels
+    const far = R + discPx() / 2, near = R * MARGIN;       // moon just touching → centred
+    const k = Math.max(0, Math.min(1, (far - off) / (far - near)));
 
     const t = reduce ? 0 : (now % LOOP) / LOOP;
     Sun.paint(canvas, Object.assign({}, s, { wavePhase: -2 * Math.PI * t }));
