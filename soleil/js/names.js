@@ -13,9 +13,9 @@
     { name: "Purusha", origin: "Vedic (Hindu)", text: "The Sun emerged from the eye of the primordial cosmic being during a cosmic sacrifice." }
   ];
 
-  const NAME_MS = 85;     // per letter of the name
-  const TEXT_MS = 18;     // per letter of the description
-  const HOLD_MS = 7000;   // how long a complete myth stays
+  const NAME_MS = 60;     // per letter of the name
+  const TEXT_MS = 12;     // per letter of the description
+  const HOLD_MS = 3000;   // how long a complete myth stays
   const OUT_MS = 30;      // per letter when the name un-types
 
   const title = document.getElementById("appName");
@@ -26,7 +26,7 @@
   if (!title || !box || !origin || !text) return;
 
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let i = 0, timer = null, run = 0;
+  let i = Math.floor(Math.random() * MYTHS.length), timer = null, run = 0;   // a random creator first
 
   // the longest names would overflow: shrink the type until the name fits on one line
   function fit(full) {

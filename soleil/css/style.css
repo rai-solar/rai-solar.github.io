@@ -10,6 +10,10 @@
   --warn: #D10000;
   --line: 2px solid var(--ink);
   --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* the CABeZa grid: 8 columns, 8px gap, 16px margin. The sun side takes 5, the controls 3 */
+  --cols: 8;
+  --gap: 8px;
+  --margin: 16px;
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
@@ -38,11 +42,11 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
 /* ---------- top bar ---------- */
 
 .top {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 10px 20px 8px;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gap);
+  align-items: end;
+  padding: 8px var(--margin) 8px;
   border-bottom: var(--line);
 }
 .top h1 {
@@ -53,7 +57,7 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
   letter-spacing: -0.04em;
 }
 /* v02: the name of the app changes, one creator of the Sun after another */
-.brand { flex: 1; min-width: 0; }
+.brand { grid-column: 1 / 6; min-width: 0; }
 .top h1 {
   height: calc(clamp(56px, 11vw, 150px) * 0.8);
   display: flex;
@@ -87,33 +91,43 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
 .myth-origin:not(:empty)::after { content: " — "; color: var(--mute); }
 
 .top-tag {
-  margin: 0;
+  grid-column: 6 / -1;
+  margin: 0 0 4px;
   font-family: var(--mono);
   font-size: 12px;
   text-transform: uppercase;
-  text-align: right;
+  text-align: left;
 }
 
 /* ---------- two columns ---------- */
 
 .page {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(330px, 380px);
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gap);
   align-items: start;
+  padding: 0 var(--margin);
 }
-.left { border-right: var(--line); min-width: 0; }
-.right { min-width: 0; }
+/* left: 5 columns, the sun on 3 of them and the docks on 2 */
+.left { grid-column: 1 / 6; min-width: 0; display: grid; grid-template-columns: subgrid; align-items: start; }
+.stage-wrap { grid-column: 1 / 4; }
+.docks { grid-column: 4 / 6; position: relative; min-width: 0; }
+/* right: the controls on the last 3 */
+.right { grid-column: 6 / -1; min-width: 0; position: relative; }
+/* the dividing lines run down the middle of the 8px gaps */
+.docks::before, .right::before {
+  content: ""; position: absolute; top: 0; bottom: 0;
+  left: calc(var(--gap) / -2 - 1px);
+  border-left: var(--line);
+}
 
 /* ---------- the sun ---------- */
 
-.stage-wrap { border-bottom: var(--line); }
 .stage {
   position: relative;
   width: 100%;
-  max-width: 720px;
   aspect-ratio: 1 / 1;
   background: repeating-conic-gradient(#E4E4E1 0 25%, #F6F6F3 0 50%) 0 0 / 28px 28px;
-  border-right: var(--line);
   border-bottom: var(--line);
 }
 .stage.over { outline: 4px dashed var(--ink); outline-offset: -8px; }
@@ -151,9 +165,7 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: 720px;
-  padding: 8px 20px;
-  border-right: var(--line);
+  padding: 8px 0;
   font-family: var(--mono);
   font-size: 12px;
   text-transform: uppercase;
@@ -163,7 +175,7 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
 
 /* ---------- docks under the sun ---------- */
 
-.dock { max-width: 720px; padding: 10px 20px 12px; border-right: var(--line); border-bottom: var(--line); }
+.dock { padding: 12px 0; border-bottom: var(--line); }
 .dock-title {
   margin: 0 0 6px;
   font-family: var(--mono);
@@ -173,9 +185,9 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
   text-transform: uppercase;
 }
 
-.save-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
-.export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.gif-motions { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-bottom: 14px; }
+.save-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+.export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+.gif-motions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px var(--gap); margin-bottom: 12px; }
 #gifPreview[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
 .note { margin: 4px 0 0; min-height: 1em; font-family: var(--mono); font-size: 12px; color: var(--mute); }
@@ -185,8 +197,8 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
 
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));   /* the two dock columns */
+  gap: var(--gap);
   margin: 12px 0 0;
   padding: 0;
   list-style: none;
@@ -220,7 +232,7 @@ button, input, select { font: inherit; color: inherit; border-radius: 0; }
 }
 .tile-del:hover { background: var(--ink); color: var(--paper); }
 
-.github { display: flex; flex-wrap: wrap; gap: 10px; }
+.github { display: grid; gap: var(--gap); }
 .chip-card { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: var(--line); }
 .chip-card.light { background: #FFFFFF; }
 .chip-card.dark { background: #0D1117; }
@@ -292,7 +304,7 @@ input[type="color"].active { outline: 3px solid var(--ink); outline-offset: 2px;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 14px;
+  padding: 8px 0;
   cursor: pointer;
   list-style: none;
   background: var(--paper);
@@ -306,7 +318,7 @@ input[type="color"].active { outline: 3px solid var(--ink); outline-offset: 2px;
 .ico { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: square; }
 .ico .solid { fill: var(--ink); }
 
-.blk-body { display: grid; gap: 10px; padding: 2px 14px 12px; }
+.blk-body { display: grid; gap: 10px; padding: 0 0 16px; }
 .blk-body.inner { padding: 0; }
 
 .sub {
@@ -323,8 +335,9 @@ input[type="color"].active { outline: 3px solid var(--ink); outline-offset: 2px;
 
 .label {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 8px;
+  gap: 0 8px;
   margin-bottom: 2px;
   font-family: var(--mono);
   font-size: 11px;
@@ -332,7 +345,8 @@ input[type="color"].active { outline: 3px solid var(--ink); outline-offset: 2px;
 }
 output { font-weight: 700; white-space: nowrap; }
 
-.sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+/* the controls side is exactly 3 columns wide: three sliders a row, one per column */
+.sliders { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px var(--gap); }
 .slider.off, .check.off, #ringWrap.off { opacity: 0.35; }
 
 input[type="range"] {
@@ -380,6 +394,10 @@ input[type="range"]:focus-visible { outline-offset: 4px; }
 /* ---------- segmented choices ---------- */
 
 .segments { display: flex; border: var(--line); }
+/* three choices: one per column, the gaps between them on the grid's gaps */
+.segments:has(> label:nth-of-type(3)) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--gap); border: 0; }
+.segments:has(> label:nth-of-type(3)) label { border: var(--line); }
+.segments:has(> label:nth-of-type(3)) label + input + label { border-left: var(--line); }
 .segments input { position: absolute; opacity: 0; pointer-events: none; }
 .segments label {
   flex: 1 1 0;
@@ -419,9 +437,10 @@ input[type="range"]:focus-visible { outline-offset: 4px; }
 /* ---------- small screens ---------- */
 
 @media (max-width: 900px) {
-  .page { grid-template-columns: minmax(0, 1fr); }
-  .left { border-right: 0; border-bottom: var(--line); }
-  .stage, .bar-check, .dock { max-width: none; border-right: 0; }
+  .brand, .top-tag, .left, .right, .stage-wrap, .docks { grid-column: 1 / -1; }
+  .left { border-bottom: var(--line); }
+  .docks::before, .right::before { display: none; }
+  .sliders { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* 4 + 4 columns */
 }
 
 @media (prefers-reduced-motion: reduce) {
