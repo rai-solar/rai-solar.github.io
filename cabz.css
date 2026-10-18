@@ -2,9 +2,9 @@
    Layout: 8 columns, 8px gap, 16px page margin (the same grid nav.js draws and overlays). */
 :root {
   color-scheme: dark;
-  --bg: #000;
+  --bg: rgb(88, 88, 88);   /* a gray, so the black eclipse ball shows */
   --fg: #fff;
-  --dim: #555;
+  --dim: #333;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --cols: 8;
   --gap: 8px;
@@ -89,7 +89,27 @@ body {
 .sun img, .sun canvas { display: block; width: 100%; height: auto; transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
 .sun.live img { display: none; }   /* sun.js draws it live, rippling */
 .sun:hover img, .sun:focus-visible img, .sun:hover canvas, .sun:focus-visible canvas { transform: rotate(30deg) scale(1.06); }
+.sun[data-hover="extend"]:hover canvas, .sun[data-hover="extend"]:focus-visible canvas { transform: none; }
 .sun:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
+.sun[data-hover="eclipse"] { cursor: none; }
+/* the mouse as a huge black ball (eclipse mode) */
+.sun-ball { position: fixed; left: 0; top: 0; width: 0; height: 0; border-radius: 50%; background: #000;
+  pointer-events: none; opacity: 0; z-index: 10; }
+/* debug: pick what hovering the sun does */
+.sun-debug {
+  position: absolute;
+  top: calc(var(--bar) + 16px + (100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) + 8px);
+  right: var(--margin);
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, .4);
+  border-radius: 2px;
+  background: none;
+  color: #fff;
+  font: 400 13px/1 var(--mono);
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+.sun-debug:hover { border-color: #fff; }
 
 /* fw: one emoji per column, from column 1 */
 .tiles { list-style: none; margin: 0; padding: 0; row-gap: 48px; }
@@ -120,6 +140,7 @@ body {
   .tiles a { font-size: calc(var(--step) * 0.8); }
   .tiles li, .tiles li:first-child { grid-column: span 2; }
   .sun { width: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 + var(--gap)); }
+  .sun-debug { top: calc(var(--bar) + 16px + (100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols) * 2 + var(--gap) + 8px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
