@@ -1,9 +1,9 @@
 <?php
-// Langues: reads and writes words.json and sentences.json. No database needed.
+// Langues: reads and writes words.json and sentences.json. No database needed. (v04 only uses the sentences.)
 // GET  api.php                  → the whole vocabulary
 // POST api.php                  → {"w":"lava","to":"<id>","name":"","trip":""} adds one word joined to <id> (side defaults to "after")
 // GET  api.php?kind=sentences   → every vented sentence
-// POST api.php?kind=sentences   → {"s":"the volcano is awake"} adds one sentence
+// POST api.php?kind=sentences   → {"s":"the volcano is awake","name":"","trip":"","i":0.4} adds one sentence (name, trip and intensity are optional)
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
@@ -31,12 +31,19 @@ if ($kind === 'sentences') {
   if ($len < 1 || $len > 240) fail(400, 'a sentence of 1 to 240 characters');
   if (count(preg_split('/ /', $s)) > 40) fail(400, 'at most 40 words');
   if (preg_match('/[\x00-\x1f<>]/u', $s)) fail(400, 'plain text only');
+  $name = isset($in['name']) ? mb_substr(trim((string)$in['name']), 0, 20) : '';
+  $trip = isset($in['trip']) ? (string)$in['trip'] : '';
+  if (!preg_match('/^[a-z0-9]{0,8}$/', $trip)) fail(400, 'bad signature');
+  if ($name !== '' && $trip === '') fail(400, 'a name needs a code');
+  if (preg_match('/[\x00-\x1f<>]/u', $name)) fail(400, 'plain text only');
   $fh = fopen($file, 'c+');
   if (!$fh || !flock($fh, LOCK_EX)) fail(500, 'the volcano is busy, try again');
   $data = json_decode(stream_get_contents($fh) ?: '{"sentences":[]}', true);
   if (!is_array($data) || !isset($data['sentences']) || !is_array($data['sentences'])) $data = ['sentences' => []];
   if (count($data['sentences']) >= $MAX_SENTENCES) array_shift($data['sentences']);   // the oldest makes room
   $item = ['id' => bin2hex(random_bytes(6)), 's' => $s, 't' => (int) round(microtime(true) * 1000)];
+  if ($name !== '') { $item['name'] = $name; $item['trip'] = $trip; }
+  if (isset($in['i']) && is_numeric($in['i'])) $item['i'] = round(max(0, min(1, (float)$in['i'])), 2);   // how loud it was said, 0 to 1
   $data['sentences'][] = $item;
   ftruncate($fh, 0); rewind($fh);
   fwrite($fh, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));

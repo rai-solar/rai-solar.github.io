@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Spectral:ital,wght@0,400;1,400&display=swap">
 <style>
-/* Layout: a pixel-art night sky and a dark volcano (after a photo of Villarrica). Words fly out as plain type in a trail, no boxes.
+/* Layout: a pixel-art night sky and a dark volcano (after a photo of Villarrica). What people vent is thrown out of the crater or pours down the cone.
+   A hole in the cone shows the magma chamber, where every note floats; the last 21 are hot and can be opened (top left).
    One grotesque face, small tracked capitals for controls, hairlines instead of frames (Swiss / brutalist web typography).
-   A big word in the middle, MAGMA, flips the sky to WATER: the volcano sinks and the words and their links drift as a slow current.
-   Right: real volcanoes that set the eruption's strength, plus a speed control. Two modes: catch and vent / throw. */
+   Bottom left: who is here, then the writing. Right: real volcanoes that set the eruption's strength. Bottom: magma / water, speed. */
 :root {
   --sky: #0b1633;
   --line: #f2f2f2;
@@ -45,24 +45,22 @@ input { border-bottom: 1px solid var(--faint); padding: 6px 0; }
 .who { color: var(--dim); }
 
 /* the switch: magma, and after a press, water. A box at the bottom. */
-#elem { position: fixed; z-index: 3; left: 50%; bottom: calc(54px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); padding: 12px 38px; border: 1px solid #ff3b14; background: #ff3b14; color: #0a0a0a; font: 600 15px/1 var(--mono); letter-spacing: .14em; text-transform: lowercase; transition: background .25s, border-color .25s; }
+#elem { position: fixed; z-index: 3; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); padding: 12px 38px; border: 1px solid #ff3b14; background: #ff3b14; color: #0a0a0a; font: 600 15px/1 var(--mono); letter-spacing: .14em; text-transform: lowercase; transition: background .25s, border-color .25s; }
 #elem:hover { text-decoration: none; background: #ff6a3d; border-color: #ff6a3d; color: #0a0a0a; }
 body.water #elem { background: #bcd6ff; border-color: #bcd6ff; color: #0a0a0a; }
 body.water #elem:hover { background: #dbe9ff; border-color: #dbe9ff; }
-@media (max-width: 760px) { #elem { bottom: auto; top: calc(56px + env(safe-area-inset-top, 0px)); left: 16px; transform: none; } }
-body.water #volcanoes, body.water #note { opacity: 0; pointer-events: none; }
-#volcanoes, #voice, #note { transition: opacity .3s; }
+@media (max-width: 760px) { #elem { bottom: auto; top: calc(100px + env(safe-area-inset-top, 0px)); left: auto; right: 16px; transform: none; padding: 9px 22px; } }
+body.water #volcanoes, body.water #detail { opacity: 0; pointer-events: none; }
+#volcanoes, #voice, #detail { transition: opacity .3s; }
 
-#idPanel { position: fixed; z-index: 3; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); left: 16px; width: min(280px, calc(100vw - 32px)); background: var(--sky); border: 0; border-top: 1px solid var(--line); padding: 14px 0; display: flex; flex-direction: column; gap: 10px; }
+/* bottom left: the name panel (when open), who is here, then the writing */
+#dock { position: fixed; z-index: 3; left: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(320px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 14px; }
+#idPanel { background: var(--sky); border: 0; border-top: 1px solid var(--line); padding: 14px 0 0; display: flex; flex-direction: column; gap: 10px; }
 #idPanel p { margin: 0; font-size: 12px; line-height: 1.6; color: var(--dim); }
 #idPanel input { width: 100%; box-sizing: border-box; }
 #idPanel label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--dim); }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-/* the two slots that open on a caught word: they touch its left and right edges */
-.slot { position: fixed; z-index: 1; height: 28px; box-sizing: border-box; width: 12ch; padding: 0 6px; border-bottom: 1px solid var(--line); background: transparent; }
-.slot::placeholder { color: var(--dim); }
-.slot:focus-visible { outline: none; border-bottom-width: 2px; }
 
 /* real volcanoes */
 #volcanoes { position: fixed; z-index: 2; right: 16px; top: calc(64px + env(safe-area-inset-top, 0px)); width: 250px; background: none; border: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -73,7 +71,7 @@ body.water #volcanoes, body.water #note { opacity: 0; pointer-events: none; }
 #vlist button[aria-pressed="true"] { font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
 #vnote { margin: 6px 0 0; font-size: 12px; line-height: 1.55; color: var(--dim); }
 #vnote .vlive { margin-top: 5px; color: var(--line); }
-#me { position: fixed; z-index: 2; left: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); max-width: min(360px, calc(100vw - 32px)); font-size: 12px; line-height: 1.75; text-shadow: 0 0 6px #0b1633, 0 0 2px #0b1633; }
+#me { font-size: 12px; line-height: 1.75; text-shadow: 0 0 6px #0b1633, 0 0 2px #0b1633; }
 #here { margin: 0 0 8px; font: italic 400 16px/1.35 var(--old); color: var(--line); }
 #me .kv { display: flex; align-items: baseline; gap: 8px; }
 #me .k { width: 7ch; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
@@ -81,7 +79,7 @@ body.water #volcanoes, body.water #note { opacity: 0; pointer-events: none; }
 #me .who { padding: 0; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--line); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255, 255, 255, .35); }
 #me .who:hover { text-decoration-color: var(--line); }
 #mem { color: var(--dim); }
-/* the vocabulary count sits over the mountain: fiery red-orange so it reads there */
+/* the count sits over the mountain: fiery red-orange so it reads there */
 #count { color: #ff6a1f; font-weight: 500; font-variant-numeric: tabular-nums; }
 .int { display: grid; grid-template-columns: 1fr auto; align-items: baseline; row-gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .22); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 .int .val { color: var(--line); font-size: 13px; letter-spacing: 0; font-variant-numeric: tabular-nums; }
@@ -92,16 +90,18 @@ body.water #volcanoes, body.water #note { opacity: 0; pointer-events: none; }
 .int input[type=range]::-moz-range-thumb { width: 2px; height: 18px; background: var(--line); border: 0; border-radius: 0; }
 .int input[type=range]:focus-visible { outline: 1px solid var(--line); outline-offset: 4px; }
 @media (max-width: 760px) {
-  #volcanoes { top: auto; bottom: calc(44px + env(safe-area-inset-bottom, 0px)); left: 16px; right: 16px; width: auto; }
-  #vlist { flex-direction: row; overflow-x: auto; }
+  #volcanoes { top: calc(52px + env(safe-area-inset-top, 0px)); left: 16px; right: 16px; width: auto; }
+  #vlist { flex-direction: row; gap: 16px; overflow-x: auto; }
   #vlist button { flex: none; }
-  #volcanoes { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
+  #vnote { display: none; }
+  #me .kv, #voice .hint, .speedbox { display: none; }
 }
 
-#voice { position: fixed; z-index: 2; left: 16px; top: calc(64px + env(safe-area-inset-top, 0px)); width: min(440px, calc(100vw - 280px)); box-sizing: border-box; background: none; border: 0; border-top: 1px solid var(--line); padding: 12px 0; display: flex; flex-direction: column; gap: 10px; }
-@media (max-width: 760px) { #voice { width: auto; right: 16px; } }
-#voice form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+#voice { box-sizing: border-box; border-top: 1px solid var(--line); padding: 10px 0 0; display: flex; flex-direction: column; gap: 10px; }
+#voice form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px 16px; }
+#voice form #ventText { grid-column: 1 / -1; }
 #voice form .int { margin-top: 0; padding-top: 0; border-top: 0; }
+#voice .hint { margin: 0; font-size: 11px; line-height: 1.5; color: var(--dim); }
 /* the speed sits alone in the bottom right corner, out of the way of the list */
 .speedbox { position: fixed; z-index: 2; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: min(170px, 38vw); margin: 0; padding: 0; border-top: 0; }
 #voice form button { justify-self: start; }
@@ -109,18 +109,40 @@ body.water #volcanoes, body.water #note { opacity: 0; pointer-events: none; }
 .meter { height: 6px; border-bottom: 1px solid var(--faint); }
 .meter span { display: block; height: 100%; width: 0; background: var(--line); }
 .heard { margin: 0; min-height: 1.4em; color: var(--dim); font: italic 400 15px/1.4 var(--old); overflow-wrap: anywhere; }
+
+/* one of the last 21 notes, opened from inside the volcano */
+#detail { position: fixed; z-index: 3; left: 16px; top: calc(64px + env(safe-area-inset-top, 0px)); width: min(360px, calc(100vw - 32px)); box-sizing: border-box; border-top: 1px solid #ffd27a; padding: 12px 0 0; text-shadow: 0 0 6px #0b1633, 0 0 2px #0b1633; }
+#detail .k { margin: 0; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #ffd27a; }
+#dText { margin: 10px 0 12px; font: italic 400 21px/1.3 var(--old); color: var(--line); overflow-wrap: anywhere; }
+#detail dl { display: grid; grid-template-columns: 7ch 1fr; gap: 2px 8px; margin: 0 0 12px; font-size: 12px; line-height: 1.6; }
+#detail dt { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); line-height: 1.9; }
+#detail dd { margin: 0; color: var(--line); }
+#detail .row { gap: 22px; }
+@media (max-width: 760px) { #detail { top: calc(96px + env(safe-area-inset-top, 0px)); width: calc(100vw - 32px); background: rgba(11, 22, 51, .92); padding-bottom: 12px; } }
 </style>
 
 <canvas id="c"></canvas>
 
 <header class="bar top">
   <h1>langues</h1>
-  <div class="seg" role="group" aria-label="Mode">
-    <button data-mode="words" aria-pressed="true">catch</button>
-    <button data-mode="voice" aria-pressed="false">vent / throw</button>
-  </div>
 </header>
 
+<aside id="volcanoes" aria-label="Volcano">
+  <div id="vlist"></div>
+  <p id="vnote"></p>
+</aside>
+
+<aside id="detail" aria-live="polite" hidden>
+  <p class="k" id="dRank"></p>
+  <p id="dText"></p>
+  <dl id="dMeta"></dl>
+  <div class="row">
+    <button id="dThrow">throw it again</button>
+    <button id="dClose">close</button>
+  </div>
+</aside>
+
+<div id="dock">
 <div id="idPanel" hidden>
   <p>Stay anonymous, or take a name and lock it with a secret code. Others see your name with a signature made from the code. The code never leaves this browser.</p>
   <label for="nm">name<input id="nm" maxlength="20" autocomplete="off"></label>
@@ -132,14 +154,14 @@ body.water #volcanoes, body.water #note { opacity: 0; pointer-events: none; }
   </div>
 </div>
 
-<aside id="volcanoes" aria-label="Volcano">
-  <div id="vlist"></div>
-  <p id="vnote"></p>
+<aside id="me" aria-label="Who is here">
+  <p id="here">no one can hear you scream</p>
+  <div class="kv"><span class="k">name</span><span class="c">:</span><button class="who" id="who" aria-expanded="false">anonymous</button></div>
+  <div class="kv"><span class="k">notes</span><span class="c">:</span><span id="count"></span></div>
+  <div class="kv"><span class="k">memory</span><span class="c">:</span><span id="mem"></span></div>
 </aside>
 
-<input class="slot" id="inAdd" placeholder="add a word" maxlength="24" autocomplete="off" aria-label="Add a word to the caught word" hidden>
-
-<div id="voice" hidden>
+<div id="voice">
   <div class="seg" role="group" aria-label="Voice input">
     <button data-vm="real" aria-pressed="false">real</button>
     <button data-vm="debug" aria-pressed="true">debug</button>
@@ -161,22 +183,14 @@ body.water #volcanoes, body.water #note { opacity: 0; pointer-events: none; }
     <label class="int" for="intensity"><span>intensity</span><span class="val" id="intVal">25</span><input type="range" id="intensity" min="0" max="100" value="25"></label>
     <button>vent</button>
   </form>
+  <p class="hint">said calmly it pours down · shouted it explodes · then it sinks inside and comes back later</p>
+</div>
 </div>
 
 <button id="elem" aria-pressed="false" aria-label="Switch between magma and water">magma</button>
 
 <label class="int speedbox" for="speed"><span>speed</span><span class="val" id="speedVal">1×</span><input type="range" id="speed" min="25" max="200" value="100"></label>
 
-<aside id="me" aria-label="Who is here">
-  <p id="here">no one can hear you scream</p>
-  <div class="kv"><span class="k">name</span><span class="c">:</span><button class="who" id="who" aria-expanded="false">anonymous</button></div>
-  <div class="kv"><span class="k">words</span><span class="c">:</span><span id="count"></span></div>
-  <div class="kv"><span class="k">memory</span><span class="c">:</span><span id="mem"></span></div>
-</aside>
-
-<footer class="bar bottom">
-  <span id="note"></span>
-</footer>
 
 <script>window.playhtmlReady = new Promise(r => { window.__playhtmlResolve = r; });</script>
 <script type="module">
@@ -190,11 +204,10 @@ body.water #volcanoes, body.water #note { opacity: 0; pointer-events: none; }
 
 <script>
 // ================= basics =================
-const BOX_H = 28, PAD = 10, SP = 17;    // SP: distance between words in a trail (the boxes overlap)
-const FONT = "400 16px Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const BOX_H = 28;
 const SFONT = "italic 400 20px Spectral, Georgia, 'Times New Roman', serif";   // vent / throw: it should look like old writing
 const SLOW = .65;
-const WORD_RE = /^[\p{L}\p{N}'’-]{1,24}$/u;
+const pickOne = a => a.length ? a[Math.floor(Math.random() * a.length)] : undefined;
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -206,7 +219,6 @@ function resize() {
   cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + "px"; cv.style.height = H + "px";
   buildScene();
 }
-const textWidth = t => { ctx.font = FONT; return Math.ceil(ctx.measureText(t).width) + PAD * 2; };
 
 // ================= who is here =================
 const hereEl = document.getElementById("here");
@@ -265,207 +277,10 @@ document.getElementById("anon").addEventListener("click", () => {
   closeId(); showWho();
 });
 
-// ================= vocabulary: words.json + api.php =================
-// Each word: { id, w, to, side, name, trip, t }. "to" is the word it was added to, "side" is "before" or "after".
-// Reading: api.php (shared, can write) → words.json (read-only) → built-in starters. New words go to api.php,
-// or stay in this browser when there is no api.php (GitHub Pages, opening the file locally).
-const STARTERS = [
-  { id: "s1", w: "fire", to: null, side: null, t: 1 },
-  { id: "s2", w: "love", to: null, side: null, t: 2 },
-  { id: "s3", w: "sky", to: null, side: null, t: 3 },
-  { id: "s4", w: "switzerland", to: null, side: null, t: 4 },
-  { id: "s5", w: "pizza", to: null, side: null, t: 5 },
-  { id: "s6", w: "dog", to: null, side: null, t: 6 },
-  { id: "s7", w: "river", to: null, side: null, t: 7 },
-  { id: "s8", w: "volcano", to: null, side: null, t: 8 },
-  { id: "s9", w: "water", to: null, side: null, t: 9 },
-  { id: "s10", w: "peace", to: null, side: null, t: 10 },
-  { id: "s11", w: "correct", to: null, side: null, t: 11 },
-  { id: "s12", w: "magic", to: null, side: null, t: 12 },
-  { id: "s13", w: "poem", to: null, side: null, t: 13 },
-  { id: "s14", w: "stinky", to: null, side: null, t: 14 },
-  { id: "s15", w: "moss", to: null, side: null, t: 15 },
-  { id: "s16", w: "thunder", to: null, side: null, t: 16 },
-  { id: "s17", w: "fern", to: null, side: null, t: 17 },
-  { id: "s18", w: "owl", to: null, side: null, t: 18 },
-  { id: "s19", w: "glacier", to: null, side: null, t: 19 },
-  { id: "s20", w: "ember", to: null, side: null, t: 20 },
-  { id: "s21", w: "tide", to: null, side: null, t: 21 },
-  { id: "s22", w: "canyon", to: null, side: null, t: 22 },
-  { id: "s23", w: "mushroom", to: null, side: null, t: 23 },
-  { id: "s24", w: "lichen", to: null, side: null, t: 24 },
-  { id: "s25", w: "snow", to: null, side: null, t: 25 },
-  { id: "s26", w: "ash", to: null, side: null, t: 26 },
-  { id: "s27", w: "storm", to: null, side: null, t: 27 },
-  { id: "s28", w: "meadow", to: null, side: null, t: 28 },
-  { id: "s29", w: "heron", to: null, side: null, t: 29 },
-  { id: "s30", w: "pebble", to: null, side: null, t: 30 },
-  { id: "s31", w: "comet", to: null, side: null, t: 31 },
-  { id: "s32", w: "desert", to: null, side: null, t: 32 },
-  { id: "s33", w: "fog", to: null, side: null, t: 33 },
-  { id: "s34", w: "cave", to: null, side: null, t: 34 },
-  { id: "s35", w: "otter", to: null, side: null, t: 35 },
-  { id: "s36", w: "bamboo", to: null, side: null, t: 36 },
-  { id: "s37", w: "mud", to: null, side: null, t: 37 },
-  { id: "s38", w: "lava", to: null, side: null, t: 38 },
-  { id: "s39", w: "basalt", to: null, side: null, t: 39 },
-  { id: "s40", w: "geyser", to: null, side: null, t: 40 },
-  { id: "s41", w: "dune", to: null, side: null, t: 41 },
-  { id: "s42", w: "orchid", to: null, side: null, t: 42 },
-  { id: "s43", w: "wolf", to: null, side: null, t: 43 },
-  { id: "s44", w: "moon", to: null, side: null, t: 44 },
-  { id: "s45", w: "cloud", to: null, side: null, t: 45 },
-  { id: "s46", w: "rain", to: null, side: null, t: 46 },
-  { id: "s47", w: "root", to: null, side: null, t: 47 },
-  { id: "s48", w: "seed", to: null, side: null, t: 48 },
-  { id: "s49", w: "wind", to: null, side: null, t: 49 },
-  { id: "s50", w: "crow", to: null, side: null, t: 50 },
-  { id: "s51", w: "salt", to: null, side: null, t: 51 },
-  { id: "s52", w: "sunrise", to: null, side: null, t: 52 },
-  { id: "s53", w: "llama", to: null, side: null, t: 53 },
-  { id: "s54", w: "herring", to: null, side: null, t: 54 },
-  { id: "s55", w: "walrus", to: null, side: null, t: 55 },
-  { id: "s56", w: "bucket", to: null, side: null, t: 56 },
-  { id: "s57", w: "trousers", to: null, side: null, t: 57 },
-  { id: "s58", w: "shrubbery", to: null, side: null, t: 58 },
-  { id: "s59", w: "nobody", to: null, side: null, t: 59 },
-  { id: "s60", w: "cheese", to: null, side: null, t: 60 },
-  { id: "s61", w: "spoon", to: null, side: null, t: 61 },
-  { id: "s62", w: "umbrella", to: null, side: null, t: 62 },
-  { id: "s63", w: "goat", to: null, side: null, t: 63 },
-  { id: "s64", w: "snail", to: null, side: null, t: 64 },
-  { id: "s65", w: "hedgehog", to: null, side: null, t: 65 },
-  { id: "s66", w: "toast", to: null, side: null, t: 66 },
-  { id: "s67", w: "sausage", to: null, side: null, t: 67 },
-  { id: "s68", w: "biscuit", to: null, side: null, t: 68 },
-  { id: "s69", w: "trombone", to: null, side: null, t: 69 },
-  { id: "s70", w: "sleeping", to: "s8", side: "before", t: 70 },
-  { id: "s71", w: "slowly", to: "s70", side: "before", t: 71 },
-  { id: "s72", w: "hot", to: "s9", side: "before", t: 72 },
-  { id: "s73", w: "cold", to: "s1", side: "before", t: 73 },
-  { id: "s74", w: "blue", to: "s3", side: "before", t: 74 },
-  { id: "s75", w: "endless", to: "s7", side: "before", t: 75 },
-  { id: "s76", w: "singing", to: "s7", side: "before", t: 76 },
-  { id: "s77", w: "tiny", to: "s6", side: "before", t: 77 },
-  { id: "s78", w: "wet", to: "s6", side: "before", t: 78 },
-  { id: "s79", w: "very", to: "s14", side: "before", t: 79 },
-  { id: "s80", w: "tonight", to: "s5", side: "after", t: 80 },
-  { id: "s81", w: "inner", to: "s10", side: "before", t: 81 },
-  { id: "s82", w: "hour", to: "s12", side: "after", t: 82 },
-  { id: "s83", w: "morning", to: "s13", side: "before", t: 83 },
-  { id: "s84", w: "sleepy", to: "s4", side: "before", t: 84 },
-  { id: "s85", w: "politically", to: "s11", side: "before", t: 85 },
-  { id: "s86", w: "frozen", to: "s5", side: "before", t: 86 },
-  { id: "s87", w: "gently", to: "s74", side: "before", t: 87 }
-].map(o => ({ name: "", trip: "", ...o }));
-const LOCAL_KEY = "word-volcano-local-2";   // a new key: words kept in browsers before the reset are left behind
-const words = new Map();
-const mine = new Set();
-let memMode = "starting", dirty = true;
-
-function clean(o) {
-  if (!o || typeof o.w !== "string" || !WORD_RE.test(o.w) || o.id == null) return null;
-  return {
-    id: String(o.id).slice(0, 40), w: o.w,
-    to: typeof o.to === "string" ? o.to : null,
-    side: o.side === "before" ? "before" : o.side === "after" ? "after" : null,
-    name: typeof o.name === "string" ? o.name.slice(0, 20) : "",
-    trip: typeof o.trip === "string" ? o.trip.slice(0, 8) : "",
-    t: Number(o.t) || 0,
-  };
-}
-function keepWord(w) {
-  if (!w || words.has(w.id)) return false;
-  words.set(w.id, { ...w, bw: textWidth(w.w) });
-  dirty = true;
-  return true;
-}
-function localList() { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]"); } catch { return []; } }
-function saveLocal(w) { try { localStorage.setItem(LOCAL_KEY, JSON.stringify([...localList(), w].slice(-2000))); } catch {} }
 async function getJSON(url) {
   const r = await fetch(url + (url.includes("?") ? "&" : "?") + "v=" + Date.now(), { cache: "no-store" });
   if (!r.ok) throw new Error(String(r.status));
   return r.json();
-}
-// open index.html?words=test/words-test.json to try the links with a test vocabulary (read-only, nothing is saved on the server)
-let TEST_FILE = null;
-try { TEST_FILE = new URLSearchParams(location.search).get("words"); } catch {}
-async function loadWords(first) {
-  let data = null;
-  if (TEST_FILE && first) { try { data = await getJSON(TEST_FILE); memMode = "read-only"; } catch {} }
-  if (!data && (first || memMode === "shared")) { try { data = await getJSON("api.php"); memMode = "shared"; } catch {} }
-  if (!data && (first || memMode === "read-only")) { try { data = await getJSON("words.json"); memMode = "read-only"; } catch {} }
-  if (!data && first) memMode = "local";
-  const list = Array.isArray(data?.words) ? [...data.words] : [];
-  if (first && memMode === "local") list.push(...STARTERS);
-  if (first && memMode !== "shared") list.push(...localList());
-  const fresh = [];
-  for (const o of list) { const w = clean(o); if (keepWord(w) && !first && !mine.has(w.id)) fresh.push(w); }
-  if (first && !words.size) STARTERS.forEach(keepWord);
-  if (mode === "words") fresh.forEach(w => { reindex(); erupt(chainAround(words.get(w.id)), true); });
-  showStatus();
-}
-async function saveWord(body) {
-  if (memMode === "shared") {
-    const r = await fetch("api.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const j = await r.json().catch(() => null);
-    if (!r.ok || !j || !j.word) throw new Error((j && j.error) || "the volcano didn't answer, try again");
-    return j.word;
-  }
-  const w = { ...body, id: "l-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now() };
-  saveLocal(w);
-  return w;
-}
-const countEl = document.getElementById("count"), memEl = document.getElementById("mem");
-function showStatus() {
-  countEl.textContent = words.size.toLocaleString();
-  memEl.textContent = { shared: "shared", "read-only": "words.json + this browser", local: "this browser only" }[memMode] || "";
-}
-setInterval(() => { if (memMode === "shared" || memMode === "read-only") loadWords(false).catch(() => {}); }, 6000);
-
-// ================= chains =================
-// Every word is linked to the word it was added to (`to`). A chain reads left to right. A word that already has company
-// doesn't get its link broken: the new word becomes another branch, and each time a chain is built a branch is picked
-// at random, so one word can lead to several different pathways.
-// <links>
-let idx = new Map();
-function reindex() {
-  idx = new Map();
-  for (const w of words.values()) if (w.to) {
-    const k = w.to + ":" + (w.side === "before" ? "before" : "after");
-    if (!idx.has(k)) idx.set(k, []);
-    idx.get(k).push(w);
-  }
-  dirty = false;
-}
-const pickOne = a => a.length ? a[Math.floor(Math.random() * a.length)] : undefined;
-function prevOf(w) {       // what can stand just before w
-  const c = [];
-  if (w.to && w.side !== "before" && words.has(w.to)) c.push(words.get(w.to));
-  c.push(...(idx.get(w.id + ":before") || []));
-  return pickOne(c);
-}
-function nextOf(w) {       // what can stand just after w
-  const c = [];
-  if (w.to && w.side === "before" && words.has(w.to)) c.push(words.get(w.to));
-  c.push(...(idx.get(w.id + ":after") || []));
-  return pickOne(c);
-}
-function chainAround(w, max = 7) {
-  if (!w) return [];
-  const seq = [w], seen = new Set([w.id]);
-  let p = prevOf(w), n = nextOf(w);
-  while (seq.length < max && (p || n)) {
-    if (p && !seen.has(p.id)) { seq.unshift(p); seen.add(p.id); p = prevOf(p); } else p = null;
-    if (seq.length < max && n && !seen.has(n.id)) { seq.push(n); seen.add(n.id); n = nextOf(n); } else n = null;
-  }
-  return seq;
-}
-// </links>
-function pickWord() {
-  const list = [...words.values()].sort((a, b) => b.t - a.t);
-  if (!list.length) return null;
-  return Math.random() < .55 ? list[Math.floor(Math.random() * Math.min(20, list.length))] : list[Math.floor(Math.random() * list.length)];
 }
 
 // ================= real volcanoes =================
@@ -488,9 +303,9 @@ const VOLCANOES = [
 ];
 const vrpText = v => v.vrp >= 10 || v.vrp === 0 ? Math.round(v.vrp) : v.vrp.toFixed(1);
 // the list is shown from the strongest (top) to the weakest (bottom), and the page starts at the bottom (Lascar)
-// the slider says 1x for what is comfortable in each mode: 0.5x of the raw clock for catch, 0.25x for vent / throw
-const speedBase = () => mode === "voice" ? .4 : .5;
-let V = VOLCANOES[0], timeScale = .5;
+// the slider says 1x for 0.4x of the raw clock: comfortable to read
+const speedBase = () => .4;
+let V = VOLCANOES[0], timeScale = .4;
 const vlist = document.getElementById("vlist"), vnote = document.getElementById("vnote");
 const labelOf = v => v.hist ? `${v.name} (${v.year})` : `${v.name} (live)`;   // "(live)" is shown on purpose, to show the prototype
 const WARM = [255, 214, 64], HOT = [255, 34, 16];   // warm yellow for the weakest, hot red for the strongest
@@ -501,7 +316,7 @@ VOLCANOES.slice().reverse().forEach(v => {
   b.style.setProperty("--c", tint(v));
   const nm = document.createElement("span"); nm.textContent = labelOf(v); b.append(nm);
   const s = document.createElement("small"); s.textContent = v.vrp != null ? vrpText(v) + " MW" : v.vei ? "VEI " + v.vei : "no reading"; b.append(s);
-  b.addEventListener("click", () => { V = v; nextErupt = Math.min(nextErupt, .3); nextRecall = Math.min(nextRecall, .6); showVolcano(); });
+  b.addEventListener("click", () => { V = v; nextRecall = Math.min(nextRecall, .6); showVolcano(); });
   vlist.appendChild(b);
 });
 function showVolcano() {
@@ -526,7 +341,7 @@ function noise1(x, seed) {
 function buildScene() {
   P = W < 760 ? 3 : 4;
   const gw = Math.ceil(W / P), gh = Math.ceil(H / P);
-  const cx = W / 2, rimY = H * .56, half = clamp(W * .026, 18, 40), baseHalf = Math.max(W * .7, 560);
+  const cx = W / 2, rimY = H * (W < 760 ? .36 : .56), half = clamp(W * .026, 18, 40), baseHalf = Math.max(W * .7, 560);
   rim = { x: cx, y: rimY, half };
   // the profile: a tall cone like Villarrica, slightly concave, a little rough
   prof = new Float32Array(W + 1);
@@ -587,6 +402,7 @@ function buildScene() {
       if (hgt > 0) g.fillRect(i, Math.round(base - hgt), 1, Math.ceil(hgt));
     }
   }
+  buildHole(g, gw, gh);
   // arc-length tables for words sliding down each side
   for (const dir of [-1, 1]) {
     const pts = []; let l = 0, ppx = null, ppy = null;
@@ -636,31 +452,9 @@ function arcLenAtX(dir, x) {
 }
 
 // ================= eruptions =================
-// A trail: the last word leads, the words before it follow along its path, overlapping.
-let trails = [], slides = [], flows = [], bits = [], splats = [], nextErupt = 1, shake = 0;
-let pulse = 0, glowLevel = .3;
-let water = false, wLevel = 0, streams = [], streamsFor = "", phraseQueue = [];   // water: the words as a river   // pulse: recent eruptions (fades in a couple of seconds); glowLevel: the red light, eased
-function erupt(seq, fresh = false) {
-  if (!seq.length) return;
-  const c = crater();
-  const lift = Math.sqrt(H) * 30 * SLOW * V.power;
-  trails.push({
-    items: seq.map(w => ({ word: w })), lone: seq.length === 1,
-    x: c.x + rand(-c.half * .4, c.half * .4), y: c.y + 2 * P,
-    vx: (rand(-1, 1) * V.spread * rand(.5, 1.5) + (V.side || 0) * rand(.4, 1)) * Math.min(W, 900) * .38 * SLOW,
-    vy: -lift * rand(.6, 1.1), path: [], head: 0, landed: false, extra: 0, frozen: false, done: new Set(),
-  });
-  const t = trails[trails.length - 1]; t.path.push({ x: t.x, y: t.y, l: 0 });
-  t.off = seq.map((_, k) => k * SP);   // the boxes overlap along the path
-  t.age = 0;
-  for (const it of t.items) {           // each piece of tephra tumbles in its own way
-    it.a = rand(.5, 1.3) * (Math.random() < .5 ? -1 : 1);
-    it.w = rand(2.2, 5.5); it.ph = rand(0, 6.28);
-    it.jx = rand(5, 20); it.jy = rand(5, 18); it.jw = rand(1.4, 3.6);
-  }
-  sparkle(c, fresh ? 16 : 6 + V.burst * 2, V.power - .5);
-  shake = Math.max(shake, V.shake);
-}
+let slides = [], flows = [], bits = [], splats = [], shake = 0;
+let pulse = 0, glowLevel = .3;   // pulse: recent eruptions (fades in a couple of seconds); glowLevel: the red light, eased
+let water = false, wLevel = 0, streamsFor = "";   // water: the notes as a river
 function sparkle(c, n, power) {
   for (let i = 0; i < n; i++) bits.push({ x: c.x + rand(-c.half, c.half) * .5, y: c.y + P, vx: rand(-80, 80) * (1 + power), vy: rand(-340, -120) * SLOW * (1 + power), life: rand(.5, 1.3), hot: true, g: .6 });
 }
@@ -668,66 +462,20 @@ function splat(x, y, bw, lone) {
   for (let i = 0; i < 14; i++) bits.push({ x: x + rand(-bw / 2, bw / 2), y, vx: rand(-90, 90), vy: rand(-170, -40), life: rand(.4, .9), g: 1, white: lone });
   splats.push({ x, y, w: bw, life: 1.2, lone });
 }
-function pathPoint(t, l) {
-  const p = t.path; if (l <= 0) return p[0];
-  let lo = 0, hi = p.length - 1;
-  if (l >= p[hi].l) return p[hi];
-  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (p[m].l < l) lo = m; else hi = m; }
-  const a = p[lo], b = p[hi], f = (l - a.l) / ((b.l - a.l) || 1);
-  return { x: lerp(a.x, b.x, f), y: lerp(a.y, b.y, f) };
-}
-function updateTrails(dt, g) {
-  for (const t of trails) {
-    if (t.frozen) continue;
-    t.age = (t.age || 0) + dt;
-    const n = t.items.length;
-    if (!t.landed) {
-      t.vy += g * dt; t.x += t.vx * dt; t.y += t.vy * dt;
-      const last = t.path[t.path.length - 1], d = Math.hypot(t.x - last.x, t.y - last.y);
-      if (d > 2) { t.path.push({ x: t.x, y: t.y, l: last.l + d }); t.head = last.l + d; }
-      if (t.vy > 0 && t.y + BOX_H / 2 >= ground(t.x)) {
-        t.landed = true; t.speed = Math.max(220, Math.hypot(t.vx, t.vy));
-        const lead = t.items[n - 1]; t.done.add(n - 1);
-        splat(t.x, ground(t.x), lead.word.bw, t.lone);
-      }
-      if (t.x < -400 || t.x > W + 400) t.gone = true;
-    } else {
-      t.extra += t.speed * dt;
-      for (let k = 1; k < n; k++) {
-        const i = n - 1 - k;
-        if (!t.done.has(i) && t.extra - t.off[k] >= 0) { t.done.add(i); const p = pathPoint(t, t.head); splat(p.x, ground(p.x), t.items[i].word.bw, false); }
-      }
-      if (t.done.size >= n) t.gone = true;
-    }
-  }
-  trails = trails.filter(t => !t.gone);
-}
 
 // ================= magma / water =================
-// Press the box at the bottom: the eruptions stop and the vocabulary runs down the volcano as a river. Words that were
-// added to each other travel together as one phrase, close together; every word is set in the same size.
+// Press the box at the bottom: the eruptions stop, the volcano sinks and the notes drift by as a river.
 const elemBtn = document.getElementById("elem");
 elemBtn.addEventListener("click", () => {
   water = !water;
   elemBtn.textContent = water ? "water" : "magma";
   elemBtn.setAttribute("aria-pressed", String(water));
   document.body.classList.toggle("water", water);
-  if (water) { release(); buildRiver(); }
+  if (water) { closeDetail(); buildRiver(); }
 });
-// Liquid, not lanes: every group of words is a particle carried by an incompressible flow (a stream function with a
-// steady current to the right, slow eddies and shear), so they bend, drift apart, bunch up and weave. A phrase is laid
-// along the path its head has just travelled. Words that were added to each other travel as one group; the more words
-// are linked, the bigger and brighter the group. Thin dashed streaks of foam run along the same currents.
-function nextPhrase() {
-  if (!phraseQueue.length) {                       // every word once, in a new order
-    phraseQueue = [...words.values()];
-    for (let i = phraseQueue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [phraseQueue[i], phraseQueue[j]] = [phraseQueue[j], phraseQueue[i]]; }
-  }
-  const w = phraseQueue.pop();
-  if (!w) return { text: "", n: 0 };
-  const seq = chainAround(w, 6);
-  return { text: seq.map(x => x.w).join(" "), n: seq.length };
-}
+// Liquid, not lanes: every note is a particle carried by an incompressible flow (a stream function with a steady current
+// to the right, slow eddies and shear), so they bend, drift apart, bunch up and weave. A note is laid along the path its
+// head has just travelled. Thin streaks of foam run along the same currents.
 let fluid = [], fluidT = 0;
 function flowAt(x, y, t) {
   const U = 40 + 18 * Math.sin(y * .007 + 1.3);                               // a current to the right, faster in some bands (shear)
@@ -741,10 +489,9 @@ function spawnParticle(sentenceText) {
   const sentence = typeof sentenceText === "string";
   let text = "", n = 0;
   if (sentence) { text = sentenceText; n = 9; }
-  else if (Math.random() < .3) text = "";                                     // foam: only a streak
-  else { const ph = nextPhrase(); text = ph.text; n = ph.n; }
-  const size = sentence ? 20 : n >= 3 ? 21 : n === 2 ? 19 : 17;
-  const font = sentence ? `italic 400 ${size}px Spectral, Georgia, serif` : `${n >= 3 ? 600 : n === 2 ? 500 : 400} ${size}px Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif`;
+  else if (Math.random() < .3 || !sentences.length) text = "";               // foam: only a streak
+  else { text = sentenceLines(pickOne(sentences).s)[0] || ""; n = 1; }
+  const font = `italic 400 ${sentence ? 20 : 17}px Spectral, Georgia, serif`;
   ctx.font = font;
   const w = [...text].map(ch => ctx.measureText(ch).width);
   const bw = text ? w.reduce((a, b) => a + b, 0) : rand(70, 190);
@@ -822,26 +569,41 @@ async function loadSentences() {
   const seen = new Set(), out = [];
   const add = o => {
     if (!o || typeof o.s !== "string" || !o.s.trim() || seen.has(String(o.id))) return;
-    seen.add(String(o.id)); out.push({ id: String(o.id), s: o.s.trim().slice(0, 240), t: Number(o.t) || 0 });
+    seen.add(String(o.id));
+    out.push({ id: String(o.id), s: o.s.trim().slice(0, 240), t: Number(o.t) || 0,
+      name: typeof o.name === "string" ? o.name.slice(0, 20) : "", trip: typeof o.trip === "string" ? o.trip.slice(0, 8) : "",
+      i: Number.isFinite(o.i) ? clamp(o.i, 0, 1) : null });
   };
   (Array.isArray(data?.sentences) ? data.sentences : []).forEach(add);
   if (sentMode !== "shared") { try { JSON.parse(localStorage.getItem(SENT_LOCAL_KEY) || "[]").forEach(add); } catch {} }
   if (!out.length) SENT_STARTERS.forEach((t, i) => add({ id: "q" + (i + 1), s: t }));
   sentences = out;
+  syncNotes(); showStatus();
 }
-async function saveSentence(text) {
+async function saveSentence(text, I) {
   const t = String(text || "").trim().replace(/\s+/g, " ").slice(0, 240);
   if (!t || t.split(" ").length > 40) return;
-  const o = { id: "l-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), s: t, t: Date.now() };
+  const i = Math.round(clamp(I, 0, 1) * 100) / 100;
+  const o = { id: "l-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), s: t, t: Date.now(), name: me.name, trip: me.trip, i };
+  let saved = null;
   if (sentMode === "shared") {
     try {
-      const r = await fetch("api.php?kind=sentences", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ s: t }) });
+      const r = await fetch("api.php?kind=sentences", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ s: t, name: me.name, trip: me.trip, i }) });
       const j = await r.json();
-      if (r.ok && j && j.sentence) { sentences.push({ id: j.sentence.id, s: j.sentence.s, t: j.sentence.t }); return; }
+      if (r.ok && j && j.sentence) saved = { ...o, ...j.sentence };
     } catch {}
   }
-  try { const l = JSON.parse(localStorage.getItem(SENT_LOCAL_KEY) || "[]"); l.push(o); localStorage.setItem(SENT_LOCAL_KEY, JSON.stringify(l.slice(-300))); } catch {}
-  sentences.push(o);
+  if (!saved) {
+    try { const l = JSON.parse(localStorage.getItem(SENT_LOCAL_KEY) || "[]"); l.push(o); localStorage.setItem(SENT_LOCAL_KEY, JSON.stringify(l.slice(-300))); } catch {}
+    saved = o;
+  }
+  if (!sentences.some(x => x.id === saved.id)) sentences.push(saved);
+  syncNotes(saved.id); showStatus();
+}
+const countEl = document.getElementById("count"), memEl = document.getElementById("mem");
+function showStatus() {
+  countEl.textContent = sentences.length.toLocaleString();
+  memEl.textContent = { shared: "shared", "read-only": "sentences.json + this browser" }[sentMode] || "this browser only";
 }
 loadSentences();
 setInterval(loadSentences, 90 * 1000);   // people elsewhere keep venting
@@ -949,73 +711,207 @@ function updateSlides(dt, g) {
   flows = flows.filter(f => slides.some(v => v.flow === f));
 }
 
-// ================= catching and adding =================
-const inAdd = document.getElementById("inAdd"), note = document.getElementById("note");
-const WORDS_HINT = "";
-const VOICE_HINT = "calm sentences flow · loud ones explode · they come back later";
-let caught = null, busy = false, hover = null;
-function catchItem(trail, item) {
-  release();
-  trail.frozen = true; caught = { trail, item };
-  inAdd.value = ""; inAdd.hidden = false;
-  const w = item.word;
-  note.textContent = (w.id.startsWith("s") && !w.to ? "from the volcano" : `thrown by ${signature(w.name, w.trip)}`) + " · type a word, then Enter: it joins this one · Esc to let go";
-  inAdd.focus({ preventScroll: true });
-}
-function release() {
-  if (caught) caught.trail.frozen = false;
-  caught = null;
-  inAdd.hidden = true;
-  note.textContent = mode === "words" ? WORDS_HINT : VOICE_HINT;
-}
-async function submit(input) {
-  if (!caught || busy) return;
-  const text = input.value.trim().split(/\s+/)[0] || "";
-  if (!WORD_RE.test(text)) { note.textContent = "one word: letters, numbers, - or '"; return; }
-  busy = true;
-  try {
-    // the new word always joins the caught word (never in the middle of a link): a word that already has company gets a new branch
-    const saved = clean(await saveWord({ w: text, to: caught.item.word.id, side: "after", name: me.name, trip: me.trip }));
-    if (!saved) throw new Error("the volcano didn't answer, try again");
-    mine.add(saved.id); keepWord(saved); reindex();
-    release();
-    erupt(chainAround(words.get(saved.id)), true);
-    showStatus();
-  } catch (e) { note.textContent = e.message; }
-  busy = false;
-}
-inAdd.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); submit(inAdd); } });
-addEventListener("keydown", e => { if (e.key === "Escape") { release(); closeId(); } });
+// ================= inside the volcano =================
+// A hole in the cone shows the magma chamber. Every note ever vented floats in there, carried round by slow convection:
+// up through the middle, out under the roof, down the sides. The last 21 are hot (gold) and can be opened to read them
+// in full. When the volcano erupts, a note in here lights up and comes out of the crater the way it was vented.
+const RECENT = 21, MAX_OLD = 250;
+const NFONT_OLD = "italic 400 13px Spectral, Georgia, serif", NFONT_HOT = "italic 400 14px Spectral, Georgia, serif";
+let hole = null, sceneY = 0;            // sceneY: how far the volcano has sunk (water)
+const notes = new Map();                // sentence id -> a floating note
+let recentIds = new Set(), rankOf = new Map(), picked = null, hoverNote = null, blobs = [];
 
-function hit(px, py) {
-  for (let i = trails.length - 1; i >= 0; i--) {
-    const t = trails[i];
-    for (let k = t.items.length - 1; k >= 0; k--) {           // front (leader) first
-      const it = t.items[k];
-      if (!it.vis) continue;
-      if (px >= it.bx - 2 && px <= it.bx + it.word.bw + 2 && py >= it.by - 2 && py <= it.by + BOX_H + 2) return { t, it };
+function buildHole(g) {
+  // the opening: a rough ellipse on the face of the cone, painted into the pixel-art scene (glow and notes come every frame)
+  const c = crater();
+  const top = c.y + (H - c.y) * (W < 760 ? .1 : .18), bot = c.y + (H - c.y) * (W < 760 ? .45 : .8);
+  const cy = (top + bot) / 2, ry = (bot - top) / 2;
+  let edge = c.x; while (edge < W && prof[Math.round(edge)] < cy) edge += 2;   // the cone's half width at that height
+  const rx = Math.max(60, Math.min((edge - c.x) * .78, W * .3, 440));
+  const rows = [];                      // one per pixel row: its left and right ends, on the pixel grid
+  for (let j = Math.ceil((cy - ry) / P); j <= Math.floor((cy + ry) / P); j++) {
+    const y = (j + .5) * P, e = 1 - ((y - cy) / ry) ** 2;
+    if (e <= 0) continue;
+    const half = rx * Math.sqrt(e) * (1 + .06 * Math.sin(j * .9 + 1.7) + .04 * Math.sin(j * 2.3));   // a broken, rocky edge
+    rows.push({ j, l: Math.round((c.x - half) / P), r: Math.round((c.x + half) / P) });
+  }
+  hole = { cx: c.x, cy, rx, ry, rows, top: rows[0].j * P, byJ: new Map(rows.map(r => [r.j, r])) };
+  // dark under the roof, glowing magma at the bottom, a rim of broken rock lit from below
+  const pal = ["#120403", "#1c0604", "#290805", "#3a0c05", "#511207", "#6c1a09", "#8a240c", "#a8300f"];
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  rows.forEach((row, k) => {
+    const f = k / Math.max(1, rows.length - 1);
+    for (let i = row.l; i < row.r; i++) {
+      let col = pal[clamp(Math.round(f * f * (pal.length - 1) + (((i ^ row.j) & 1) - .5) * .8 + (rnd() - .5) * .6), 0, pal.length - 1)];
+      if (i === row.l || i === row.r - 1 || k === 0 || k === rows.length - 1) col = f > .5 ? "#c4461a" : "#5e1a08";
+      g.fillStyle = col; g.fillRect(i, row.j, 1, 1);
+    }
+    g.fillStyle = "#040405"; g.fillRect(row.l - 1, row.j, 1, 1); g.fillRect(row.r, row.j, 1, 1);   // cut into the cone
+  });
+  blobs = Array.from({ length: 9 }, () => ({ u: rand(-.8, .8), v: rand(-1, 1.2), r: rand(3, 7), sp: rand(.04, .09) }));
+}
+function holePath() {                   // the inside of the opening, in pixel steps
+  const rs = hole.rows;
+  ctx.beginPath(); ctx.moveTo((rs[0].l + 1) * P, rs[0].j * P);
+  for (const r of rs) { ctx.lineTo((r.l + 1) * P, r.j * P); ctx.lineTo((r.l + 1) * P, (r.j + 1) * P); }
+  for (let k = rs.length - 1; k >= 0; k--) { const r = rs[k]; ctx.lineTo((r.r - 1) * P, (r.j + 1) * P); ctx.lineTo((r.r - 1) * P, r.j * P); }
+  ctx.closePath();
+}
+const inHole = (x, y) => { const r = hole && hole.byJ.get(Math.floor(y / P)); return !!r && x >= (r.l + 1) * P && x < (r.r - 1) * P; };
+const shortNote = s => { const m = W < 760 ? 22 : 34; return s.length > m ? s.slice(0, m - 2).trimEnd() + "…" : s; };
+
+function syncNotes(freshId) {
+  const byId = new Map(sentences.map(s => [s.id, s]));
+  for (const id of [...notes.keys()]) if (!byId.has(id)) notes.delete(id);
+  for (const s of sentences) {
+    const n = notes.get(s.id);
+    if (n) { n.s = s; continue; }
+    const a = rand(0, 6.28), r = Math.sqrt(Math.random()) * .85;
+    notes.set(s.id, { s, u: Math.cos(a) * r, v: Math.sin(a) * r, ph: rand(0, 6.28), sp: rand(.7, 1.3), flash: 0, tw: 0, x: 0, y: 0 });
+  }
+  if (freshId && notes.has(freshId)) Object.assign(notes.get(freshId), { u: rand(-.1, .1), v: -.9, flash: 1.6 });   // what you just said sinks in from the top
+  // the last 21 by time; notes with the same time keep their order in the file
+  const order = sentences.map((s, k) => [s, k]).sort((a, b) => (a[0].t - b[0].t) || (a[1] - b[1])).map(x => x[0]);
+  recentIds = new Set(order.slice(-RECENT).map(s => s.id));
+  rankOf = new Map(order.map((s, k) => [s.id, k + 1]));
+  if (picked && !notes.has(picked.s.id)) closeDetail();
+}
+function flashNote(id) { const n = notes.get(id); if (n) n.flash = 1.2; }
+
+function updateNotes(dt) {
+  const k = .025, T = performance.now() / 1000;
+  for (const n of notes.values()) {
+    n.flash = Math.max(0, n.flash - dt * .8);
+    if (n === picked) continue;          // an open note holds still
+    // two convection rolls: up through the middle, down the sides
+    const du = -Math.PI / 2 * Math.sin(Math.PI * n.u) * Math.sin(Math.PI * n.v / 2);
+    const dv = -Math.PI * Math.cos(Math.PI * n.u) * Math.cos(Math.PI * n.v / 2);
+    n.u += (du * k + Math.sin(T * .37 * n.sp + n.ph) * .012) * n.sp * dt;
+    n.v += (dv * k + Math.cos(T * .29 * n.sp + n.ph * 1.7) * .012) * n.sp * dt;
+    const d = Math.hypot(n.u, n.v);
+    if (d > .92) { n.u *= .92 / d; n.v *= .92 / d; }
+  }
+  if (!hole) return;
+  // the last 21 keep out of each other's way and stay whole inside the opening, so each one can be read and picked
+  const hot = [...notes.values()].filter(n => n.tw && recentIds.has(n.s.id));
+  const ease = Math.min(1, dt * 4);
+  for (let a = 0; a < hot.length; a++) for (let b = a + 1; b < hot.length; b++) {
+    const A = hot[a], B = hot[b];
+    const dx = (A.u - B.u) * hole.rx, dy = (A.v - B.v) * hole.ry;
+    const ox = (A.tw + B.tw) / 2 + 12 - Math.abs(dx), oy = 21 - Math.abs(dy);
+    if (ox <= 0 || oy <= 0) continue;
+    const vert = oy < ox, push = (vert ? oy : ox) * ease / 2, s = (vert ? dy : dx) >= 0 ? 1 : -1;
+    const R = vert ? hole.ry : hole.rx, key = vert ? "v" : "u";
+    if (A !== picked) A[key] += s * push / R;
+    if (B !== picked) B[key] -= s * push / R;
+  }
+  for (const n of hot) {
+    if (n === picked) continue;
+    n.v = clamp(n.v, -.86, .86);
+    const room = Math.sqrt(1 - n.v * n.v) * .94 - n.tw / 2 / hole.rx;
+    if (room <= 0) { n.u += -n.u * ease; n.v *= 1 - ease * .2; }
+    else n.u = clamp(n.u, -room, room);
+  }
+  for (const b of blobs) { b.v -= b.sp * dt * (1 + pulse); if (b.v < -1.3) Object.assign(b, { u: rand(-.8, .8), v: 1.3, r: rand(3, 7) }); }
+}
+
+function drawChamber(t) {
+  if (!hole) return;
+  const c = crater();
+  // the conduit: magma climbing from the chamber to the crater
+  for (let y = c.y + 3 * P, i = 0; y < hole.top; y += P, i++) {
+    const x = Math.round((c.x + Math.sin(y * .04) * 1.4 * P) / P) * P;
+    ctx.fillStyle = (i + Math.floor(t / (110 - 60 * glowLevel))) % 5 === 0 ? "#e2561c" : "#4a1307";
+    ctx.fillRect(x, y, P, P);
+  }
+  ctx.save();
+  holePath(); ctx.clip();
+  // slow bubbles of brighter magma, and a flare when the volcano erupts
+  ctx.fillStyle = "#ff7a1f";
+  for (const b of blobs) {
+    const bx = hole.cx + b.u * hole.rx, by = hole.cy + b.v * hole.ry, R = b.r * P;
+    ctx.globalAlpha = .12 + .1 * clamp(b.v, 0, 1);
+    for (let dy = -R; dy <= R; dy += P) {
+      const half = Math.round(Math.sqrt(Math.max(0, R * R - dy * dy)) / P) * P;
+      ctx.fillRect(Math.round(bx / P) * P - half, Math.round((by + dy) / P) * P, half * 2, P);
     }
   }
-  return null;
+  if (pulse > .02) { ctx.globalAlpha = pulse * .18; ctx.fillRect(hole.cx - hole.rx - P, hole.top, hole.rx * 2 + 2 * P, hole.ry * 2 + 2 * P); }
+  ctx.globalAlpha = 1;
+
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const total = sentences.length;
+  for (const hot of [false, true]) {     // the older ones first, dim and small; the last 21 on top, gold
+    ctx.font = hot ? NFONT_HOT : NFONT_OLD;
+    for (const n of notes.values()) {
+      if (recentIds.has(n.s.id) !== hot) continue;
+      if (!hot && rankOf.get(n.s.id) <= total - RECENT - MAX_OLD) continue;
+      const label = shortNote(n.s.s);
+      if (!n.tw || n.label !== label || n.hot !== hot) { n.label = label; n.hot = hot; n.tw = ctx.measureText(label).width; }
+      n.x = hole.cx + n.u * hole.rx; n.y = hole.cy + n.v * hole.ry;
+      const lit = n === picked || n === hoverNote;
+      ctx.fillStyle = n === picked ? "#ffffff" : lit ? "#fff3d1" : hot ? mix("#ffc75a", "#fff6dc", clamp(n.flash, 0, 1)) : mix("#7a2a14", "#ffd9a8", clamp(n.flash, 0, 1));
+      ctx.globalAlpha = hot ? 1 : .55 + .45 * clamp(n.flash, 0, 1);
+      ctx.fillText(label, n.x, n.y);
+      if (lit) ctx.fillRect(Math.round(n.x - n.tw / 2), Math.round(n.y + 9), Math.round(n.tw), 1);
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// ---------- picking one of the last 21 ----------
+const detailEl = document.getElementById("detail"), dRank = document.getElementById("dRank"), dText = document.getElementById("dText"), dMeta = document.getElementById("dMeta");
+const when = t => { const d = new Date(t), z = n => String(n).padStart(2, "0"); return `${z(d.getDate())}/${z(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}, ${z(d.getHours())}:${z(d.getMinutes())}`; };
+function openDetail(n) {
+  picked = n;
+  const s = n.s;
+  dRank.textContent = `note ${rankOf.get(s.id)} of ${sentences.length} · one of the last ${RECENT}`;
+  dText.textContent = s.s;
+  const rows = [
+    ["when", s.t > 1e11 ? when(s.t) : "from the start"],
+    ["who", /^q\d+$/.test(s.id) && !s.name ? "Monty Python, a seed" : signature(s.name, s.trip)],
+    ["words", String(s.s.split(/\s+/).length)],
+  ];
+  if (s.i != null) rows.push(["voice", `intensity ${Math.round(s.i * 100)}`]);
+  dMeta.replaceChildren(...rows.flatMap(([k, v]) => {
+    const a = document.createElement("dt"), b = document.createElement("dd");
+    a.textContent = k; b.textContent = v; return [a, b];
+  }));
+  detailEl.hidden = false;
+}
+function closeDetail() { picked = null; detailEl.hidden = true; }
+document.getElementById("dClose").addEventListener("click", closeDetail);
+document.getElementById("dThrow").addEventListener("click", () => {
+  if (!picked) return;
+  flashNote(picked.s.id);
+  vent(picked.s.s, picked.s.i ?? .7);
+});
+function noteAt(px, py) {
+  if (!hole || wLevel > .05) return null;
+  const y = py - sceneY;
+  if (!inHole(px, y)) return null;
+  let found = null;
+  for (const n of notes.values()) if (recentIds.has(n.s.id) && n.tw && Math.abs(px - n.x) <= n.tw / 2 + 4 && Math.abs(y - n.y) <= 11) found = n;
+  return found;                          // the last one drawn is the one on top
 }
 cv.addEventListener("pointermove", e => {
-  if (mode !== "words") return;
-  const h = hit(e.clientX, e.clientY); hover = h ? h.it : null;
-  cv.style.cursor = h ? "pointer" : "default";
+  hoverNote = noteAt(e.clientX, e.clientY);
+  cv.style.cursor = hoverNote ? "pointer" : "";
 });
 cv.addEventListener("pointerdown", e => {
   if (!idPanel.hidden) closeId();
-  if (mode !== "words") return;
-  const h = hit(e.clientX, e.clientY);
-  if (h) catchItem(h.t, h.it); else release();
+  const n = noteAt(e.clientX, e.clientY);
+  if (n) openDetail(n); else if (picked) closeDetail();
 });
+addEventListener("keydown", e => { if (e.key === "Escape") { closeDetail(); closeId(); } });
 
 // ================= voice mode =================
 const voiceEl = document.getElementById("voice"), realEl = document.getElementById("real"), debugEl = document.getElementById("debug");
 const ventText = document.getElementById("ventText"), intensity = document.getElementById("intensity"), intVal = document.getElementById("intVal");
 const micBtn = document.getElementById("mic"), langSel = document.getElementById("lang"), heard = document.getElementById("heard"), levelEl = document.getElementById("level");
 intensity.addEventListener("input", () => { intVal.textContent = intensity.value; });
-debugEl.addEventListener("submit", e => { e.preventDefault(); vent(ventText.value, intensity.value / 100); saveSentence(ventText.value); ventText.value = ""; });
+debugEl.addEventListener("submit", e => { e.preventDefault(); const I = intensity.value / 100; vent(ventText.value, I); saveSentence(ventText.value, I); ventText.value = ""; });
 document.querySelectorAll("[data-vm]").forEach(b => b.addEventListener("click", () => {
   const real = b.dataset.vm === "real";
   document.querySelectorAll("[data-vm]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
@@ -1039,7 +935,7 @@ async function startMic() {
     let interim = "";
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
-      if (r.isFinal) { const I = peak; vent(r[0].transcript, I); saveSentence(r[0].transcript); heard.textContent = `“${r[0].transcript.trim()}” · intensity ${Math.round(I * 100)}`; peak = 0; }
+      if (r.isFinal) { const I = peak; vent(r[0].transcript, I); saveSentence(r[0].transcript, I); heard.textContent = `“${r[0].transcript.trim()}” · intensity ${Math.round(I * 100)}`; peak = 0; }
       else interim += r[0].transcript;
     }
     if (interim) heard.textContent = interim + "…";
@@ -1068,36 +964,9 @@ function readLevel() {
   levelEl.style.width = (level * 100).toFixed(1) + "%";
 }
 
-// ================= modes =================
-let mode = "words";
-document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => {
-  mode = b.dataset.mode;
-  document.querySelectorAll("[data-mode]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-  voiceEl.hidden = mode !== "voice";
-  release();
-  if (mode === "voice") { trails = []; nextRecall = 1.5; } else stopMic();
-  speed.value = 100; applySpeed();   // each mode starts at its own comfortable 1x
-  note.textContent = mode === "words" ? WORDS_HINT : VOICE_HINT;
-}));
-
 // ================= drawing =================
-// Words take the lava's colours. heat 1 = bright orange (lone words keep it until they splat),
-// lower heat = cooling ember, further back in a trail. "caught" = white-hot.
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const mix = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(",")})`; };
-// A flying word sits in a box, as in the first version: dark ember when cool, orange when hot, white-hot when caught.
-function drawBox(x, y, w, text, heat, alpha = 1, bold = false) {
-  ctx.globalAlpha = alpha;
-  const caught = heat === "caught", h = caught ? 1 : clamp(heat, 0, 1);
-  ctx.fillStyle = caught ? "#ffe9c2" : mix("#2a0d05", "#ff7a1f", h * h); ctx.fillRect(x, y, w, BOX_H);
-  ctx.strokeStyle = caught ? "#ffffff" : mix("#6e2610", "#ffd08a", h); ctx.lineWidth = bold ? 2 : 1;
-  ctx.strokeRect(x + .5, y + .5, w - 1, BOX_H - 1);
-  ctx.fillStyle = caught || h > .62 ? "#1a0703" : mix("#b8471a", "#ffb066", h);
-  ctx.font = FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText(text, x + w / 2, y + BOX_H / 2 + 1);
-  ctx.globalAlpha = 1;
-}
-
 // a sentence flowing down the cone: every letter sits on the path and turns with it, so it runs downhill like magma.
 // Flows going right read along the flow; flows going left read uphill, so the letters are never upside down.
 function drawFlow(v, heat, alpha) {
@@ -1129,49 +998,27 @@ function drawFlow(v, heat, alpha) {
   ctx.globalAlpha = 1;
 }
 
-// coloured letters for a spoken sentence: white-hot at the start, cooling toward the end and over time
-function drawLetters(x, y, text, heat, alpha = 1) {
-  ctx.globalAlpha = alpha; ctx.font = SFONT; ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  const h = clamp(heat, 0, 1), n = text.length;
-  let cx = x + 3;
-  for (let i = 0; i < n; i++) {
-    const ch = text[i], f = n > 1 ? i / (n - 1) : 0;
-    ctx.fillStyle = mix("#d6360f", "#ffe3a8", clamp(h * 1.15 - f * .3, 0, 1));
-    ctx.fillText(ch, cx, y + BOX_H / 2 + 1);
-    cx += ctx.measureText(ch).width;
-  }
-  ctx.textAlign = "center"; ctx.globalAlpha = 1;
-}
-
 let last = 0;
 function frame(t) {
   const realDt = Math.min(.05, (t - last) / 1000 || 0); last = t;
   const dt = realDt * timeScale;
   const g = Math.sqrt(H) * 22 * SLOW * SLOW;
-  if (dirty) reindex();
   readLevel();
 
   wLevel += ((water ? 1 : 0) - wLevel) * Math.min(1, realDt * 7);
   if (Math.abs((water ? 1 : 0) - wLevel) < .01) wLevel = water ? 1 : 0;
   const calm = water || wLevel > .05;
 
-  if (mode === "words" && !calm) {
-    nextErupt -= dt;
-    if (nextErupt <= 0) {
-      for (let b = 0; b < V.burst; b++) { const w = pickWord(); if (w) erupt(chainAround(w, 1 + Math.floor(Math.random() * 7))); }
-      nextErupt = rand(V.every[0], V.every[1]);
-    }
-  }
-  if (mode === "voice" && (!calm || water)) {          // sentences from before come back at random, untouchable
+  if (!calm || water) {          // notes from inside come back up at random: the volcano erupts them the way they were vented
     nextRecall -= realDt;                        // real seconds: the speed slider changes the motion, not how often they return
     if (nextRecall <= 0) {
       const r = water ? .5 : ventR();
       nextRecall = lerp(14, 4.5, r) * rand(.8, 1.25);         // Tambora: every few seconds; Llaima: every fourteen (the flows are slow, so more would pile up)
-      if (sentences.length) for (let n = 0; n < Math.min(2, V.burst); n++) vent(sentences[Math.floor(Math.random() * sentences.length)].s, rand(.1, .8));
+      if (sentences.length) for (let n = 0; n < Math.min(2, V.burst); n++) { const s = pickOne(sentences); flashNote(s.id); vent(s.s, rand(.1, .8)); }
     }
   }
-  updateTrails(dt, g);
   updateSlides(dt, g);
+  updateNotes(realDt * (speed.value / 100));
   for (const b of bits) { b.vy += g * b.g * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt; }
   bits = bits.filter(b => b.life > 0);
   for (const s of splats) s.life -= dt;
@@ -1218,6 +1065,8 @@ function frame(t) {
     ctx.fillRect(x, y, P, P);
     if (f > 1.2) { ctx.fillStyle = "#ff7a1f"; ctx.fillRect(x, y - P, P, P); }
   }
+  sceneY = Math.round(wLevel * H * 1.15 / P) * P;
+  drawChamber(t);
   ctx.restore();
 
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -1236,50 +1085,11 @@ function frame(t) {
     ctx.fillRect(Math.round(b.x / P) * P, Math.round(b.y / P) * P, s, s);
   }
 
-  // trails: draw back to front so the leading word is on top; the word you caught always comes to the very front
-  const front = [];
-  for (const tr of trails) {
-    const n = tr.items.length, headL = tr.landed ? tr.head + tr.extra : tr.head;
-    for (const it of tr.items) it.vis = false;
-    for (let k = n - 1; k >= 0; k--) {
-      const i = n - 1 - k, it = tr.items[i];
-      if (tr.done.has(i) && !tr.frozen) continue;
-      const l = headL - tr.off[k];
-      if (l < 0 || (tr.landed && l > tr.head)) continue;
-      const p = k === 0 && !tr.landed ? { x: tr.x, y: tr.y } : pathPoint(tr, l);
-      const isCaught = caught && caught.item === it;
-      const age = tr.age || 0, wild = .3 + .7 * Math.exp(-age * .35);   // wild at first, settling as they fall
-      const rot = isCaught ? 0 : Math.sin(age * it.w + it.ph) * it.a * wild;
-      const ox = isCaught ? 0 : Math.sin(age * it.jw + it.ph) * it.jx * wild, oy = isCaught ? 0 : Math.cos(age * it.jw * 1.3 + it.ph) * it.jy * wild;
-      it.bx = Math.round(p.x + ox - it.word.bw / 2); it.by = Math.round(p.y + oy - BOX_H / 2); it.vis = true;
-      const paint = () => {
-        ctx.save(); ctx.translate(Math.round(p.x + ox), Math.round(p.y + oy)); ctx.rotate(rot);
-        drawBox(-Math.round(it.word.bw / 2), -BOX_H / 2, it.word.bw, it.word.w, isCaught ? "caught" : tr.lone ? 1 : .88 - k * .15,
-          isCaught || tr.lone ? 1 : Math.max(.35, 1 - k * .12), hover === it);
-        ctx.restore();
-      };
-      if (isCaught) front.push(paint); else paint();
-    }
-  }
-
-  for (const paint of front) paint();
-
   // sliding and vented words
   for (const v of slides) {
     if (v.delay > 0) continue;
     const style = clamp(v.heat, .15, 1);
-    if (v.state === "fly") {
-      if (v.sentence) drawFlow(v, style, clamp(v.alpha, 0, 1));
-      else drawBox(Math.round(v.x - v.bw / 2), Math.round(v.y - BOX_H / 2), v.bw, v.t, style, v.alpha);
-    } else {
-      if (v.sentence) drawFlow(v, style, clamp(v.alpha, 0, 1));
-      else {
-        const p = arcAt(v.pts, v.s); if (!p) continue;
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.ang);
-        drawBox(-v.bw / 2, -BOX_H, v.bw, v.t, style, clamp(v.alpha, 0, 1));
-        ctx.restore();
-      }
-    }
+    drawFlow(v, style, clamp(v.alpha, 0, 1));
   }
 
   if (wLevel > .01) {
@@ -1287,11 +1097,6 @@ function frame(t) {
     updateRiver(realDt * (speed.value / 100) * .6); drawRiver(t);
   }
 
-  // keep the two slots touching the caught word
-  if (caught && caught.item.vis) {
-    const it = caught.item;
-    inAdd.style.left = Math.round(it.bx + it.word.bw) + "px"; inAdd.style.top = it.by + "px";
-  }
   requestAnimationFrame(frame);
 }
 
@@ -1299,11 +1104,11 @@ addEventListener("resize", resize);
 resize();
 if (document.fonts) {
   const get = f => { try { return document.fonts.load(f); } catch { return Promise.resolve(); } };
-  Promise.all([get("400 16px Inter"), get("italic 400 20px Spectral")]).catch(() => {})
-    .then(() => document.fonts.ready).then(() => { for (const w of words.values()) w.bw = textWidth(w.w); });
+  Promise.all([get("400 16px Inter"), get("italic 400 20px Spectral"), get("italic 400 15px Spectral")]).catch(() => {})
+    .then(() => document.fonts.ready).then(() => { for (const n of notes.values()) n.tw = 0; });
 }
-loadWords(true).catch(() => { memMode = "local"; STARTERS.forEach(keepWord); showStatus(); });
+applySpeed();
 requestAnimationFrame(frame);
 </script>
 <script src="../../site.js" defer></script>
-<script src="../../nav.js" data-path="fw/langues/index.html" defer></script>
+<script src="../../nav.js" data-path="fw/under-pressure/index.html" defer></script>
