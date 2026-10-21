@@ -4,6 +4,7 @@
 // POST api.php                  → {"w":"lava","to":"<id>","name":"","trip":""} adds one word joined to <id> (side defaults to "after")
 // GET  api.php?kind=sentences   → every vented sentence
 // POST api.php?kind=sentences   → {"s":"the volcano is awake","name":"","trip":"","i":0.4} adds one sentence (name, trip and intensity are optional)
+//                                 with "re":"<id>" it is a reply to that sentence
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
@@ -36,13 +37,21 @@ if ($kind === 'sentences') {
   if (!preg_match('/^[a-z0-9]{0,8}$/', $trip)) fail(400, 'bad signature');
   if ($name !== '' && $trip === '') fail(400, 'a name needs a code');
   if (preg_match('/[\x00-\x1f<>]/u', $name)) fail(400, 'plain text only');
+  $re = isset($in['re']) ? (string)$in['re'] : '';
+  if ($re !== '' && !preg_match('/^[A-Za-z0-9_-]{1,40}$/', $re)) fail(400, 'bad reply');
   $fh = fopen($file, 'c+');
   if (!$fh || !flock($fh, LOCK_EX)) fail(500, 'the volcano is busy, try again');
   $data = json_decode(stream_get_contents($fh) ?: '{"sentences":[]}', true);
   if (!is_array($data) || !isset($data['sentences']) || !is_array($data['sentences'])) $data = ['sentences' => []];
+  if ($re !== '') {
+    $found = false;
+    foreach ($data['sentences'] as $x) { if (isset($x['id']) && $x['id'] === $re && empty($x['re'])) { $found = true; break; } }
+    if (!$found) { flock($fh, LOCK_UN); fclose($fh); fail(400, 'that note is gone'); }
+  }
   if (count($data['sentences']) >= $MAX_SENTENCES) array_shift($data['sentences']);   // the oldest makes room
   $item = ['id' => bin2hex(random_bytes(6)), 's' => $s, 't' => (int) round(microtime(true) * 1000)];
   if ($name !== '') { $item['name'] = $name; $item['trip'] = $trip; }
+  if ($re !== '') $item['re'] = $re;
   if (isset($in['i']) && is_numeric($in['i'])) $item['i'] = round(max(0, min(1, (float)$in['i'])), 2);   // how loud it was said, 0 to 1
   $data['sentences'][] = $item;
   ftruncate($fh, 0); rewind($fh);

@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<title>Langues</title>
+<title>La voie du volcan</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Spectral:ital,wght@0,400;1,400&display=swap">
 <style>
 /* Layout: a pixel-art night sky and a dark volcano (after a photo of Villarrica). What people vent is thrown out of the crater or pours down the cone.
-   A hole in the cone shows the magma chamber, where every note floats; the last 21 are hot and can be opened (top left).
+   A hole in the cone shows the magma chamber, where every note floats as a small magma bomb; the last 21 are hot and open as a chat above the crater.
+   Right: the pressure. When it reaches the top the hole crusts over, the volcano explodes and the camera follows it into the sky.
    One grotesque face, small tracked capitals for controls, hairlines instead of frames (Swiss / brutalist web typography).
-   Bottom left: who is here, then the writing. Right: real volcanoes that set the eruption's strength. Bottom: magma / water, speed. */
+   Bottom left: who is here, then the writing. Bottom: magma / water. */
 :root {
   --sky: #0b1633;
   --line: #f2f2f2;
@@ -32,7 +33,7 @@ canvas { position: fixed; inset: 0; display: block; touch-action: none; image-re
 .home { position: fixed; top: calc(9px + env(safe-area-inset-top, 0px)); left: 12px; z-index: 50; height: 30px; padding: 0 8px; display: flex; align-items: center; font: 400 22px/1 "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--line); text-decoration: none; opacity: .75; cursor: pointer; }
 .home:hover { opacity: 1; }
 .bottom { bottom: env(safe-area-inset-bottom, 0px); flex-wrap: wrap; }
-h1 { margin: 0; font-size: 15px; line-height: 30px; font-weight: 500; color: var(--line); letter-spacing: .02em; }
+h1 { margin: 0; font: 400 19px/30px var(--old); color: var(--line); letter-spacing: .02em; }
 
 button, input, select { font: inherit; color: var(--line); background: none; border: 0; border-radius: 0; }
 button { cursor: pointer; padding: 4px 0; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
@@ -44,14 +45,17 @@ input { border-bottom: 1px solid var(--faint); padding: 6px 0; }
 .seg button[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 5px; font-weight: 600; }
 .who { color: var(--dim); }
 
-/* the switch: magma, and after a press, water. A box at the bottom. */
-#elem { position: fixed; z-index: 3; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); padding: 12px 38px; border: 1px solid #ff3b14; background: #ff3b14; color: #0a0a0a; font: 600 15px/1 var(--mono); letter-spacing: .14em; text-transform: lowercase; transition: background .25s, border-color .25s; }
-#elem:hover { text-decoration: none; background: #ff6a3d; border-color: #ff6a3d; color: #0a0a0a; }
-body.water #elem { background: #bcd6ff; border-color: #bcd6ff; color: #0a0a0a; }
-body.water #elem:hover { background: #dbe9ff; border-color: #dbe9ff; }
-@media (max-width: 760px) { #elem { bottom: auto; top: calc(100px + env(safe-area-inset-top, 0px)); left: auto; right: 16px; transform: none; padding: 9px 22px; } }
-body.water #volcanoes, body.water #detail { opacity: 0; pointer-events: none; }
-#volcanoes, #voice, #detail { transition: opacity .3s; }
+/* the switch at the bottom: magma or water, the one that is on is lit */
+#elem { position: fixed; z-index: 3; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; gap: 2px; padding: 3px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; background: rgba(8, 14, 34, .72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+#elem button { padding: 8px 22px; border-radius: 999px; font: 500 12px/1 var(--mono); letter-spacing: .16em; text-transform: lowercase; color: var(--dim); transition: background .25s, color .25s, box-shadow .25s; }
+#elem button:hover { text-decoration: none; color: var(--line); }
+#elem button[data-el="magma"][aria-pressed="true"] { background: #ff3b14; color: #0a0a0a; box-shadow: 0 0 18px rgba(255, 59, 20, .45); }
+#elem button[data-el="water"][aria-pressed="true"] { background: #bcd6ff; color: #0a0a0a; box-shadow: 0 0 18px rgba(188, 214, 255, .4); }
+@media (max-width: 760px) { #elem { bottom: auto; top: calc(100px + env(safe-area-inset-top, 0px)); left: auto; right: 16px; transform: none; } #elem button { padding: 7px 14px; } }
+body.water #chat, body.water #peek { opacity: 0; pointer-events: none; }
+body.water #gauge { opacity: .3; }
+#gauge, #voice, #chat { transition: opacity .3s; }
+#elem button:disabled { opacity: .4; cursor: default; }
 
 /* bottom left: the name panel (when open), who is here, then the writing */
 #dock { position: fixed; z-index: 3; left: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(320px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 14px; }
@@ -62,15 +66,20 @@ body.water #volcanoes, body.water #detail { opacity: 0; pointer-events: none; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
 
-/* real volcanoes */
-#volcanoes { position: fixed; z-index: 2; right: 16px; top: calc(64px + env(safe-area-inset-top, 0px)); width: 250px; background: none; border: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-#volcanoes .label { margin: 0 0 2px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
-#vlist { display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 300px); overflow-y: auto; }
-#vlist button { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; text-align: left; color: var(--c, var(--line)); padding: 4px 0; font-size: 15px; letter-spacing: 0; text-transform: none; border-bottom: 1px solid rgba(255, 255, 255, .1); }
-#vlist button small { color: inherit; opacity: .7; font-size: 11px; letter-spacing: .06em; }
-#vlist button[aria-pressed="true"] { font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
-#vnote { margin: 6px 0 0; font-size: 12px; line-height: 1.55; color: var(--dim); }
-#vnote .vlive { margin-top: 5px; color: var(--line); }
+/* the pressure, on the right: it fills with time and with every note */
+#gauge { position: fixed; z-index: 2; right: 26px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); text-shadow: 0 0 6px #0b1633; }
+#gauge .tube { cursor: ns-resize; touch-action: none; position: relative; width: 12px; height: min(56vh, 460px); border: 1px solid rgba(255, 255, 255, .5); background: repeating-linear-gradient(to top, transparent 0 calc(10% - 1px), rgba(255, 255, 255, .16) calc(10% - 1px) 10%); }
+#pFill { position: absolute; left: 2px; right: 2px; bottom: 2px; height: 0; background: linear-gradient(to top, #8f2a0e, #ff5a1a 50%, #ffd27a 85%, #fff3d1); }
+#pVal { color: var(--line); font-size: 12px; letter-spacing: .04em; font-variant-numeric: tabular-nums; min-width: 9ch; text-align: center; }
+#gauge.critical .tube { animation: throb .5s steps(2) infinite; }
+#gauge.critical #pVal { color: #ffd27a; }
+#gauge .tube:focus-visible { outline: 1px solid var(--line); outline-offset: 4px; }
+#pBoom { margin-bottom: 4px; padding: 7px 14px; border: 1px solid #ff5a1a; border-radius: 999px; background: rgba(255, 90, 26, .12); color: #ffd27a; font-size: 10px; letter-spacing: .16em; transition: background .2s, color .2s, box-shadow .2s; }
+#pBoom:hover { text-decoration: none; background: #ff5a1a; color: #0a0a0a; box-shadow: 0 0 16px rgba(255, 90, 26, .5); }
+#pBoom:active { transform: translateY(1px); }
+#pBoom:disabled { border-color: var(--faint); background: none; color: var(--dim); box-shadow: none; }
+@keyframes throb { 50% { border-color: #ff5a1a; box-shadow: 0 0 0 1px #ff5a1a; } }
+@media (prefers-reduced-motion: reduce) { #gauge.critical .tube { animation: none; border-color: #ff5a1a; } }
 #me { font-size: 12px; line-height: 1.75; text-shadow: 0 0 6px #0b1633, 0 0 2px #0b1633; }
 #here { margin: 0 0 8px; font: italic 400 16px/1.35 var(--old); color: var(--line); }
 #me .kv { display: flex; align-items: baseline; gap: 8px; }
@@ -90,11 +99,9 @@ body.water #volcanoes, body.water #detail { opacity: 0; pointer-events: none; }
 .int input[type=range]::-moz-range-thumb { width: 2px; height: 18px; background: var(--line); border: 0; border-radius: 0; }
 .int input[type=range]:focus-visible { outline: 1px solid var(--line); outline-offset: 4px; }
 @media (max-width: 760px) {
-  #volcanoes { top: calc(52px + env(safe-area-inset-top, 0px)); left: 16px; right: 16px; width: auto; }
-  #vlist { flex-direction: row; gap: 16px; overflow-x: auto; }
-  #vlist button { flex: none; }
-  #vnote { display: none; }
-  #me .kv, #voice .hint, .speedbox { display: none; }
+  #gauge { right: 14px; top: calc(150px + env(safe-area-inset-top, 0px)); transform: none; }
+  #gauge .tube { height: 26vh; }
+  #me .kv, #voice .hint { display: none; }
 }
 
 #voice { box-sizing: border-box; border-top: 1px solid var(--line); padding: 10px 0 0; display: flex; flex-direction: column; gap: 10px; }
@@ -102,45 +109,56 @@ body.water #volcanoes, body.water #detail { opacity: 0; pointer-events: none; }
 #voice form #ventText { grid-column: 1 / -1; }
 #voice form .int { margin-top: 0; padding-top: 0; border-top: 0; }
 #voice .hint { margin: 0; font-size: 11px; line-height: 1.5; color: var(--dim); }
-/* the speed sits alone in the bottom right corner, out of the way of the list */
-.speedbox { position: fixed; z-index: 2; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: min(170px, 38vw); margin: 0; padding: 0; border-top: 0; }
 #voice form button { justify-self: start; }
 #ventText { width: 100%; min-width: 0; box-sizing: border-box; font: italic 400 17px var(--old); }
 .meter { height: 6px; border-bottom: 1px solid var(--faint); }
 .meter span { display: block; height: 100%; width: 0; background: var(--line); }
 .heard { margin: 0; min-height: 1.4em; color: var(--dim); font: italic 400 15px/1.4 var(--old); overflow-wrap: anywhere; }
 
-/* one of the last 21 notes, opened from inside the volcano */
-#detail { position: fixed; z-index: 3; left: 16px; top: calc(64px + env(safe-area-inset-top, 0px)); width: min(360px, calc(100vw - 32px)); box-sizing: border-box; border-top: 1px solid #ffd27a; padding: 12px 0 0; text-shadow: 0 0 6px #0b1633, 0 0 2px #0b1633; }
-#detail .k { margin: 0; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #ffd27a; }
-#dText { margin: 10px 0 12px; font: italic 400 21px/1.3 var(--old); color: var(--line); overflow-wrap: anywhere; }
-#detail dl { display: grid; grid-template-columns: 7ch 1fr; gap: 2px 8px; margin: 0 0 12px; font-size: 12px; line-height: 1.6; }
-#detail dt { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); line-height: 1.9; }
-#detail dd { margin: 0; color: var(--line); }
-#detail .row { gap: 22px; }
-@media (max-width: 760px) { #detail { top: calc(96px + env(safe-area-inset-top, 0px)); width: calc(100vw - 32px); background: rgba(11, 22, 51, .92); padding-bottom: 12px; } }
-</style>
+/* a note, opened: a chat window above the crater, pointing down at it */
+#chat { position: fixed; z-index: 4; left: 50%; transform: translateX(-50%); width: min(400px, calc(100vw - 32px)); box-sizing: border-box; display: flex; flex-direction: column; background: rgba(8, 14, 34, .95); border: 1px solid rgba(255, 210, 122, .5); box-shadow: 0 12px 40px rgba(0, 0, 0, .45); }
+#chat::after { content: ""; position: absolute; left: 50%; top: 100%; width: 14px; height: 14px; background: rgb(8, 14, 34); border-right: 1px solid rgba(255, 210, 122, .5); border-bottom: 1px solid rgba(255, 210, 122, .5); transform: translate(-50%, -7px) rotate(45deg); }
+#chat header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255, 255, 255, .12); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #ffd27a; }
+#chat header button { padding: 0; font-size: 10px; color: var(--dim); }
+#cLog { list-style: none; margin: 0; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+.msg { max-width: 86%; align-self: flex-start; }
+.msg .body { margin: 0; padding: 8px 12px; border-radius: 14px 14px 14px 4px; background: rgba(255, 255, 255, .08); font: italic 400 16px/1.35 var(--old); color: var(--line); overflow-wrap: anywhere; }
+.msg.op { max-width: 100%; }
+.msg.op .body { padding: 10px 14px; background: rgba(255, 179, 71, .17); font-size: 20px; border-radius: 16px 16px 16px 4px; }
+.msg.mine { align-self: flex-end; }
+.msg.mine .body { background: rgba(188, 214, 255, .18); border-radius: 14px 14px 4px 14px; }
+.msg .meta { margin: 4px 8px 0; font-size: 11px; color: var(--dim); }
+.msg.mine .meta { text-align: right; }
+#cForm { display: flex; gap: 14px; align-items: center; padding: 10px 14px 12px; border-top: 1px solid rgba(255, 255, 255, .12); }
+#cText { flex: 1; min-width: 0; font: italic 400 16px var(--old); }
+#cText::placeholder { color: var(--dim); }
+#cText:focus-visible { outline: none; border-bottom-color: var(--line); }
+/* what a bomb says, at the pointer */
+#peek { position: fixed; z-index: 5; max-width: 300px; padding: 7px 11px; border-radius: 12px 12px 12px 3px; background: rgba(8, 14, 34, .92); border: 1px solid rgba(255, 210, 122, .45); font: italic 400 16px/1.35 var(--old); color: var(--line); pointer-events: none; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  #chat { top: calc(56px + env(safe-area-inset-top, 0px)); bottom: auto !important; max-height: 62vh !important; }
+  #chat::after { display: none; }
+}
+</style></style>
 
 <canvas id="c"></canvas>
 
 <header class="bar top">
-  <h1>langues</h1>
+  <h1>la voie du volcan</h1>
 </header>
 
-<aside id="volcanoes" aria-label="Volcano">
-  <div id="vlist"></div>
-  <p id="vnote"></p>
+<aside id="gauge" aria-label="Pressure">
+  <button id="pBoom" type="button">erupt</button>
+  <div class="tube" id="tube" role="slider" tabindex="0" aria-label="Pressure: drag to set it" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="pFill"></span></div>
+  <span id="pVal">0%</span>
 </aside>
 
-<aside id="detail" aria-live="polite" hidden>
-  <p class="k" id="dRank"></p>
-  <p id="dText"></p>
-  <dl id="dMeta"></dl>
-  <div class="row">
-    <button id="dThrow">throw it again</button>
-    <button id="dClose">close</button>
-  </div>
-</aside>
+<section id="chat" role="dialog" aria-label="A note from inside the volcano" hidden>
+  <header><span id="cRank"></span><button id="cClose" type="button">close</button></header>
+  <ol id="cLog"></ol>
+  <form id="cForm"><input id="cText" placeholder="reply…" maxlength="240" autocomplete="off" aria-label="Reply"><button>send</button></form>
+</section>
+<div id="peek" aria-hidden="true" hidden></div>
 
 <div id="dock">
 <div id="idPanel" hidden>
@@ -183,13 +201,12 @@ body.water #volcanoes, body.water #detail { opacity: 0; pointer-events: none; }
     <label class="int" for="intensity"><span>intensity</span><span class="val" id="intVal">25</span><input type="range" id="intensity" min="0" max="100" value="25"></label>
     <button>vent</button>
   </form>
-  <p class="hint">said calmly it pours down · shouted it explodes · then it sinks inside and comes back later</p>
+  <p class="hint">what you write sinks into the volcano · every note adds to the pressure, louder ones add more</p>
 </div>
 </div>
 
-<button id="elem" aria-pressed="false" aria-label="Switch between magma and water">magma</button>
+<div id="elem" role="group" aria-label="Magma or water"><button type="button" data-el="magma" aria-pressed="true">magma</button><button type="button" data-el="water" aria-pressed="false">water</button></div>
 
-<label class="int speedbox" for="speed"><span>speed</span><span class="val" id="speedVal">1×</span><input type="range" id="speed" min="25" max="200" value="100"></label>
 
 
 <script>window.playhtmlReady = new Promise(r => { window.__playhtmlResolve = r; });</script>
@@ -215,7 +232,8 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const cv = document.getElementById("c"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1;
 function resize() {
-  DPR = devicePixelRatio || 1; W = innerWidth; H = innerHeight;
+  const box = document.body.getBoundingClientRect();
+  DPR = devicePixelRatio || 1; W = Math.round(box.width) || innerWidth; H = Math.round(box.height) || innerHeight;
   cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + "px"; cv.style.height = H + "px";
   buildScene();
 }
@@ -283,54 +301,10 @@ async function getJSON(url) {
   return r.json();
 }
 
-// ================= real volcanoes =================
-// Two scales, because they measure different things:
-// VEI (Volcanic Explosivity Index, 0-8) is about how EXPLOSIVE an eruption was: how much it threw out and how high.
-//   It only makes sense for eruptions that already happened, so it is kept for the three giants.
-// VRP (Volcanic Radiative Power, in megawatts) is how much HEAT a volcano gives off right now, seen by satellites
-//   (MIROVA). It works for volcanoes that pour out lava and don't explode. Readings below: MIROVA, 14/10/26.
-// One or more volcanoes per continent, and names a European class knows. Each one sets how often words come out, how high and wide they go.
-const VOLCANOES = [
-  { id: "llaima", vrp: 0, now: "MIROVA (satellite), 14/10/26 07:00 UTC: 0 MW, no heat seen.", name: "Llaima", place: "Chile, 2008", note: "One of the most active volcanoes of the Andes. In 2008 its lava fountains fell on the snow of Conguillío, a park of araucaria trees: the pehuén, sacred to the Mapuche, a tree from the age of the dinosaurs.", every: [1.5, 2.6], power: .65, spread: .35, flow: 0, burst: 1, shake: 1, ash: 0 },
-  { id: "etna", vrp: 1.28, now: "MIROVA (satellite), 14/10/26 12:18 UTC: 1.3 MW of heat.", name: "Etna", place: "Sicily, 2021", note: "Its summit craters explode in violent paroxysms: lava fountains hundreds of metres high and ash columns that close the airport of Catania. In 122 BC an explosion buried the city in ash and Rome excused it from taxes for ten years.", every: [1.2, 2], power: .75, spread: .4, flow: 0, burst: 1, shake: 1, ash: 0 },
-  { id: "ambrym", vrp: 118.52, now: "MIROVA (satellite), 14/10/26 16:40 UTC: 119 MW of heat.", name: "Ambrym", place: "Vanuatu, erupting now", note: "A caldera 12 km wide on a Pacific island. Its lava lakes lit the night sky for decades, until the eruption of December 2018 drained them and villages were evacuated.", every: [.5, .95], power: 1, spread: .55, flow: 0, burst: 2, shake: 3, ash: 0 },
-  { id: "nyamuragira", vrp: 644.47, now: "MIROVA (satellite), 14/10/26 18:40 UTC: 644 MW of heat, the strongest on Earth that day.", name: "Nyamuragira", place: "DR Congo, erupting now", note: "Africa's most active volcano: more than 40 eruptions since 1882. Its very fluid lava runs far across the forests of Virunga, where the mountain gorillas live.", every: [.35, .7], power: 1.1, spread: .7, flow: 0, burst: 2, shake: 5, ash: 0 },
-  { id: "eyja", hist: 1, year: "2010", now: "MIROVA (satellite), 14/10/26: 0 MW, quiet.", name: "Eyjafjallajökull", vei: "4", place: "Iceland, 2010", note: "In April 2010 its ash cloud closed most of Europe's airspace for days: about 100,000 flights cancelled, ten million passengers stranded. Its name means the glacier of the island mountains.", every: [.5, 1], power: 1.12, spread: .6, flow: 0, burst: 1, shake: 3, ash: 1 },
-  { id: "vesuvius", hist: 1, year: "79 AD", now: "MIROVA (satellite), 14/10/26: 0 MW, quiet.", name: "Vesuvius", vei: "5", place: "Italy, 79 AD", note: "Buried Pompeii and Herculaneum in 79 AD. Pliny the Younger watched from across the bay and described a cloud shaped like an umbrella pine. About 600,000 people live in its red zone today.", every: [.3, .6], power: 1.2, spread: .8, flow: 0, burst: 2, shake: 8, ash: 1.5 },
-  { id: "pinatubo", hist: 1, year: "1991", vei: "6", name: "Pinatubo", place: "Philippines, 1991", note: "Ash rose about 35 km and cooled the whole planet for a year. It had slept for about 500 years; a typhoon hit the same day and turned the ash into mudflows. Warnings from scientists saved thousands of lives.", every: [.22, .45], power: 1.25, spread: .9, flow: 0, burst: 2, shake: 7, ash: 2 },
-  { id: "krakatoa", hist: 1, year: "1883", vei: "6", name: "Krakatoa", place: "Indonesia, 1883", note: "Probably the loudest sound in recorded history, heard 4,800 km away. Tsunamis killed more than 36,000 people, and the red sunsets that followed around the world are one theory for the sky in Munch's The Scream.", every: [.15, .35], power: 1.3, spread: 1.1, flow: 0, burst: 3, shake: 12, ash: 2 },
-  { id: "tambora", hist: 1, year: "1815", vei: "7", name: "Tambora", place: "Indonesia, 1815", note: "The largest eruption in recorded history: the summit dropped by about 1,400 m. 1816 became the year without a summer, and Mary Shelley wrote Frankenstein at Lake Geneva.", every: [.1, .25], power: 1.35, spread: 1.2, flow: 0, burst: 3, shake: 10, ash: 3 },
-];
-const vrpText = v => v.vrp >= 10 || v.vrp === 0 ? Math.round(v.vrp) : v.vrp.toFixed(1);
-// the list is shown from the strongest (top) to the weakest (bottom), and the page starts at the bottom (Lascar)
-// the slider says 1x for 0.4x of the raw clock: comfortable to read
-const speedBase = () => .4;
-let V = VOLCANOES[0], timeScale = .4;
-const vlist = document.getElementById("vlist"), vnote = document.getElementById("vnote");
-const labelOf = v => v.hist ? `${v.name} (${v.year})` : `${v.name} (live)`;   // "(live)" is shown on purpose, to show the prototype
-const WARM = [255, 214, 64], HOT = [255, 34, 16];   // warm yellow for the weakest, hot red for the strongest
-const tint = v => { const k = VOLCANOES.indexOf(v) / (VOLCANOES.length - 1); return `rgb(${[0, 1, 2].map(i => Math.round(WARM[i] + (HOT[i] - WARM[i]) * k)).join(",")})`; };
-VOLCANOES.slice().reverse().forEach(v => {
-  const b = document.createElement("button");
-  b.dataset.v = v.id; b.setAttribute("aria-pressed", String(v === V));
-  b.style.setProperty("--c", tint(v));
-  const nm = document.createElement("span"); nm.textContent = labelOf(v); b.append(nm);
-  const s = document.createElement("small"); s.textContent = v.vrp != null ? vrpText(v) + " MW" : v.vei ? "VEI " + v.vei : "no reading"; b.append(s);
-  b.addEventListener("click", () => { V = v; nextRecall = Math.min(nextRecall, .6); showVolcano(); });
-  vlist.appendChild(b);
-});
-function showVolcano() {
-  vlist.querySelectorAll("button").forEach(b => {
-    const on = b.dataset.v === V.id, v = VOLCANOES.find(x => x.id === b.dataset.v);
-    b.setAttribute("aria-pressed", String(on));
-    b.firstChild.textContent = labelOf(v);
-  });
-  vnote.textContent = `${V.place}. ${V.note}`;
-}
-showVolcano();
-const speed = document.getElementById("speed"), speedVal = document.getElementById("speedVal");
-function applySpeed() { const x = speed.value / 100; timeScale = x * speedBase(); speedVal.textContent = (+x.toFixed(2)) + "×"; }
-speed.addEventListener("input", applySpeed);
+// ================= the volcano's mood =================
+// There is no list of volcanoes any more: the pressure (see below) sets how hard it throws and how often.
+const V = { power: .65, shake: 1, burst: 1 };
+const timeScale = .4;   // the clock everything moves on: slow enough to read
 
 // ================= scene: pixel-art sky and volcano =================
 let P = 4, bg = null, prof = null, surfQ = null, rim = { x: 0, y: 0, half: 40 }, arcs = {};
@@ -464,14 +438,15 @@ function splat(x, y, bw, lone) {
 }
 
 // ================= magma / water =================
-// Press the box at the bottom: the eruptions stop, the volcano sinks and the notes drift by as a river.
-const elemBtn = document.getElementById("elem");
-elemBtn.addEventListener("click", () => {
-  water = !water;
-  elemBtn.textContent = water ? "water" : "magma";
-  elemBtn.setAttribute("aria-pressed", String(water));
+// The switch at the bottom: on water, the eruptions stop, the volcano sinks and the notes drift by as a river.
+const elemBtns = [...document.querySelectorAll("#elem button")];
+for (const b of elemBtns) b.addEventListener("click", () => {
+  const w = b.dataset.el === "water";
+  if (w === water) return;
+  water = w;
+  elemBtns.forEach(x => x.setAttribute("aria-pressed", String((x.dataset.el === "water") === water)));
   document.body.classList.toggle("water", water);
-  if (water) { closeDetail(); buildRiver(); }
+  if (water) { closeChat(); buildRiver(); }
 });
 // Liquid, not lanes: every note is a particle carried by an incompressible flow (a stream function with a steady current
 // to the right, slow eddies and shear), so they bend, drift apart, bunch up and weave. A note is laid along the path its
@@ -556,12 +531,12 @@ function drawRiver(t) {
   ctx.globalAlpha = 1;
 }
 
-// ================= sentences: what people vent is kept in sentences.json and comes back by itself =================
-// Reading: api.php?kind=sentences (shared, can write) → sentences.json (read-only) → a few built-in sentences.
-// New sentences go to api.php, or stay in this browser when there is no api.php.
-const SENT_STARTERS = ["And now for something completely different.", "Nobody expects the Spanish Inquisition!", "'Tis but a scratch.", "It's just a flesh wound.", "We are the knights who say Ni!", "Always look on the bright side of life.", "He's not the Messiah, he's a very naughty boy!", "What have the Romans ever done for us?", "This parrot is no more! It has ceased to be!", "He's pining for the fjords.", "It's not pining, it's passed on!", "Your mother was a hamster and your father smelt of elderberries.", "I fart in your general direction.", "Run away! Run away!", "Help, help, I'm being repressed!", "Strange women lying in ponds distributing swords is no basis for a system of government.", "I'm not dead yet.", "What is the airspeed velocity of an unladen swallow?", "Is that an African swallow or a European swallow?", "It's only a model.", "On second thought, let's not go to Camelot. It is a silly place.", "Bring out your dead!", "I'm a lumberjack and I'm okay.", "She turned me into a newt! ... I got better.", "Nudge, nudge, wink, wink, say no more!", "Now go away, or I shall taunt you a second time!", "Come and see the violence inherent in the system!", "Blessed are the cheesemakers.", "Remember, you're all individuals!", "Yes, we're all individuals!", "Well, it's not much of a cheese shop, is it?", "An argument isn't just contradiction.", "Spam, spam, spam, spam, lovely spam, wonderful spam.", "Look, that rabbit's got a vicious streak a mile wide!", "I wish to complain about this parrot.", "Always look on the bright side of death."];
+// ================= notes: what people vent is kept in sentences.json =================
+// Reading: api.php?kind=sentences (shared, can write) → sentences.json (read-only) → a few built-in notes.
+// New notes go to api.php, or stay in this browser when there is no api.php. A reply is a sentence with "re": <the note's id>.
+const SENT_STARTERS = ["my landlord has ignored the leak in my ceiling for three weeks", "the 7:42 train was cancelled again", "deadline tomorrow, motivation somewhere in another country", "I said I'm fine eleven times today", "je déteste les lundis", "estoy harta de que me interrumpan", "my phone is at 3% and so am I", "why is adulthood mostly paperwork"];
 const SENT_LOCAL_KEY = "lapilli-sentences-local";
-let sentences = [], sentMode = "none";
+let sentences = [], replies = new Map(), sentMode = "none", sentLoaded = false, knownIds = new Set();
 async function loadSentences() {
   let data = null;
   try { data = await getJSON("api.php?kind=sentences"); sentMode = "shared"; } catch {}
@@ -572,23 +547,33 @@ async function loadSentences() {
     seen.add(String(o.id));
     out.push({ id: String(o.id), s: o.s.trim().slice(0, 240), t: Number(o.t) || 0,
       name: typeof o.name === "string" ? o.name.slice(0, 20) : "", trip: typeof o.trip === "string" ? o.trip.slice(0, 8) : "",
-      i: Number.isFinite(o.i) ? clamp(o.i, 0, 1) : null });
+      i: Number.isFinite(o.i) ? clamp(o.i, 0, 1) : null, re: typeof o.re === "string" ? o.re : null });
   };
   (Array.isArray(data?.sentences) ? data.sentences : []).forEach(add);
   if (sentMode !== "shared") { try { JSON.parse(localStorage.getItem(SENT_LOCAL_KEY) || "[]").forEach(add); } catch {} }
-  if (!out.length) SENT_STARTERS.forEach((t, i) => add({ id: "q" + (i + 1), s: t }));
-  sentences = out;
+  if (!out.some(s => !s.re)) SENT_STARTERS.forEach((t, i) => add({ id: "q" + (i + 1), s: t }));
+  if (sentLoaded) {                            // notes and replies from other people add to the pressure too
+    const fresh = out.filter(s => !knownIds.has(s.id));
+    addPressure(PER_NOTE * fresh.reduce((a, s) => a + (s.re ? .5 : 1), 0));
+  }
+  knownIds = new Set(out.map(s => s.id));
+  sentences = out.filter(s => !s.re);
+  replies = new Map();
+  for (const r of out.filter(s => s.re).sort((a, b) => a.t - b.t)) addReply(r);
+  sentLoaded = true;
   syncNotes(); showStatus();
+  if (picked) renderChat();
 }
-async function saveSentence(text, I) {
+function addReply(r) { if (!replies.has(r.re)) replies.set(r.re, []); replies.get(r.re).push(r); }
+async function saveSentence(text, I, re = null) {
   const t = String(text || "").trim().replace(/\s+/g, " ").slice(0, 240);
   if (!t || t.split(" ").length > 40) return;
-  const i = Math.round(clamp(I, 0, 1) * 100) / 100;
-  const o = { id: "l-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), s: t, t: Date.now(), name: me.name, trip: me.trip, i };
+  const i = I == null ? null : Math.round(clamp(I, 0, 1) * 100) / 100;
+  const o = { id: "l-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), s: t, t: Date.now(), name: me.name, trip: me.trip, i, re };
   let saved = null;
   if (sentMode === "shared") {
     try {
-      const r = await fetch("api.php?kind=sentences", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ s: t, name: me.name, trip: me.trip, i }) });
+      const r = await fetch("api.php?kind=sentences", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ s: t, name: me.name, trip: me.trip, i, re }) });
       const j = await r.json();
       if (r.ok && j && j.sentence) saved = { ...o, ...j.sentence };
     } catch {}
@@ -597,9 +582,17 @@ async function saveSentence(text, I) {
     try { const l = JSON.parse(localStorage.getItem(SENT_LOCAL_KEY) || "[]"); l.push(o); localStorage.setItem(SENT_LOCAL_KEY, JSON.stringify(l.slice(-300))); } catch {}
     saved = o;
   }
+  keepMine(saved.id); knownIds.add(saved.id);
+  if (re) { addReply(saved); addPressure(PER_NOTE * .5); return saved; }
   if (!sentences.some(x => x.id === saved.id)) sentences.push(saved);
   syncNotes(saved.id); showStatus();
+  addPressure(PER_NOTE * (.6 + .8 * (i ?? .5)));   // louder notes push harder
+  return saved;
 }
+const MINE_KEY = "up-mine";                    // what this browser wrote, to show it as yours in a chat
+let mineIds = new Set();
+try { mineIds = new Set(JSON.parse(localStorage.getItem(MINE_KEY) || "[]")); } catch {}
+function keepMine(id) { mineIds.add(id); try { localStorage.setItem(MINE_KEY, JSON.stringify([...mineIds].slice(-500))); } catch {} }
 const countEl = document.getElementById("count"), memEl = document.getElementById("mem");
 function showStatus() {
   countEl.textContent = sentences.length.toLocaleString();
@@ -607,7 +600,6 @@ function showStatus() {
 }
 loadSentences();
 setInterval(loadSentences, 90 * 1000);   // people elsewhere keep venting
-let nextRecall = 4;
 
 // ================= voice: the sentence as coloured letters =================
 // A spoken sentence stays one line of letters that reads as a sentence (no boxes, no separate words).
@@ -625,42 +617,25 @@ function sentenceLines(text) {
   if (cur) lines.push(cur);
   return lines;
 }
-function slideWords(lines, I) {
-  const c = crater(), u = (Math.random() < .5 ? -1 : 1) * rand(.5, .85);   // down the face of the cone, to a side, so the text stays nearly level
-  const seq = lines.slice().reverse();                           // the last line leaves first, so the sentence reads top to bottom
-  const flow = { age: 0 }; flows.push(flow);
-  let prev = null;
-  for (const t of seq) {
-    const v = { t, sentence: true, bw: letterWidth(t), ext: letterWidth(t), I, pts: tonguePath(u, c.y + P), alpha: 1, flow, state: "slide", heat: .5 + I,
-      delay: prev ? Infinity : 0, after: prev, s: 0 };
-    slides.push(v); prev = v;
-  }
-}
-// How strong the chosen volcano is, 0 (Llaima) to 1 (Tambora). It changes how sentences are thrown, how often they come
-// back, how many at once, how hard the ground shakes and how fast the flows run.
+// How hard the volcano throws, 0 to 1: it follows the pressure.
 const ventR = () => clamp((V.power - .6) / .75, 0, 1);
-function vent(text, I) {
-  if (water || wLevel > .3) { addSentenceToFluid(text); return; }
-  const r = ventR();
-  I = clamp(I + (r - .35) * .5, 0, 1);          // a big volcano throws more of what you say; a gentle one lets it pour
-  const lines = sentenceLines(text);
+// A small eruption: one note thrown out of the crater. It falls back and breaks on the rock: only an explosion makes lava run.
+function throwNote(text) {
+  const lines = sentenceLines(text).slice(0, 2);
   if (!lines.length) return;
-  const c = crater();
-  if (I < .6) { slideWords(lines, I); sparkle(c, 4 + Math.round(r * 6), 0); shake = Math.max(shake, V.shake * .25); return; }   // most sentences pour down; only the loud ones are thrown
-  const gEst = Math.sqrt(H) * 22 * SLOW * SLOW;
-  const lift = Math.min(Math.sqrt(H) * 30 * SLOW * lerp(.3, .62, I) * (.6 + .8 * r), Math.sqrt(2 * gEst * Math.max(60, c.y - 24)));   // high enough to arc, never off the screen
+  const c = crater(), g = gravity(), r = ventR();
   let delay = 0;
   for (const t of lines) {
-    const x0 = c.x + rand(-c.half, c.half) * .5, side = Math.random() < .5 ? -1 : 1;
-    const v = { t, sentence: true, bw: letterWidth(t), ext: letterWidth(t), I, alpha: 1, heat: .55 + I * .9 + r * .2, delay, state: "fly", s: 0, s0: 0,
-      x: x0, y: c.y, vx: side * rand(.3, 1) * lerp(.35, 1, I) * Math.min(W, 900) * .17 * SLOW * (.6 + .9 * r), vy: -lift * rand(.8, 1) }   // thrown up and only a little sideways, so it falls back near the top;
-    v.fp = [{ x: x0, y: c.y, l: 0 }]; v.pts = v.fp;     // its flight so far: the letters are laid along it
+    const h = Math.max(80, c.y - 90) * rand(.45, .85) * (.7 + .3 * r);    // up and back down, never off the screen
+    const v = { t, sentence: true, bw: letterWidth(t), ext: letterWidth(t), I: .7, alpha: 1, heat: 1.1, delay, state: "fly", s: 0, s0: 0, small: true,
+      x: c.x + rand(-c.half, c.half) * .5, y: c.y, vx: (Math.random() < .5 ? -1 : 1) * rand(.2, .7) * Math.min(W, 900) * .1, vy: -Math.sqrt(2 * g * h) };
+    v.fp = [{ x: v.x, y: v.y, l: 0 }]; v.pts = v.fp;     // its flight so far: the letters are laid along it
     slides.push(v);
-    delay += lerp(.9, .3, I);
+    delay += .35;
   }
-  shake = Math.max(shake, V.shake * (.3 + .7 * I) * .8);
-  pulse = Math.min(1, pulse + .25 + I * .5 + r * .3);
-  sparkle(c, Math.round(4 + I * 40 + r * 30), I);
+  shake = Math.max(shake, 2 + r * 4);
+  pulse = Math.min(1, pulse + .35);
+  sparkle(c, Math.round(10 + r * 24), .4 + r * .6);
 }
 function updateSlides(dt, g) {
   for (const f of flows) f.age += dt;
@@ -672,7 +647,7 @@ function updateSlides(dt, g) {
     if (v.delay > 0) { v.delay -= dt; continue; }
     v.heat -= dt * (v.state === "fly" ? .3 : .1);
     if (v.state === "fly") {
-      const sdt = dt * .6;                                   // slower, so it can be read
+      const sdt = dt * (v.blast ? 2.5 * BLAST : .6);         // slower, so it can be read; an explosion goes faster than real time
       v.vy += g * sdt; v.vx *= 1 - .08 * sdt; v.x += v.vx * sdt; v.y += v.vy * sdt;
       const last = v.fp[v.fp.length - 1], dd = Math.hypot(v.x - last.x, v.y - last.y);
       if (dd > 1.5) { v.fp.push({ x: v.x, y: v.y, l: last.l + dd }); }
@@ -682,7 +657,7 @@ function updateSlides(dt, g) {
         const onCone = v.y < H - 24 && ground(v.x) < H - 4 && v.y > c.y - 30;   // falling back onto the summit counts as landing on the cone
         const sgn = v.x < c.x ? -1 : 1;
         const u = sgn * (Math.abs(v.x - c.x) < c.half ? rand(.5, .8) : clamp(Math.abs(v.x - c.x) / Math.max(30, v.y - c.y), .5, .9));
-        const tp = onCone ? tonguePath(u, Math.max(v.y, c.y + P)) : null;
+        const tp = onCone && !v.small ? tonguePath(u, Math.max(v.y, c.y + P)) : null;
         if (tp && tp.length > 3) {
           // keep the flight and carry on down the slope, so the sentence doesn't jump when it lands
           const base = v.fp[v.fp.length - 1], dx = base.x - tp[0].x, joined = v.fp.slice();
@@ -700,7 +675,7 @@ function updateSlides(dt, g) {
       if (v.sv === undefined) { v.sv = rand(.75, 1.5); v.sp = rand(0, 6.28); }
       const L0 = v.pts[v.pts.length - 1].l, prog = clamp((v.s - (v.s0 || 0)) / Math.max(60, L0 - (v.s0 || 0)), 0, 1);
       const surge = 1 + .35 * Math.sin(v.s * .02 + v.sp + performance.now() * .0013);
-      v.s += slideSpeed(v.I) * v.sv * (.7 + .8 * ventR()) * (.55 + 1.1 * prog) * surge * (.5 + .5 * Math.exp(-v.flow.age / 7)) * dt;
+      v.s += slideSpeed(v.I) * (v.blast ? BLAST * 1.6 : 1) * v.sv * (.7 + .8 * ventR()) * (.55 + 1.1 * prog) * surge * (.5 + .5 * Math.exp(-v.flow.age / 7)) * dt;
       const L = v.pts[v.pts.length - 1].l, tail = v.sentence ? v.bw : 0;   // the letters trail behind the head of the flow
       const run = Math.max(1, L - (v.s0 || 0));
       if (v.s - tail > L) v.alpha = 0;
@@ -712,23 +687,22 @@ function updateSlides(dt, g) {
 }
 
 // ================= inside the volcano =================
-// A hole in the cone shows the magma chamber. Every note ever vented floats in there, carried round by slow convection:
-// up through the middle, out under the roof, down the sides. The last 21 are hot (gold) and can be opened to read them
-// in full. When the volcano erupts, a note in here lights up and comes out of the crater the way it was vented.
+// A hole in the cone shows the magma chamber. Every note ever vented floats in there as a magma bomb, carried round by
+// slow convection: up through the middle, out under the roof, down the sides. Old notes are dark cooled rock; the last 21
+// are gold and hot: pointing at one shows what it says, clicking opens it as a chat above the crater. Notes never leave.
 const RECENT = 21, MAX_OLD = 250;
-const NFONT_OLD = "italic 400 13px Spectral, Georgia, serif", NFONT_HOT = "italic 400 14px Spectral, Georgia, serif";
-let hole = null, sceneY = 0;            // sceneY: how far the volcano has sunk (water)
-const notes = new Map();                // sentence id -> a floating note
+let hole = null, crust = null, sceneY = 0;   // sceneY: how far the volcano has sunk (water)
+const notes = new Map();                     // sentence id -> a floating bomb
 let recentIds = new Set(), rankOf = new Map(), picked = null, hoverNote = null, blobs = [];
 
 function buildHole(g) {
-  // the opening: a rough ellipse on the face of the cone, painted into the pixel-art scene (glow and notes come every frame)
+  // the opening: a rough ellipse on the face of the cone, painted into the pixel-art scene (glow and bombs come every frame)
   const c = crater();
   const top = c.y + (H - c.y) * (W < 760 ? .1 : .18), bot = c.y + (H - c.y) * (W < 760 ? .45 : .8);
   const cy = (top + bot) / 2, ry = (bot - top) / 2;
   let edge = c.x; while (edge < W && prof[Math.round(edge)] < cy) edge += 2;   // the cone's half width at that height
   const rx = Math.max(60, Math.min((edge - c.x) * .78, W * .3, 440));
-  const rows = [];                      // one per pixel row: its left and right ends, on the pixel grid
+  const rows = [];                            // one per pixel row: its left and right ends, on the pixel grid
   for (let j = Math.ceil((cy - ry) / P); j <= Math.floor((cy + ry) / P); j++) {
     const y = (j + .5) * P, e = 1 - ((y - cy) / ry) ** 2;
     if (e <= 0) continue;
@@ -739,18 +713,28 @@ function buildHole(g) {
   // dark under the roof, glowing magma at the bottom, a rim of broken rock lit from below
   const pal = ["#120403", "#1c0604", "#290805", "#3a0c05", "#511207", "#6c1a09", "#8a240c", "#a8300f"];
   let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  // the crust that seals the opening when the pressure is at the top: cooled rock with glowing cracks
+  crust = document.createElement("canvas"); crust.width = g.canvas.width; crust.height = g.canvas.height;
+  const k2 = crust.getContext("2d"), cracks = new Set();
+  for (let n = 0; n < 7; n++) {
+    let i = Math.round(c.x / P + rand(-rx, rx) / P * .7), j = Math.round(cy / P + rand(-ry, ry) / P * .6);
+    for (let s = 0; s < 26; s++) { cracks.add(i + "," + j); i += Math.round(rand(-1, 1)); j += Math.round(rand(-1, 1)); }
+  }
   rows.forEach((row, k) => {
     const f = k / Math.max(1, rows.length - 1);
     for (let i = row.l; i < row.r; i++) {
       let col = pal[clamp(Math.round(f * f * (pal.length - 1) + (((i ^ row.j) & 1) - .5) * .8 + (rnd() - .5) * .6), 0, pal.length - 1)];
       if (i === row.l || i === row.r - 1 || k === 0 || k === rows.length - 1) col = f > .5 ? "#c4461a" : "#5e1a08";
       g.fillStyle = col; g.fillRect(i, row.j, 1, 1);
+      k2.fillStyle = cracks.has(i + "," + row.j) ? (rnd() > .4 ? "#ff7a1f" : "#c4461a") : ["#0c0d0f", "#101113", "#141518", "#191a1d"][((i * 7) ^ (row.j * 3)) & 3];
+      k2.fillRect(i, row.j, 1, 1);
     }
     g.fillStyle = "#040405"; g.fillRect(row.l - 1, row.j, 1, 1); g.fillRect(row.r, row.j, 1, 1);   // cut into the cone
   });
   blobs = Array.from({ length: 9 }, () => ({ u: rand(-.8, .8), v: rand(-1, 1.2), r: rand(3, 7), sp: rand(.04, .09) }));
+  for (const n of notes.values()) n.spr = null;   // P may have changed
 }
-function holePath() {                   // the inside of the opening, in pixel steps
+function holePath() {                         // the inside of the opening, in pixel steps
   const rs = hole.rows;
   ctx.beginPath(); ctx.moveTo((rs[0].l + 1) * P, rs[0].j * P);
   for (const r of rs) { ctx.lineTo((r.l + 1) * P, r.j * P); ctx.lineTo((r.l + 1) * P, (r.j + 1) * P); }
@@ -758,7 +742,32 @@ function holePath() {                   // the inside of the opening, in pixel s
   ctx.closePath();
 }
 const inHole = (x, y) => { const r = hole && hole.byJ.get(Math.floor(y / P)); return !!r && x >= (r.l + 1) * P && x < (r.r - 1) * P; };
-const shortNote = s => { const m = W < 760 ? 22 : 34; return s.length > m ? s.slice(0, m - 2).trimEnd() + "…" : s; };
+
+// a magma bomb, in pixels: a small smooth pebble, a little oval. Old notes are dark cooled rock, the last 21 are gold,
+// and the one you point at (or have open) turns white-hot.
+const hashStr = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
+const BOMB = { old: ["#170a08", "#2a1611", "#3a1d15"], hot: ["#c9541a", "#ffb347", "#ffe3a0"], lit: ["#ffd9a0", "#fff3d6", "#ffffff"] };
+function bombSprite(r, kind, seed) {
+  const pal = BOMB[kind];
+  if (r === 1) {                                // the smallest: a 2×2 grain with one darker corner
+    const out = document.createElement("canvas"); out.width = out.height = 2;
+    const g = out.getContext("2d"); g.fillStyle = pal[1]; g.fillRect(0, 0, 2, 2); g.fillStyle = pal[0]; g.fillRect(1 - (seed & 1), 1, 1, 1);
+    return out;
+  }
+  const n = r * 2 + 1, out = document.createElement("canvas"); out.width = out.height = n;
+  const g = out.getContext("2d");
+  let sd = seed % 2147483646 + 1; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const asp = .72 + rnd() * .28, rot = rnd() * Math.PI, cs = Math.cos(rot), sn = Math.sin(rot), R = r + .35;
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const dx = i - r, dy = j - r, x = dx * cs + dy * sn, y = (dy * cs - dx * sn) / asp, e = (x * x + y * y) / (R * R);
+    if (e > 1) continue;
+    g.fillStyle = r > 1 && e > .5 ? pal[0] : r > 1 && dx + dy < 0 && e < .3 ? pal[2] : pal[1];   // a darker rim, a highlight up and to the left
+    g.fillRect(i, j, 1, 1);
+  }
+  return out;
+}
+const bombR = (s, hot) => hot ? (s.length < 60 ? 2 : 3) : (s.length < 50 ? 1 : 2);   // longer notes, slightly bigger bombs
+const shortNote = s => s.length > 40 ? s.slice(0, 38).trimEnd() + "…" : s;
 
 function syncNotes(freshId) {
   const byId = new Map(sentences.map(s => [s.id, s]));
@@ -767,14 +776,25 @@ function syncNotes(freshId) {
     const n = notes.get(s.id);
     if (n) { n.s = s; continue; }
     const a = rand(0, 6.28), r = Math.sqrt(Math.random()) * .85;
-    notes.set(s.id, { s, u: Math.cos(a) * r, v: Math.sin(a) * r, ph: rand(0, 6.28), sp: rand(.7, 1.3), flash: 0, tw: 0, x: 0, y: 0 });
+    notes.set(s.id, { s, u: Math.cos(a) * r, v: Math.sin(a) * r, ph: rand(0, 6.28), sp: rand(.7, 1.3), flash: 0, spr: null, hot: null, rp: 0, x: 0, y: 0 });
   }
-  if (freshId && notes.has(freshId)) Object.assign(notes.get(freshId), { u: rand(-.1, .1), v: -.9, flash: 1.6 });   // what you just said sinks in from the top
+  if (freshId && notes.has(freshId)) Object.assign(notes.get(freshId), { u: rand(-.1, .1), v: -.9, flash: 1.6, reveal: 6 });   // what you just wrote sinks in from the top, saying what it is
   // the last 21 by time; notes with the same time keep their order in the file
   const order = sentences.map((s, k) => [s, k]).sort((a, b) => (a[0].t - b[0].t) || (a[1] - b[1])).map(x => x[0]);
   recentIds = new Set(order.slice(-RECENT).map(s => s.id));
   rankOf = new Map(order.map((s, k) => [s.id, k + 1]));
-  if (picked && !notes.has(picked.s.id)) closeDetail();
+  for (const n of notes.values()) {
+    const hot = recentIds.has(n.s.id);
+    if (n.hot !== hot) { n.hot = hot; n.spr = null; }
+  }
+  if (picked && !notes.has(picked.s.id)) closeChat();
+}
+function spriteOf(n, lit = false) {
+  if (!n.spr) {
+    const r = bombR(n.s.s, n.hot), seed = hashStr(n.s.id);
+    n.spr = bombSprite(r, n.hot ? "hot" : "old", seed); n.sprLit = bombSprite(r, "lit", seed); n.rp = (r + .5) * P;
+  }
+  return lit ? n.sprLit : n.spr;
 }
 function flashNote(id) { const n = notes.get(id); if (n) n.flash = 1.2; }
 
@@ -782,7 +802,8 @@ function updateNotes(dt) {
   const k = .025, T = performance.now() / 1000;
   for (const n of notes.values()) {
     n.flash = Math.max(0, n.flash - dt * .8);
-    if (n === picked) continue;          // an open note holds still
+    if (n.reveal > 0) { n.reveal = Math.max(0, n.reveal - dt); n.v += dt * .1; }   // a new note sinks in
+    if (n === picked) continue;               // an open note holds still
     // two convection rolls: up through the middle, down the sides
     const du = -Math.PI / 2 * Math.sin(Math.PI * n.u) * Math.sin(Math.PI * n.v / 2);
     const dv = -Math.PI * Math.cos(Math.PI * n.u) * Math.cos(Math.PI * n.v / 2);
@@ -791,127 +812,278 @@ function updateNotes(dt) {
     const d = Math.hypot(n.u, n.v);
     if (d > .92) { n.u *= .92 / d; n.v *= .92 / d; }
   }
+  for (const b of blobs) { b.v -= b.sp * dt * (1 + pulse); if (b.v < -1.3) Object.assign(b, { u: rand(-.8, .8), v: 1.3, r: rand(3, 7) }); }
   if (!hole) return;
-  // the last 21 keep out of each other's way and stay whole inside the opening, so each one can be read and picked
-  const hot = [...notes.values()].filter(n => n.tw && recentIds.has(n.s.id));
+  // the last 21 keep out of each other's way and stay whole inside the opening, so each one can be picked
+  const hot = [...notes.values()].filter(n => n.rp && n.hot);
   const ease = Math.min(1, dt * 4);
   for (let a = 0; a < hot.length; a++) for (let b = a + 1; b < hot.length; b++) {
     const A = hot[a], B = hot[b];
-    const dx = (A.u - B.u) * hole.rx, dy = (A.v - B.v) * hole.ry;
-    const ox = (A.tw + B.tw) / 2 + 12 - Math.abs(dx), oy = 21 - Math.abs(dy);
-    if (ox <= 0 || oy <= 0) continue;
-    const vert = oy < ox, push = (vert ? oy : ox) * ease / 2, s = (vert ? dy : dx) >= 0 ? 1 : -1;
-    const R = vert ? hole.ry : hole.rx, key = vert ? "v" : "u";
-    if (A !== picked) A[key] += s * push / R;
-    if (B !== picked) B[key] -= s * push / R;
+    const dx = (A.u - B.u) * hole.rx, dy = (A.v - B.v) * hole.ry, d = Math.hypot(dx, dy) || .01, need = A.rp + B.rp + 12;
+    if (d >= need) continue;
+    const push = (need - d) * ease / 2;
+    if (A !== picked) { A.u += dx / d * push / hole.rx; A.v += dy / d * push / hole.ry; }
+    if (B !== picked) { B.u -= dx / d * push / hole.rx; B.v -= dy / d * push / hole.ry; }
   }
   for (const n of hot) {
     if (n === picked) continue;
-    n.v = clamp(n.v, -.86, .86);
-    const room = Math.sqrt(1 - n.v * n.v) * .94 - n.tw / 2 / hole.rx;
-    if (room <= 0) { n.u += -n.u * ease; n.v *= 1 - ease * .2; }
-    else n.u = clamp(n.u, -room, room);
+    const vMax = .92 - n.rp / hole.ry;
+    n.v = clamp(n.v, -vMax, vMax);
+    const room = Math.sqrt(Math.max(0, 1 - n.v * n.v)) * .94 - n.rp / hole.rx;
+    n.u = clamp(n.u, -Math.max(0, room), Math.max(0, room));
   }
-  for (const b of blobs) { b.v -= b.sp * dt * (1 + pulse); if (b.v < -1.3) Object.assign(b, { u: rand(-.8, .8), v: 1.3, r: rand(3, 7) }); }
 }
 
 function drawChamber(t) {
   if (!hole) return;
   const c = crater();
-  // the conduit: magma climbing from the chamber to the crater
+  // the conduit: magma climbing from the chamber to the crater, faster as the pressure builds
   for (let y = c.y + 3 * P, i = 0; y < hole.top; y += P, i++) {
     const x = Math.round((c.x + Math.sin(y * .04) * 1.4 * P) / P) * P;
-    ctx.fillStyle = (i + Math.floor(t / (110 - 60 * glowLevel))) % 5 === 0 ? "#e2561c" : "#4a1307";
+    ctx.fillStyle = (i + Math.floor(t / (130 - 100 * pressure))) % 5 === 0 ? "#e2561c" : "#4a1307";
     ctx.fillRect(x, y, P, P);
   }
-  ctx.save();
-  holePath(); ctx.clip();
-  // slow bubbles of brighter magma, and a flare when the volcano erupts
-  ctx.fillStyle = "#ff7a1f";
-  for (const b of blobs) {
-    const bx = hole.cx + b.u * hole.rx, by = hole.cy + b.v * hole.ry, R = b.r * P;
-    ctx.globalAlpha = .12 + .1 * clamp(b.v, 0, 1);
-    for (let dy = -R; dy <= R; dy += P) {
-      const half = Math.round(Math.sqrt(Math.max(0, R * R - dy * dy)) / P) * P;
-      ctx.fillRect(Math.round(bx / P) * P - half, Math.round((by + dy) / P) * P, half * 2, P);
+  if (holeOpen > .02) {
+    ctx.save();
+    holePath(); ctx.clip();
+    // slow bubbles of brighter magma, and a flare when the volcano erupts
+    ctx.fillStyle = "#ff7a1f";
+    for (const b of blobs) {
+      const bx = hole.cx + b.u * hole.rx, by = hole.cy + b.v * hole.ry, R = b.r * P;
+      ctx.globalAlpha = .12 + .1 * clamp(b.v, 0, 1) + .12 * pressure;
+      for (let dy = -R; dy <= R; dy += P) {
+        const half = Math.round(Math.sqrt(Math.max(0, R * R - dy * dy)) / P) * P;
+        ctx.fillRect(Math.round(bx / P) * P - half, Math.round((by + dy) / P) * P, half * 2, P);
+      }
     }
-  }
-  if (pulse > .02) { ctx.globalAlpha = pulse * .18; ctx.fillRect(hole.cx - hole.rx - P, hole.top, hole.rx * 2 + 2 * P, hole.ry * 2 + 2 * P); }
-  ctx.globalAlpha = 1;
-
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  const total = sentences.length;
-  for (const hot of [false, true]) {     // the older ones first, dim and small; the last 21 on top, gold
-    ctx.font = hot ? NFONT_HOT : NFONT_OLD;
-    for (const n of notes.values()) {
-      if (recentIds.has(n.s.id) !== hot) continue;
-      if (!hot && rankOf.get(n.s.id) <= total - RECENT - MAX_OLD) continue;
-      const label = shortNote(n.s.s);
-      if (!n.tw || n.label !== label || n.hot !== hot) { n.label = label; n.hot = hot; n.tw = ctx.measureText(label).width; }
-      n.x = hole.cx + n.u * hole.rx; n.y = hole.cy + n.v * hole.ry;
-      const lit = n === picked || n === hoverNote;
-      ctx.fillStyle = n === picked ? "#ffffff" : lit ? "#fff3d1" : hot ? mix("#ffc75a", "#fff6dc", clamp(n.flash, 0, 1)) : mix("#7a2a14", "#ffd9a8", clamp(n.flash, 0, 1));
-      ctx.globalAlpha = hot ? 1 : .55 + .45 * clamp(n.flash, 0, 1);
-      ctx.fillText(label, n.x, n.y);
-      if (lit) ctx.fillRect(Math.round(n.x - n.tw / 2), Math.round(n.y + 9), Math.round(n.tw), 1);
+    if (pulse > .02) { ctx.globalAlpha = pulse * .18; ctx.fillRect(hole.cx - hole.rx - P, hole.top, hole.rx * 2 + 2 * P, hole.ry * 2 + 2 * P); }
+    ctx.globalAlpha = 1;
+    const total = sentences.length;
+    for (const hot of [false, true]) {        // the old ones first, the last 21 on top
+      for (const n of notes.values()) {
+        if (n.hot !== hot) continue;
+        if (!hot && rankOf.get(n.s.id) <= total - RECENT - MAX_OLD) continue;
+        const spr = spriteOf(n, n === picked || n === hoverNote), size = spr.width * P;
+        n.x = hole.cx + n.u * hole.rx; n.y = hole.cy + n.v * hole.ry;
+        const x = Math.round((n.x - size / 2) / P) * P, y = Math.round((n.y - size / 2) / P) * P;
+        ctx.drawImage(spr, x, y, size, size);
+        if (n.flash > 0) {                     // lit up when the volcano brings it back out
+          ctx.globalAlpha = clamp(n.flash, 0, 1) * .7; ctx.globalCompositeOperation = "lighter";
+          ctx.drawImage(spr, x, y, size, size);
+          ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+        }
+      }
     }
+    ctx.restore();
+    // a note that has just been written says what it is for a moment, as it sinks in
+    ctx.font = "italic 400 15px Spectral, Georgia, serif"; ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = "#fff3d1";
+    for (const n of notes.values()) if (n.reveal > 0) {
+      ctx.globalAlpha = clamp(n.reveal / 2, 0, 1) * holeOpen;
+      ctx.fillText(shortNote(n.s.s), n.x, n.y - n.rp - 6);
+    }
+    ctx.globalAlpha = 1;
   }
-  ctx.globalAlpha = 1;
-  ctx.restore();
+  if (holeOpen < .98 && crust) {              // sealed: the opening crusts over, its cracks glow with the pressure
+    ctx.globalAlpha = 1 - holeOpen;
+    ctx.drawImage(crust, 0, 0, crust.width * P, crust.height * P);
+    if (phase === "seal") { ctx.globalAlpha = (1 - holeOpen) * (.25 + .25 * Math.sin(t / 60)); ctx.fillStyle = "#ff5a1a"; holePath(); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
 }
 
-// ---------- picking one of the last 21 ----------
-const detailEl = document.getElementById("detail"), dRank = document.getElementById("dRank"), dText = document.getElementById("dText"), dMeta = document.getElementById("dMeta");
+// ---------- a note, opened: a chat above the crater ----------
+// The note is the first message; under it, what people answered, and a box to answer too. The note itself stays inside.
+const chatEl = document.getElementById("chat"), cRank = document.getElementById("cRank"), cLog = document.getElementById("cLog");
+const cForm = document.getElementById("cForm"), cText = document.getElementById("cText"), peekEl = document.getElementById("peek");
 const when = t => { const d = new Date(t), z = n => String(n).padStart(2, "0"); return `${z(d.getDate())}/${z(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}, ${z(d.getHours())}:${z(d.getMinutes())}`; };
-function openDetail(n) {
-  picked = n;
-  const s = n.s;
-  dRank.textContent = `note ${rankOf.get(s.id)} of ${sentences.length} · one of the last ${RECENT}`;
-  dText.textContent = s.s;
-  const rows = [
-    ["when", s.t > 1e11 ? when(s.t) : "from the start"],
-    ["who", /^q\d+$/.test(s.id) && !s.name ? "Monty Python, a seed" : signature(s.name, s.trip)],
-    ["words", String(s.s.split(/\s+/).length)],
-  ];
-  if (s.i != null) rows.push(["voice", `intensity ${Math.round(s.i * 100)}`]);
-  dMeta.replaceChildren(...rows.flatMap(([k, v]) => {
-    const a = document.createElement("dt"), b = document.createElement("dd");
-    a.textContent = k; b.textContent = v; return [a, b];
-  }));
-  detailEl.hidden = false;
+function msgEl(s, kind) {
+  const li = document.createElement("li"); li.className = "msg " + kind;
+  const body = document.createElement("p"); body.className = "body"; body.textContent = s.s;
+  const meta = document.createElement("p"); meta.className = "meta";
+  const bits = [mineIds.has(s.id) ? "you" : signature(s.name, s.trip), s.t > 1e11 ? when(s.t) : ""];
+  if (kind === "op" && s.i != null) bits.push(`intensity ${Math.round(s.i * 100)}`);
+  meta.textContent = bits.filter(Boolean).join(" · ");
+  li.append(body, meta);
+  return li;
 }
-function closeDetail() { picked = null; detailEl.hidden = true; }
-document.getElementById("dClose").addEventListener("click", closeDetail);
-document.getElementById("dThrow").addEventListener("click", () => {
+function renderChat() {
   if (!picked) return;
-  flashNote(picked.s.id);
-  vent(picked.s.s, picked.s.i ?? .7);
+  const s = picked.s, list = replies.get(s.id) || [];
+  cRank.textContent = `note ${rankOf.get(s.id)} of ${sentences.length}` + (list.length ? ` · ${list.length} ${list.length === 1 ? "reply" : "replies"}` : "");
+  cLog.replaceChildren(msgEl(s, "op"), ...list.map(r => msgEl(r, mineIds.has(r.id) ? "mine" : "other")));
+  cLog.scrollTop = cLog.scrollHeight;
+}
+function placeChat() {                          // above the crater, its tail pointing down into it
+  const c = crater();
+  chatEl.style.bottom = Math.round(H - c.y + 26) + "px";
+  chatEl.style.maxHeight = Math.max(220, Math.round(c.y - 26 - 64)) + "px";
+}
+function openChat(n) {
+  picked = n; hidePeek(); placeChat();
+  chatEl.hidden = false; renderChat();
+  cText.value = ""; cText.focus({ preventScroll: true });
+}
+function closeChat() { picked = null; chatEl.hidden = true; }
+document.getElementById("cClose").addEventListener("click", closeChat);
+cForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  const n = picked, text = cText.value.trim();
+  if (!n || !text) return;
+  cText.value = "";
+  await saveSentence(text, null, n.s.id);
+  if (picked === n) renderChat();
 });
+addEventListener("resize", () => { if (!chatEl.hidden) placeChat(); });
+function showPeek(n, x, y) {
+  peekEl.textContent = n.s.s; peekEl.hidden = false;
+  peekEl.style.left = clamp(x + 16, 8, W - peekEl.offsetWidth - 8) + "px";
+  peekEl.style.top = clamp(y + 18, 8, H - peekEl.offsetHeight - 8) + "px";
+}
+function hidePeek() { peekEl.hidden = true; }
 function noteAt(px, py) {
-  if (!hole || wLevel > .05) return null;
-  const y = py - sceneY;
+  if (!hole || wLevel > .05 || holeOpen < .9) return null;
+  const y = py - sceneY - camY;
   if (!inHole(px, y)) return null;
   let found = null;
-  for (const n of notes.values()) if (recentIds.has(n.s.id) && n.tw && Math.abs(px - n.x) <= n.tw / 2 + 4 && Math.abs(y - n.y) <= 11) found = n;
-  return found;                          // the last one drawn is the one on top
+  for (const n of notes.values()) if (n.hot && n.rp && Math.hypot(px - n.x, y - n.y) <= n.rp + 6) found = n;
+  return found;                               // the last one drawn is the one on top
 }
+const local = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };   // the canvas starts below the bar
 cv.addEventListener("pointermove", e => {
-  hoverNote = noteAt(e.clientX, e.clientY);
+  const [x, y] = local(e);
+  hoverNote = noteAt(x, y);
   cv.style.cursor = hoverNote ? "pointer" : "";
+  if (hoverNote && hoverNote !== picked && e.pointerType !== "touch") showPeek(hoverNote, x, y); else hidePeek();
 });
+cv.addEventListener("pointerleave", () => { hoverNote = null; hidePeek(); });
 cv.addEventListener("pointerdown", e => {
   if (!idPanel.hidden) closeId();
-  const n = noteAt(e.clientX, e.clientY);
-  if (n) openDetail(n); else if (picked) closeDetail();
+  const n = noteAt(...local(e));
+  if (n) openChat(n); else if (picked) closeChat();
 });
-addEventListener("keydown", e => { if (e.key === "Escape") { closeDetail(); closeId(); } });
+addEventListener("keydown", e => { if (e.key === "Escape") { closeChat(); closeId(); } });
+
+// ================= pressure =================
+// Pressure builds with time and with every note that comes in. At the top the opening crusts over and the ground
+// shakes; then the volcano explodes, the camera follows what it throws up into the sky and back down, and the pressure
+// starts again from zero. The pressure is also the volcano's mood: the higher it is, the harder it throws.
+const FILL_TIME = 180, PER_NOTE = .12;        // seconds to fill with nobody writing; what one note adds
+const BLAST = 1.8;                            // how much faster than normal time an explosion plays
+let pressure = 0, phase = "build", phaseT = 0, holeOpen = 1, camY = 0, bombs = [], nextSmall = 14;
+const gaugeEl = document.getElementById("gauge"), pFill = document.getElementById("pFill"), pVal = document.getElementById("pVal");
+function addPressure(x) { if (phase === "build") pressure = Math.min(1, pressure + x); }
+// the pressure can be set by hand: drag the tube (or use the arrow keys on it), or press "erupt"
+const tube = document.getElementById("tube"), pBoom = document.getElementById("pBoom");
+const setFrom = e => { if (phase !== "build") return; const r = tube.getBoundingClientRect(); pressure = clamp((r.bottom - e.clientY) / r.height, 0, 1); };
+tube.addEventListener("pointerdown", e => { tube.setPointerCapture(e.pointerId); setFrom(e); });
+tube.addEventListener("pointermove", e => { if (tube.hasPointerCapture(e.pointerId)) setFrom(e); });
+tube.addEventListener("keydown", e => {
+  const step = { ArrowUp: .05, ArrowRight: .05, ArrowDown: -.05, ArrowLeft: -.05, PageUp: .2, PageDown: -.2 }[e.key];
+  if (step == null || phase !== "build") return;
+  e.preventDefault(); pressure = clamp(pressure + step, 0, 1);
+});
+pBoom.addEventListener("click", () => { if (phase === "build") pressure = 1; });
+const gravity = () => Math.sqrt(H) * 22 * SLOW * SLOW;
+const airborne = () => bombs.length > 0 || slides.some(v => v.blast && v.state === "fly");
+function updatePressure(dt) {
+  phaseT += dt;
+  if (phase === "build") {
+    if (!water) pressure = Math.min(1, pressure + dt / FILL_TIME);
+    if (pressure >= 1 && !water) { phase = "seal"; phaseT = 0; closeChat(); hidePeek(); }
+  } else if (phase === "seal") {
+    shake = Math.max(shake, 1 + phaseT * 9);
+    pulse = Math.min(1, pulse + dt * 1.2);
+    if (phaseT > 1.2) { phase = "blast"; phaseT = 0; blast(); }
+  } else if (phase === "blast") {
+    if (phaseT > 1 && !airborne()) { phase = "settle"; phaseT = 0; }
+  } else if (phase === "settle") {
+    pressure = Math.max(0, pressure - dt * 1.5);
+    if (phaseT > 1.2 && camY < 2) { phase = "build"; phaseT = 0; pressure = 0; }
+  }
+  holeOpen += ((phase === "build" ? 1 : 0) - holeOpen) * Math.min(1, dt * (phase === "seal" ? 3 : 1.2));
+  const p = phase === "build" ? pressure : 1;
+  V.power = lerp(.65, 1.35, p); V.shake = lerp(1, 8, p); V.burst = p > .6 ? 2 : 1;
+  pFill.style.height = `calc(${(pressure * 100).toFixed(2)}% - ${(pressure * 4).toFixed(2)}px)`;
+  pVal.textContent = { build: Math.floor(pressure * 100) + "%", seal: "sealed", blast: "eruption", settle: "release" }[phase];
+  tube.setAttribute("aria-valuenow", String(Math.round(pressure * 100)));
+  pBoom.disabled = phase !== "build";
+  gaugeEl.classList.toggle("critical", phase !== "build" || pressure > .85);
+  elemBtns.forEach(b => { b.disabled = phase !== "build"; });
+}
+function blast() {
+  const c = crater(), g = gravity();
+  // the last 21 come out as what they say, thrown high into the sky; older notes come out as bombs
+  const hot = sentences.filter(s => recentIds.has(s.id));
+  let delay = 0;
+  for (const s of hot) {
+    const line = sentenceLines(s.s)[0]; if (!line) continue;
+    const h = H * rand(1.1, 2.6);
+    const v = { t: line, sentence: true, bw: letterWidth(line), ext: letterWidth(line), I: 1, alpha: 1, heat: 1.4, delay, state: "fly", s: 0, s0: 0, blast: true,
+      x: c.x + rand(-c.half, c.half) * .5, y: c.y, vx: rand(-1, 1) * Math.min(W, 900) * .2, vy: -Math.sqrt(2 * g * h) };
+    v.fp = [{ x: v.x, y: v.y, l: 0 }]; v.pts = v.fp;
+    slides.push(v);
+    delay += rand(.02, .07);
+    flashNote(s.id);
+  }
+  const old = [...notes.values()].filter(n => !n.hot);
+  for (let k = 0; k < Math.min(48, 12 + old.length); k++) {
+    const n = old.length ? pickOne(old) : null, h = H * rand(.5, 2.3);
+    bombs.push({ spr: bombSprite(n && !n.hot ? bombR(n.s.s, false) + 1 : 2, "old", hashStr("b" + k)), x: c.x + rand(-c.half, c.half) * .6, y: c.y, vx: rand(-1, 1) * Math.min(W, 900) * .32, vy: -Math.sqrt(2 * g * h), delay: rand(0, .7) });
+  }
+  for (let k = 0; k < 140; k++) bits.push({ x: c.x + rand(-c.half, c.half), y: c.y - rand(0, 30), vx: rand(-50, 50), vy: -rand(150, 700), life: rand(5, 11), ash: true, g: -.01 });
+  sparkle(c, 140, 1.3);
+  shake = 22; pulse = 1;
+}
+function updateBombs(dt) {
+  const g = gravity();
+  for (const b of bombs) {
+    if (b.delay > 0) { b.delay -= dt; continue; }
+    b.vy += g * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.vy > 0 && b.y >= ground(b.x)) { splat(b.x, ground(b.x), b.spr.width * P, false); b.gone = true; }
+    if (b.x < -200 || b.x > W + 200) b.gone = true;
+  }
+  bombs = bombs.filter(b => !b.gone);
+}
+function updateCamera(dt) {
+  // follow the upper part of what is in the air, up into the sky and back down
+  const ys = [];
+  for (const v of slides) if (v.blast && v.state === "fly" && v.delay <= 0) ys.push(v.y);
+  for (const b of bombs) if (b.delay <= 0) ys.push(b.y);
+  let target = 0;
+  if (ys.length) { ys.sort((a, b) => a - b); target = Math.max(0, H * .42 - ys[Math.floor(ys.length * .3)]); }
+  camY += (target - camY) * Math.min(1, dt * 4);
+  if (camY < .5 && !target) camY = 0;
+}
+function drawSky() {
+  // the sky darkens with height; stars appear above the usual view, so the climb can be felt
+  const up = clamp(camY / (H * 2.5), 0, 1);
+  ctx.fillStyle = mix("#0b1633", "#02040c", up); ctx.fillRect(0, 0, W, H);
+  if (camY < 1) return;
+  const cell = 46, j0 = Math.floor(-camY / cell), j1 = Math.ceil((H - camY) / cell);
+  for (let j = j0; j <= j1; j++) for (let i = 0; i * cell < W; i++) {
+    const h = hashStr(i + ":" + j) / 4294967296;
+    if (h > .09) continue;
+    const y = j * cell + (h * 977 % 1) * cell;
+    if (y > -H * .15) continue;
+    ctx.globalAlpha = clamp(-y / (H * .9), 0, 1) * (.4 + .6 * ((h * 131) % 1));
+    ctx.fillStyle = h < .015 ? "#ffe9c2" : "#c9d6ff";
+    ctx.fillRect(Math.round((i * cell + (h * 613 % 1) * cell) / P) * P, Math.round((y + camY) / P) * P, P, P);
+  }
+  ctx.globalAlpha = 1;
+}
 
 // ================= voice mode =================
 const voiceEl = document.getElementById("voice"), realEl = document.getElementById("real"), debugEl = document.getElementById("debug");
 const ventText = document.getElementById("ventText"), intensity = document.getElementById("intensity"), intVal = document.getElementById("intVal");
 const micBtn = document.getElementById("mic"), langSel = document.getElementById("lang"), heard = document.getElementById("heard"), levelEl = document.getElementById("level");
 intensity.addEventListener("input", () => { intVal.textContent = intensity.value; });
-debugEl.addEventListener("submit", e => { e.preventDefault(); const I = intensity.value / 100; vent(ventText.value, I); saveSentence(ventText.value, I); ventText.value = ""; });
+debugEl.addEventListener("submit", e => {
+  e.preventDefault();
+  const I = intensity.value / 100;
+  saveSentence(ventText.value, I);            // it sinks straight into the volcano
+  if (water) addSentenceToFluid(ventText.value);
+  ventText.value = "";
+});
 document.querySelectorAll("[data-vm]").forEach(b => b.addEventListener("click", () => {
   const real = b.dataset.vm === "real";
   document.querySelectorAll("[data-vm]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
@@ -935,7 +1107,7 @@ async function startMic() {
     let interim = "";
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
-      if (r.isFinal) { const I = peak; vent(r[0].transcript, I); saveSentence(r[0].transcript, I); heard.textContent = `“${r[0].transcript.trim()}” · intensity ${Math.round(I * 100)}`; peak = 0; }
+      if (r.isFinal) { const I = peak; saveSentence(r[0].transcript, I); heard.textContent = `“${r[0].transcript.trim()}” · intensity ${Math.round(I * 100)}`; peak = 0; }
       else interim += r[0].transcript;
     }
     if (interim) heard.textContent = interim + "…";
@@ -1007,18 +1179,19 @@ function frame(t) {
 
   wLevel += ((water ? 1 : 0) - wLevel) * Math.min(1, realDt * 7);
   if (Math.abs((water ? 1 : 0) - wLevel) < .01) wLevel = water ? 1 : 0;
-  const calm = water || wLevel > .05;
 
-  if (!calm || water) {          // notes from inside come back up at random: the volcano erupts them the way they were vented
-    nextRecall -= realDt;                        // real seconds: the speed slider changes the motion, not how often they return
-    if (nextRecall <= 0) {
-      const r = water ? .5 : ventR();
-      nextRecall = lerp(14, 4.5, r) * rand(.8, 1.25);         // Tambora: every few seconds; Llaima: every fourteen (the flows are slow, so more would pile up)
-      if (sentences.length) for (let n = 0; n < Math.min(2, V.burst); n++) { const s = pickOne(sentences); flashNote(s.id); vent(s.s, rand(.1, .8)); }
+  updatePressure(realDt);
+  if (phase === "build" && !water && sentences.length) {   // now and then a small eruption throws one note out
+    nextSmall -= realDt;
+    if (nextSmall <= 0) {
+      nextSmall = rand(22, 50) * lerp(1, .45, pressure);
+      const s = pickOne(sentences); flashNote(s.id); throwNote(s.s);
     }
   }
   updateSlides(dt, g);
-  updateNotes(realDt * (speed.value / 100));
+  updateNotes(realDt);
+  updateBombs(realDt * BLAST);
+  updateCamera(realDt);
   for (const b of bits) { b.vy += g * b.g * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt; }
   bits = bits.filter(b => b.life > 0);
   for (const s of splats) s.life -= dt;
@@ -1028,11 +1201,12 @@ function frame(t) {
   // background
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = "#0b1633"; ctx.fillRect(0, 0, W, H);
+  drawSky();
   if (shake > 0) ctx.translate(Math.round(rand(-shake, shake) / P) * P, Math.round(rand(-shake, shake) / P) * P);
+  ctx.translate(0, Math.round(camY));          // the camera, following an explosion
 
-  // the red light behind the volcano: dim and deep for a gentle volcano, wider and hotter as eruptions come
-  // (the volcano's strength, how many words just erupted, and how loud the voice is)
+  // the red light behind the volcano: dim and deep at low pressure, wider and hotter as it builds and as eruptions come
+  // (the pressure, how much just erupted, and how loud the voice is)
   pulse = Math.max(0, pulse - realDt * .45);
   const base = clamp(.1 + (V.power - .55) / .8 * .35, .08, .5);
   const goal = clamp(base + pulse * (.3 + V.power * .3) + level * .5, 0, 1.15) * (1 - .8 * wLevel);
@@ -1085,30 +1259,40 @@ function frame(t) {
     ctx.fillRect(Math.round(b.x / P) * P, Math.round(b.y / P) * P, s, s);
   }
 
-  // sliding and vented words
+  // sliding and vented words, and the bombs of an explosion
   for (const v of slides) {
     if (v.delay > 0) continue;
     const style = clamp(v.heat, .15, 1);
     drawFlow(v, style, clamp(v.alpha, 0, 1));
   }
+  for (const b of bombs) {
+    if (b.delay > 0) continue;
+    const size = b.spr.width * P;
+    ctx.drawImage(b.spr, Math.round((b.x - size / 2) / P) * P, Math.round((b.y - size / 2) / P) * P, size, size);
+  }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
   if (wLevel > .01) {
     if (streamsFor !== W + "x" + H) buildRiver();
-    updateRiver(realDt * (speed.value / 100) * .6); drawRiver(t);
+    updateRiver(realDt * .6); drawRiver(t);
   }
 
   requestAnimationFrame(frame);
 }
 
 addEventListener("resize", resize);
+// the site bar can push the page down after it loads (it adds a padding to <html>): follow the body's size
+if (window.ResizeObserver) {
+  let lastBox = "";
+  new ResizeObserver(() => { const b = document.body.getBoundingClientRect(), k = Math.round(b.width) + "x" + Math.round(b.height); if (k !== lastBox && lastBox) resize(); lastBox = k; }).observe(document.body);
+}
 resize();
 if (document.fonts) {
   const get = f => { try { return document.fonts.load(f); } catch { return Promise.resolve(); } };
   Promise.all([get("400 16px Inter"), get("italic 400 20px Spectral"), get("italic 400 15px Spectral")]).catch(() => {})
     .then(() => document.fonts.ready).then(() => { for (const n of notes.values()) n.tw = 0; });
 }
-applySpeed();
 requestAnimationFrame(frame);
 </script>
 <script src="../../site.js" defer></script>
-<script src="../../nav.js" data-path="fw/under-pressure/index.html" defer></script>
+<script src="../../nav.js" data-path="fw/volcano/index.html" defer></script>
