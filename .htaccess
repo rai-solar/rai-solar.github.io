@@ -20,6 +20,7 @@ AddOutputFilterByType DEFLATE application/geo+json text/csv
 # versions: an archived page (<project>/_v/<id>/...) only stores the files that changed;
 # anything it doesn't have is served from the live project folder
 RewriteEngine On
+# the home page's own versions (_v/<id>/ at the root) fall back to the live root the same way
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.+)/_v/[0-9a-f]+/(.*)$ $1/$2 [L]
+RewriteRule ^(.*/)?_v/[0-9a-f]+/(.*)$ $1$2 [L]

@@ -10,7 +10,7 @@ import http.server, os, re, sys, webbrowser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FALLBACK = re.compile(r"^(/.+)/_v/[0-9a-f]+/(.*)$")
+FALLBACK = re.compile(r"^(.*)/_v/[0-9a-f]+/(.*)$")  # also _v/ at the root: the home page's versions
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):

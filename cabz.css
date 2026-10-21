@@ -1,4 +1,4 @@
-/* CABeZa · shared by the home page, fw/ and pp/
+/* CABeZa · shared by the home page, cabz/, cabz/fw/ and cabz/pp/
    Layout: 8 columns, 8px gap, 8px page margin (the same grid nav.js draws and overlays). */
 :root {
   color-scheme: light;
@@ -109,6 +109,11 @@ body {
   pointer-events: none; visibility: hidden; z-index: 10; border: 0; padding: 0; }
 .sun-ball.parked { pointer-events: auto; border: 1px solid rgba(176, 38, 255, .65); }
 .sun-ball:focus-visible { outline: 1px solid #B026FF; outline-offset: 4px; }
+/* over raimundo the moon inverts the whole round, sky and type (sun.js) */
+.sun-ball.inverting { background: transparent; -webkit-backdrop-filter: invert(1); backdrop-filter: invert(1); }
+html:has(.sun-ball.inverting) .cabz-cursor { visibility: hidden !important; }   /* only the round over the name */
+/* over a version dot: the orange of the sun's centre, no cursor (cursor.js) */
+.sun-ball.on-version { background: #FF4500; -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* on home the sun owns column 8: the index stops at 7 */
 .home .list > li { grid-column: 1 / 8; }
 

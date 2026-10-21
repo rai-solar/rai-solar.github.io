@@ -16,15 +16,20 @@
   document.documentElement.append(svg);
   document.documentElement.classList.add("cabz-cursor-ready");
   document.body.classList.add('cursor-ready');
-  const defaults = { roundness: 1.16, tailWidth: 4.8, movement: 1, pawGap: 1.2 };
-  let saved = {}; try { saved = JSON.parse(localStorage.getItem('cabz-cursor-settings') || '{}'); } catch {}
+  const defaults = { roundness: 1.3, tailWidth: 5, movement: .75, pawGap: 1.5 };
+  // v01 settled these values; its own key, so v00 keeps whatever was tuned there
+  const STORE = 'cabz-cursor-settings-v01';
+  let saved = {}; try { saved = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch {}
   const settings = { ...defaults };
   for (const key of Object.keys(defaults)) if (Number.isFinite(saved?.[key])) settings[key] = saved[key];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   let x = 0, y = 0, previousX = 0, previousY = 0, initialized = false, visible = false;
   let bend = 0, velocity = 0, swing = 0, swingVelocity = 0, curl = 3.8, last = 0;
   let curlSide = 1, stretch = 0;
-  let hand = false, cursorTarget = null;
+  let hand = false, round = false, cursorTarget = null;
+  // version dots: no arrow, no paw. The home page's moon turns orange there (sun.js);
+  // where there is no moon, the cursor itself becomes that orange round.
+  const VERSIONS = '.dot, .vers a, .g u';
   const spineAngles = Array.from({ length: 32 }, (_, i) => .24 + 3.8 * ((i + .5) / 32) ** 2);
   const arrow = () => {
     // Build a tapered ribbon around a flexible spine, so the curl can face either way.
@@ -58,9 +63,15 @@
     cursorTarget = target;
     const cursor = target ? getComputedStyle(target).cursor : 'auto';
     hand = cursor.includes('pointer');
-    visible = hand || ['none', 'auto', 'default'].includes(cursor);
-    svg.dataset.shape = hand ? 'paw' : 'arrow';
-    pads.style.display = hand ? '' : 'none';
+    // over an index name the moon's lens shows the real name: nothing should sit on it
+    const overName = target?.closest?.('.list a.name[data-full]') && !document.body.classList.contains('eclipse-locked');
+    const overVersion = target?.closest?.(VERSIONS);
+    const moonFollows = document.querySelector('.sun-ball') && !document.body.classList.contains('eclipse-locked');
+    round = !!overVersion && !moonFollows;
+    visible = !overName && !(overVersion && moonFollows) && (round || hand || ['none', 'auto', 'default'].includes(cursor));
+    svg.dataset.shape = round ? 'round' : hand ? 'paw' : 'arrow';
+    svg.style.color = round ? '#FF4500' : '';
+    pads.style.display = hand && !round ? '' : 'none';
     // Four compact toe pads and a single broad metacarpal pad, drawn from real canine references.
     // The extra path contains detached claws only; the paw never gains a tail.
     const gap = settings.pawGap - 1.2;
@@ -69,15 +80,15 @@
     const toePads = 'M4.7 14.6 C4.3 11.1 7.3 10.5 9.1 13.1 C11 15.7 10.7 19.3 8.1 19.7 C5.8 20 4.9 17.4 4.7 14.6 Z M9.6 11.4 C9.3 7.3 12.3 6.4 14.2 9 C15.8 11.2 15.5 15.8 13 16.5 C10.6 17 9.8 14.1 9.6 11.4 Z M17 11.4 C16.7 7.3 19.7 6.4 21.6 9 C23.2 11.2 22.9 15.8 20.4 16.5 C18 17 17.2 14.1 17 11.4 Z M22.8 13.1 C24.5 10.6 27.4 11.1 27 14.6 C26.7 17.4 25.8 20 23.5 19.7 C20.9 19.3 20.8 15.7 22.8 13.1 Z';
     const heel = 'M6.8 25 C6.4 21.9 11.8 20.2 13.7 18.8 Q16 16.8 18.3 18.8 C20.2 20.2 25.6 21.9 25.2 25 C24.9 29.7 22.4 31 19.3 29.4 Q16 27.8 12.7 29.4 C9.6 31 7.1 29.7 6.8 25 Z';
     // Offset only the toe subpaths for the live spacing control.
-    shape.setAttribute('d', hand ? `${toePads} ${heel}` : arrow());
-    if (hand && gap) {
+    shape.setAttribute('d', round ? 'M1 20 A11 11 0 1 0 23 20 A11 11 0 1 0 1 20 Z' : hand ? `${toePads} ${heel}` : arrow());
+    if (hand && !round && gap) {
       const numbers = toePads.match(/-?\d+(?:\.\d+)?/g).map(Number);
       let index = 0;
       const adjusted = toePads.replace(/-?\d+(?:\.\d+)?/g, () => { const value = numbers[index]; return String(index++ % 2 ? value - gap : value); });
       shape.setAttribute('d', `${adjusted} ${heel}`);
     }
     svg.style.visibility = visible ? 'visible' : 'hidden';
-    svg.style.transform = `translate(${x - (hand ? 28 : 14)}px, ${y - (hand ? 22 : 6)}px)`;
+    svg.style.transform = round ? `translate(${x - 24}px, ${y - 24}px)` : `translate(${x - (hand ? 28 : 14)}px, ${y - (hand ? 22 : 6)}px)`;
   };
   addEventListener('pointermove', update, { passive: true });
   addEventListener('pointerover', update, { passive: true });
@@ -111,7 +122,7 @@
   document.documentElement.append(devHost);
   const renderSettings = () => {
     controls.forEach(([key]) => { dev.getElementById(key).value = settings[key]; dev.querySelector(`output[for="${key}"]`).textContent = Number(settings[key]).toFixed(2); });
-    try { localStorage.setItem('cabz-cursor-settings', JSON.stringify(settings)); } catch {}
+    try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch {}
     update({ clientX: x, clientY: y, composedPath: () => cursorTarget ? [cursorTarget] : [] });
   };
   dev.addEventListener('input', event => { if (event.target.matches('input')) { settings[event.target.id] = Number(event.target.value); renderSettings(); } });
@@ -152,7 +163,7 @@
       // Each successive section responds more slowly, carrying a wave down to the tip.
       spineAngles[i] = reduce.matches ? target : angle + (target - angle) * (1 - Math.exp(-dt * (26 - t * 17)));
     });
-    if (!hand) shape.setAttribute('d', arrow());
+    if (!hand && !round) shape.setAttribute('d', arrow());
     requestAnimationFrame(draw);
   };
   requestAnimationFrame(draw);

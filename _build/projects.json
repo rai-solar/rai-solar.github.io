@@ -18,14 +18,17 @@
   ],
   "sections": [
     {
-      "id": "fw",
+      "id": "cabz/fw",
       "short": "fw",
       "title": "future web",
       "projects": [
         {
           "name": "a-joyful-noise",
           "title": "a joyful noise",
-          "offset": true
+          "offset": true,
+          "former": [
+            "fw/a-joyful-noise"
+          ]
         },
         {
           "name": "volcano",
@@ -34,6 +37,7 @@
           "offset": true,
           "cursor": "normal",
           "former": [
+            "fw/volcano",
             "fw/langues",
             "fw/under-pressure"
           ],
@@ -67,21 +71,30 @@
         {
           "name": "polygon-pong",
           "title": "polygon pong",
-          "offset": true
+          "offset": true,
+          "former": [
+            "fw/polygon-pong"
+          ]
         },
         {
           "name": "aya-traces",
           "title": "aya traces",
-          "offset": true
+          "offset": true,
+          "former": [
+            "fw/aya-traces"
+          ]
         },
         {
           "name": "pesca",
-          "title": "pesca"
+          "title": "pesca",
+          "former": [
+            "fw/pesca"
+          ]
         }
       ]
     },
     {
-      "id": "pp",
+      "id": "cabz/pp",
       "short": "pp",
       "title": "portafolio personal",
       "projects": [
@@ -90,13 +103,19 @@
           "title": "connected wild dogs",
           "offset": true,
           "label": "rafiki x noar",
-          "strike": "connected"
+          "strike": "connected",
+          "former": [
+            "pp/perros"
+          ]
         },
         {
           "name": "mouna",
           "title": "wetland hotspots",
           "offset": [
             "email.html"
+          ],
+          "former": [
+            "pp/mouna"
           ]
         },
         {
@@ -131,6 +150,7 @@
           ],
           "activeLabel": "portfolio cabz—",
           "former": [
+            "pp/pdf",
             "pp/wild-dogs"
           ]
         }

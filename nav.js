@@ -30,11 +30,10 @@
   const local = location.protocol === "file:";
   // file:// can't open folders, so point straight at their index.html
   const url = (p) => root + p + (local && (p === "" || p.endsWith("/")) ? "index.html" : "");
-  const BRAND = "–CABeZa";
-  // C A B Z evenly spaced, the small e and a falling in the gaps after B and Z
-  // set like the "—HEAD" wordmark, in Spectral: capitals with one even gap between them,
-  // then the long dash (the tabs still say CABeZa)
-  const BRAND_HTML = '<span class="brand" aria-label="CABeZa"><b>C</b><b>A</b><b>B</b><b>Z</b><b class="dash">—</b></span>';
+  // the root of the tree: raíz / cabz / fw / volcano (the tabs still say CABeZa)
+  const BRAND = "raíz";
+  const BRAND_HTML = '<span class="brand">raíz</span>';
+  const PP = "cabz/pp";
 
   // Spectral has to be declared on the page itself (fonts don't load from inside a shadow root)
   if (!document.querySelector("link[data-cabz-font]")) {
@@ -51,7 +50,10 @@
   let project, section;
   for (const s of S.sections) for (const p of s.projects) if (path.startsWith(p.id + "/")) { project = p; section = s; }
   if (!section) section = S.sections.find((s) => s.id && path.startsWith(s.id + "/"));
-  const page = project ? path.slice(project.id.length + 1) : "";
+  // the home page itself is raíz, with its own versions (cabz-vNN tags, see _build/build.py)
+  const atRoot = !project && path === "index.html" && S.root?.versions.length > 1;
+  if (atRoot) project = S.root;
+  const page = atRoot ? path : project ? path.slice(project.id.length + 1) : "";
 
   // versions
   const vs = project ? project.versions : [];
@@ -61,7 +63,7 @@
   const vHref = (v) => {
     if (v.href) return url(v.href);
     const keep = page !== "index.html" && v.pages.includes(page) ? page : "";
-    return url(project.id + "/" + (v.live ? "" : "_v/" + v.id + "/") + keep);
+    return url((project.id ? project.id + "/" : "") + (v.live ? "" : "_v/" + v.id + "/") + keep);
   };
   const vNameOf = (i, version) => version?.label || "v" + String(i).padStart(2, "0");
   const versionText = (version, i) => `${vNameOf(i, version)} [${version?.date ? ddmmyy(version.date) : "—"}]`;
@@ -69,7 +71,7 @@
 
   // neighbours inside the section
   let prev, next;
-  if (project && section.projects.length > 1) {
+  if (project && section && section.projects.length > 1) {
     const i = section.projects.indexOf(project), n = section.projects.length;
     prev = section.projects[(i - 1 + n) % n];
     next = section.projects[(i + 1) % n];
@@ -77,25 +79,28 @@
   const pHref = (p) => url(p.href);
 
   const crumbs = [`<a class="c home${!section && path === "index.html" ? " here" : ""}" href="${url("")}">${BRAND_HTML}</a>`];
+  if (path.startsWith("cabz/")) crumbs.push(`<i>/</i><a class="c${path === "cabz/index.html" ? " here" : ""}" href="${url("cabz/")}">cabz—</a>`);
   if (section && section.id) crumbs.push(`<i>/</i><a class="c${project ? "" : " here"}" href="${url(section.id + "/")}" title="${esc(section.title)}">${esc(section.short)}</a>`);
   // an older version can carry the name the project had then
-  if (project) crumbs.push(`<i>/</i><a class="c here" href="${url(project.id + "/")}" title="${esc(project.title)}">${esc(vs[cur]?.header || project.activeLabel || project.name)}</a>`);
+  if (project && !atRoot) crumbs.push(`<i>/</i><a class="c here" href="${url(project.id + "/")}" title="${esc(project.title)}">${esc(vs[cur]?.header || project.activeLabel || project.name)}</a>`);
   if (page && page !== "index.html") crumbs.push(`<span class="pg"><i>/</i> ${esc(page.replace(/\.html$/, ""))}</span>`);
 
+  // pp's dots come before the names: every row reserves room for the longest line, so the names align
+  const ppDots = Math.max(1, ...(S.sections.find((s) => s.id === PP)?.projects.map((p) => p.versions.length) || []));
   const versionMarks = (p, includeSingle) => {
     const versions = p.versions.length ? p.versions : [{}];
     const count = includeSingle ? versions.length : p.versions.length;
     return count > (includeSingle ? 0 : 1)
-      ? `<span class="g${includeSingle ? " before" : ""}">${versions.map((v, i) => `<u data-tooltip="${esc(versionText(v, i))}" aria-label="${esc(versionText(v, i))}"></u>`).join("")}</span>` : "";
+      ? `<span class="g${includeSingle ? " before" : ""}"${includeSingle ? ` style="min-width:${ppDots * 13 - 8}px"` : ""}>${versions.map((v, i) => `<u data-tooltip="${esc(versionText(v, i))}" aria-label="${esc(versionText(v, i))}"></u>`).join("")}</span>` : "";
   };
   const projectTitle = (p) => p.strike && p.title.startsWith(p.strike + " ")
     ? `<s>${esc(p.strike)}</s>${esc(p.title.slice(p.strike.length))}` : esc(p.title);
   const panel = S.sections.map((s) => `
     <section>
-      <a class="sh${s === section && !project ? " here" : ""}" href="${url(s.id ? s.id + "/" : "")}"><b>${s.id ? esc(s.short) : BRAND_HTML}</b> ${esc(s.title)}</a>
+      <a class="sh${s === section && !project ? " here" : ""}" href="${url(s.id ? s.id + "/" : "")}"><b>${s.id ? (s.id.startsWith("cabz/") ? "cabz— / " : "") + esc(s.short) : BRAND_HTML}</b> ${esc(s.title)}</a>
       <ol>${s.projects.map((p) => `
         <li><a href="${pHref(p)}"${p === project ? ' class="here" aria-current="page"' : ""}>
-          <span class="n">${s.id === "pp" ? versionMarks(p, true) : ""}${esc(p === project ? (p.activeLabel || p.name) : p.name)}${s.id !== "pp" ? versionMarks(p, false) : ""}</span>
+          <span class="n">${s.id === PP ? versionMarks(p, true) : ""}${esc(p === project ? (p.activeLabel || p.name) : p.name)}${s.id !== PP ? versionMarks(p, false) : ""}</span>
           <span class="t">${p.title.replace(/\s/g, "-") === p.name ? "" : projectTitle(p)}${p.note ? ` <em>${esc(p.note)}</em>` : ""}</span>
         </a></li>`).join("")}
       </ol>
@@ -133,12 +138,8 @@
   .here-group { grid-column: 1 / 7; display: flex; align-items: center; gap: 16px; min-width: 0; }
   .crumbs { flex: none; max-width: 60%; display: flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; overflow: hidden; }
   .crumbs > i, .pg i { font-style: normal; opacity: 1; }
-  .brand { --g: 0.42em; display: inline-flex; align-items: baseline;
+  .brand { display: inline-flex; align-items: baseline;
     font: 600 16px/1 Spectral, Georgia, "Times New Roman", serif; letter-spacing: 0; }
-  .brand b { position: relative; font-weight: inherit; }
-  .brand b + b { margin-left: var(--g); }
-  .brand .dash { font-weight: 500; }
-  .brand b:last-child { margin-right: calc(var(--g) * 0.8); }
   .c { opacity: 1; }
   .c:hover, .c.here { opacity: 1; }
   .pg { opacity: 1; overflow: hidden; text-overflow: ellipsis; }
@@ -179,14 +180,14 @@
   .panel { background: var(--nsky); padding-top: 32px; padding-bottom: 40px; row-gap: 32px;
     max-height: calc(100vh - 32px); overflow: auto; border-bottom: 1px solid var(--nfg); }
   .panel[hidden] { display: none; }
-  .panel section { grid-column: span 4; display: grid; grid-template-columns: subgrid; align-content: start; }
+  .panel section { grid-column: 1 / span 4; display: grid; grid-template-columns: subgrid; align-content: start; }
   .sh { grid-column: 1 / -1; justify-self: start; margin-bottom: 16px; opacity: 1; }
   .sh b { font-weight: 400; margin-right: 8px; }
   .sh:hover, .sh.here { opacity: 1; }
   .panel ol { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; list-style: none; margin: 0; padding: 0; }
   .panel li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; border-top: 1px solid var(--nfg); }
   .panel li:last-child { border-bottom: 1px solid var(--nfg); }
-  .panel li a { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: baseline; gap: 16px; padding: 6px 0; opacity: 1; max-width: 100%; }
+  .panel li a { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: baseline; padding: 6px 0; opacity: 1; min-width: 0; }
   .panel li a:hover, .panel li a.here { opacity: 1; }
   .panel .n { grid-column: 1 / 3; display: flex; align-items: center; font-size: 16px; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .panel li a.here .n::before { content: "→"; margin-right: 8px; }
@@ -404,7 +405,7 @@
     let p;
     for (const s of S.sections) for (const q of s.projects) if (q.id === el.dataset.project) p = q;
     if (!meta || !p) return;
-    const includeSingle = p.id.startsWith("pp/");
+    const includeSingle = p.id.startsWith(PP + "/");
     if (!includeSingle && p.versions.length < 2) return;
     const versions = p.versions.length ? p.versions : [{ live: true, href: p.href, msg: p.title }];
     const g = document.createElement("span");
@@ -416,6 +417,9 @@
     }).join("");
     meta.prepend(g);
   });
+  const ppMetas = [...document.querySelectorAll("body.pp-index .list .meta")];
+  const ppWidth = Math.max(0, ...ppMetas.map((m) => m.getBoundingClientRect().width));
+  ppMetas.forEach((m) => { m.style.minWidth = ppWidth + "px"; });
 
   const stepName = sh.querySelector(".step-name");
   sh.querySelectorAll(".step").forEach((a) => {

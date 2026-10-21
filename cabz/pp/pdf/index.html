@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>portfolio cabz—</title>
-<link rel="icon" href="../../icon.svg" type="image/svg+xml">
+<link rel="icon" href="../../../icon.svg" type="image/svg+xml">
 <style>
   html, body { height: 100%; margin: 0; background: #1a1a1a; color: #fff; }
   body { display: flex; flex-direction: column; font: 400 13px/1 Spectral, Georgia, serif; letter-spacing: .06em; }
@@ -23,7 +23,7 @@
 <script>
 addEventListener("DOMContentLoaded", () => {
   const project = window.CABZ?.sections.flatMap((section) => section.projects)
-    .find((item) => item.id === "pp/pdf");
+    .find((item) => item.id === "cabz/pp/pdf");
   const requested = new URLSearchParams(location.search).get("version");
   const edition = project?.versions.find((version) => version.id === requested)
     || project?.versions.find((version) => version.live);
@@ -36,7 +36,7 @@ addEventListener("DOMContentLoaded", () => {
   document.title = "portfolio cabz— · " + edition.label;
 });
 </script>
-<script src="../../site.js" defer></script>
-<script src="../../nav.js" data-path="pp/pdf/index.html" defer></script>
+<script src="../../../site.js" defer></script>
+<script src="../../../nav.js" data-path="cabz/pp/pdf/index.html" defer></script>
 </body>
 </html>

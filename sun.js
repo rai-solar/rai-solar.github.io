@@ -95,9 +95,12 @@
     }
     dispatchEvent(new CustomEvent("cabz:eclipse", { detail: { locked } }));
   };
+  // over a version dot the moon turns the orange of the sun's centre (the cursor hides, cursor.js)
+  const VERSIONS = ".dot, .vers a, .g u";
   addEventListener("pointermove", (event) => {
     mx = event.clientX; my = event.clientY;
     if (!locked) placeMoon(mx, my);
+    moon.classList.toggle("on-version", !locked && event.composedPath().some((el) => el instanceof Element && el.matches(VERSIONS)));
     updateSunCursor();
   }, { passive: true });
   addEventListener("resize", () => {
@@ -122,6 +125,16 @@
     else { const { cx, cy } = geometry(); mx = cx; my = cy; }
     setLocked(false);
   });
+
+  /* ---------- the moon over raimundo ---------- */
+  // Over the name at bottom left the moon inverts instead of hiding: the whole round, sky and type.
+  const identity = document.querySelector(".identity");
+  const updateInvert = () => {
+    if (!identity) return;
+    const r = identity.getBoundingClientRect(), radius = discPx() / 2;
+    const nx = Math.max(r.left, Math.min(r.right, mx)), ny = Math.max(r.top, Math.min(r.bottom, my));
+    moon.classList.toggle("inverting", !locked && Math.hypot(mx - nx, my - ny) < radius);
+  };
 
   /* ---------- drawing ---------- */
 
@@ -153,6 +166,7 @@
   function draw(now) {
     const k = locked ? 1 : eclipseAt(mx, my);
     setSky(k);
+    updateInvert();
 
     const t = reduce ? 0 : (now % LOOP) / LOOP;
     const settings = Object.assign({}, s, { wavePhase: -2 * Math.PI * t });
