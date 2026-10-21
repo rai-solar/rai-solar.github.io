@@ -4,7 +4,8 @@
 // The mouse carries a moon: a disc the colour of the background, a touch bigger than the sun's body,
 // always under the pointer (it hides whatever it passes over). Bring it onto the centre of
 // the sun and the rays fade with the distance: gone when it sits on the centre (almost exactly).
-// The whole page darkens with it: the painted sky goes to night, black type → neon purple.
+// Click a total eclipse to park the moon and lock night; pick it up to return to day.
+// The whole page darkens with it: the painted sky goes to night, charcoal type → neon purple.
 (() => {
   "use strict";
   const Sun = window.Sun;
@@ -33,23 +34,94 @@
   /* ---------- the moon under the mouse ---------- */
 
   const BOX = Sun.config.BOX, C = Sun.config.C;
-  const moon = document.createElement("div");
+  const moon = document.createElement("button");
+  moon.type = "button";
+  moon.tabIndex = -1;
+  moon.setAttribute("aria-label", "Pick up the moon");
   moon.className = "sun-ball";
   moon.setAttribute("aria-hidden", "true");
   document.body.appendChild(moon);
   // the moon covers the whole round body of the sun (the circle the rays grow from), plus a hair
   const discPx = () => link.clientWidth * (2 * built.core * 1.06) / BOX;
 
-  let mx = -1e4, my = -1e4;
-  addEventListener("pointermove", (e) => {
-    mx = e.clientX; my = e.clientY;
+  let mx = -1e4, my = -1e4, locked = false;
+  const geometry = () => {
+    const r = link.getBoundingClientRect();
+    return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, radius: r.width * built.core / BOX };
+  };
+  const placeMoon = (x, y) => {
     const d = discPx();
     moon.style.width = moon.style.height = d + "px";
-    moon.style.left = (mx - d / 2) + "px";      // left/top, not a transform: a transform would
-    moon.style.top = (my - d / 2) + "px";       // break the fixed sky it shows
+    moon.style.left = (x - d / 2) + "px";
+    moon.style.top = (y - d / 2) + "px";
     moon.style.visibility = "visible";
+  };
+  const eclipseAt = (x, y) => {
+    const { cx, cy, radius } = geometry();
+    const off = Math.hypot(x - cx, y - cy);
+    const far = radius + discPx() / 2, near = radius * MARGIN;
+    return Math.max(0, Math.min(1, (far - off) / (far - near)));
+  };
+  const hitZone = (x, y) => {
+    const { cx, cy, radius } = geometry();
+    const distance = Math.hypot(x - cx, y - cy);
+    if (distance <= radius * MARGIN) return "eclipse";
+    if (distance <= radius * 1.06) return "none";
+    const rect = link.getBoundingClientRect();
+    return distance <= rect.width * 0.48 ? "rays" : "none";
+  };
+  const updateSunCursor = () => {
+    link.style.cursor = !locked && hitZone(mx, my) !== "none" ? "var(--cursor-hand, pointer)" : "none";
+  };
+  const LOCK_KEY = "cabz-eclipse-locked";
+  const savedLock = () => { try { return localStorage.getItem(LOCK_KEY) === "1"; } catch { return locked; } };
+  const setLocked = (value) => {
+    try { if (value) localStorage.setItem(LOCK_KEY, "1"); else localStorage.removeItem(LOCK_KEY); } catch {}
+    locked = value;
+    document.body.classList.toggle("eclipse-locked", locked);
+    moon.classList.toggle("parked", locked);
+    moon.tabIndex = locked ? 0 : -1;
+    if (locked) {
+      moon.removeAttribute("aria-hidden");
+
+      const { cx, cy } = geometry();
+      placeMoon(cx, cy);
+      setSky(1);
+    } else {
+      if (document.activeElement === moon) link.focus({ preventScroll: true });
+      moon.setAttribute("aria-hidden", "true");
+      delete moon.dataset.tooltip;
+      placeMoon(mx, my);
+    }
+    dispatchEvent(new CustomEvent("cabz:eclipse", { detail: { locked } }));
+  };
+  addEventListener("pointermove", (event) => {
+    mx = event.clientX; my = event.clientY;
+    if (!locked) placeMoon(mx, my);
+    updateSunCursor();
   }, { passive: true });
-  document.documentElement.addEventListener("pointerleave", () => { moon.style.visibility = "hidden"; mx = my = -1e4; });
+  addEventListener("resize", () => {
+    if (locked) { const { cx, cy } = geometry(); placeMoon(cx, cy); }
+    else if (mx > -1000) placeMoon(mx, my);
+  });
+  document.documentElement.addEventListener("pointerleave", () => {
+    if (!locked) { moon.style.visibility = "hidden"; mx = my = -1e4; }
+  });
+  link.addEventListener("click", (event) => {
+    if (locked) { event.preventDefault(); return; }
+    // Keyboard activation retains the link's Soleil destination.
+    if (!event.detail) return;
+    const zone = hitZone(event.clientX, event.clientY);
+    if (zone !== "rays") event.preventDefault();
+    if (zone === "eclipse") setLocked(true);
+  });
+  moon.addEventListener("click", (event) => {
+    if (!locked) return;
+    event.preventDefault(); event.stopPropagation();
+    if (event.detail) { mx = event.clientX; my = event.clientY; }
+    else { const { cx, cy } = geometry(); mx = cx; my = cy; }
+    setLocked(false);
+  });
 
   /* ---------- drawing ---------- */
 
@@ -59,7 +131,7 @@
 
   // the page follows the eclipse: the painted sky with black type → night with neon purple type
   const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const SKY = { bg: [hex("#D99A76"), hex("#000000")], fg: [hex("#000000"), hex("#B026FF")] };   // type: black → neon purple
+  const SKY = { bg: [hex("#EFB4A5"), hex("#222222")], fg: [hex("#222222"), hex("#B026FF")] };   // type: charcoal → neon purple
   const mix = (pair, k) => "rgb(" + pair[0].map((v, i) => Math.round(v + (pair[1][i] - v) * k)).join(",") + ")";
   const root = document.documentElement.style;
   let lastK = -1;
@@ -67,25 +139,26 @@
     const q = Math.round(k * 100) / 100;
     if (q === lastK) return;
     lastK = q;
-    root.setProperty("--night", q);                       // the painted sky darkens to black
+    document.body.classList.toggle("eclipse-dark", q >= 0.72);
+    root.setProperty("--night", q);                       // the painted sky darkens to charcoal
     root.setProperty("--bg", mix(SKY.bg, q));
     root.setProperty("--fg", mix(SKY.fg, q));
     const [r, g, b] = mix(SKY.fg, q).match(/\d+/g);
     root.setProperty("--dim", `rgba(${r},${g},${b},${0.42 + 0.3 * q})`);
   }
 
+  if (savedLock()) setLocked(true);
+  addEventListener("pageshow", () => { if (savedLock() !== locked) setLocked(savedLock()); });
+
   function draw(now) {
-    // how far is the moon from the sun's centre? the rays follow that distance directly:
-    // fully there while the moon doesn't touch the sun, gone once it sits on the centre
-    const r = link.getBoundingClientRect();
-    const off = Math.hypot(mx - (r.left + r.width / 2), my - (r.top + r.height / 2));
-    const R = r.width * built.core / BOX;                  // the sun's body, in screen pixels
-    const far = R + discPx() / 2, near = R * MARGIN;       // moon just touching → centred
-    const k = Math.max(0, Math.min(1, (far - off) / (far - near)));
+    const k = locked ? 1 : eclipseAt(mx, my);
     setSky(k);
 
     const t = reduce ? 0 : (now % LOOP) / LOOP;
-    Sun.paint(canvas, Object.assign({}, s, { wavePhase: -2 * Math.PI * t }));
+    const settings = Object.assign({}, s, { wavePhase: -2 * Math.PI * t });
+    const frame = Sun.buildSun(settings);
+    Sun.paint(canvas, settings, frame);
+    updateSunCursor();
 
     if (k > 0.002) {
       // totality: the rays fade out, the round body of the sun stays (under the moon)

@@ -14,7 +14,7 @@
 
 site.js and _v/ are generated: git-ignored, rebuilt on every run, and uploaded with the site.
 """
-import json, re, shutil, subprocess, sys
+import hashlib, json, re, shutil, subprocess, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -101,8 +101,19 @@ def main():
             if (d / "_v").exists():
                 shutil.rmtree(d / "_v")
 
-            entry = {"id": pid, "name": p["name"], "title": p.get("title", p["name"]),
+            entry = {"id": pid, "name": p.get("label", p["name"]), "title": p.get("title", p["name"]),
                      "href": pid + "/" + p.get("href", ""), "versions": []}
+            if p.get("activeLabel"):
+                entry["activeLabel"] = p["activeLabel"]
+            if p.get("strike"):
+                entry["strike"] = p["strike"]
+            if p.get("cursor"):
+                entry["cursor"] = p["cursor"]
+            for edition in p.get("versions", []):
+                if not (d / edition["file"]).is_file():
+                    raise FileNotFoundError(d / edition["file"])
+                entry["versions"].append({**edition, "pages": ["index.html"],
+                    "href": pid + "/index.html?version=" + edition["id"]})
             if p.get("note"):
                 entry["note"] = p["note"]
             if p.get("offset"):
@@ -111,19 +122,36 @@ def main():
             paths = [pid] + p.get("former", [])
             commits = history(paths) if has_git else []
             vidx = [k for k, c in enumerate(commits) if "[minor]" not in c["msg"]]
-            if len(vidx) >= 2:
-                live = tree("HEAD", pid)
-                for n, k in enumerate(vidx):
+            snaps = [] if p.get("versions") else p.get("snapshots", [])
+            # snapshots: versions from before the project was in git, one html file each in
+            # _build/snapshots/<project>/, listed before the git versions
+            for n, snap in enumerate(snaps):
+                data = (ROOT / "_build" / "snapshots" / pid / snap["file"]).read_bytes()
+                vid = hashlib.sha1(data).hexdigest()[:7]  # hex like a commit, so the _v/ fallback finds the live files
+                msg = p.get("names", {}).get(f"v{n:02d}", snap["msg"])
+                entry["versions"].append({"id": vid, "date": snap["date"], "msg": msg, "pages": ["index.html"], "live": False})
+                if p.get("headers", {}).get(f"v{n:02d}"):
+                    entry["versions"][-1]["header"] = p["headers"][f"v{n:02d}"]  # the project's name in the bar for this version
+                path = pid + "/index.html"
+                dest = d / "_v" / vid / "index.html"
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(inject(data.decode("utf-8", "replace"), tags(path, path.count("/") + 2, vid)), "utf-8")
+            if not p.get("versions") and len(snaps) + len(vidx) >= 2:
+                live = tree("HEAD", pid) or {pid + "/" + f.relative_to(d).as_posix(): None for f in d.rglob("*") if f.is_file() and "_v" not in f.relative_to(d).parts}
+                for m, k in enumerate(vidx):
+                    n = len(snaps) + m  # the snapshots come first
                     c = commits[k]
-                    is_live = n == len(vidx) - 1
+                    is_live = n == len(snaps) + len(vidx) - 1
                     vid = c["sha"][:7]
                     # a version is its commit plus the [minor] fixes made before the next version
-                    end = commits[vidx[n + 1] - 1]["sha"] if not is_live else None
+                    end = commits[vidx[m + 1] - 1]["sha"] if not is_live else None
                     files = live if is_live else tree_any(end, pid, paths)
                     pages = sorted(f[len(pid) + 1:] for f in files if f.endswith(".html"))
                     msg = re.sub(r"^\s*[\w./-]+\s*[·:]\s*", "", c["msg"]).strip() or c["msg"]
                     msg = p.get("names", {}).get(f"v{n:02d}", msg)  # a version can be renamed in projects.json
                     entry["versions"].append({"id": vid, "date": c["date"], "msg": msg, "pages": pages, "live": is_live})
+                    if p.get("headers", {}).get(f"v{n:02d}"):
+                        entry["versions"][-1]["header"] = p["headers"][f"v{n:02d}"]
                     if is_live:
                         continue
                     for path, blob in files.items():
@@ -131,6 +159,8 @@ def main():
                         is_html = rel.endswith(".html")
                         if not is_html and live.get(path) == blob:
                             continue  # same as today: served from the live folder
+                        if rel.endswith(".php"):
+                            continue  # server code always runs from the live folder, next to the data it reads and writes
                         data = git("cat-file", "blob", blob, binary=True)
                         if is_html:
                             depth = path.count("/") + 2  # + _v/<id>/
@@ -138,7 +168,8 @@ def main():
                         dest = d / "_v" / vid / rel
                         dest.parent.mkdir(parents=True, exist_ok=True)
                         dest.write_bytes(data)
-                print(f"{pid}: {len(vidx)} versions (v00–v{len(vidx) - 1:02d})")
+                total = len(snaps) + len(vidx)
+                print(f"{pid}: {total} versions (v00–v{total - 1:02d})")
             s["projects"].append(entry)
         site["sections"].append(s)
 

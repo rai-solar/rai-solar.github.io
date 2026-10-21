@@ -1,0 +1,18 @@
+/* Shared cursor layer, independent of each project's layout and typography. */
+html.cabz-cursor-ready {
+  --cursor-color: #FF4500;
+  --cursor-hand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E") 0 0, pointer;
+  --cursor: var(--cursor-hand);
+  cursor: none;
+}
+html.cabz-cursor-ready body { cursor: none; }
+html.cabz-cursor-ready a[href], html.cabz-cursor-ready button:not(:disabled),
+html.cabz-cursor-ready summary, html.cabz-cursor-ready [role='button']:not([aria-disabled='true']),
+html.cabz-cursor-ready input[type='submit'], html.cabz-cursor-ready input[type='checkbox'],
+html.cabz-cursor-ready input[type='radio'], html.cabz-cursor-ready select { cursor: var(--cursor-hand); }
+html.cabz-cursor-dark, html:has(body.eclipse-dark), html:has(body.eclipse-locked) { --cursor-color: #B026FF; }
+.cabz-cursor {
+  position: fixed; left: 0; top: 0; width: 48px; height: 52px;
+  pointer-events: none; z-index: 2147483647; color: var(--cursor-color); visibility: hidden;
+}
+.cabz-cursor path { fill: currentColor; stroke: #222; stroke-width: 1; stroke-linejoin: round; }

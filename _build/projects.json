@@ -28,9 +28,41 @@
           "offset": true
         },
         {
-          "name": "langues",
-          "title": "langues",
-          "offset": true
+          "name": "volcano",
+          "label": "voie-du-volcan",
+          "title": "la voie du volcan",
+          "offset": true,
+          "cursor": "normal",
+          "former": [
+            "fw/langues",
+            "fw/under-pressure"
+          ],
+          "names": {
+            "v03": "langues"
+          },
+          "headers": {
+            "v00": "word-volcano",
+            "v01": "word-volcano",
+            "v02": "under-pressure",
+            "v03": "langues"
+          },
+          "snapshots": [
+            {
+              "file": "26-10-03_word-volcano.html",
+              "date": "2026-10-03T00:00:00+02:00",
+              "msg": "word volcano, the first prototype"
+            },
+            {
+              "file": "26-10-08_word-volcano.html",
+              "date": "2026-10-08T00:00:00+02:00",
+              "msg": "word volcano in black and white"
+            },
+            {
+              "file": "26-10-14_under-pressure.html",
+              "date": "2026-10-14T00:00:00+02:00",
+              "msg": "under pressure, the pixel volcano"
+            }
+          ]
         },
         {
           "name": "polygon-pong",
@@ -56,7 +88,9 @@
         {
           "name": "perros",
           "title": "connected wild dogs",
-          "offset": true
+          "offset": true,
+          "label": "rafiki x noar",
+          "strike": "connected"
         },
         {
           "name": "mouna",
@@ -66,9 +100,39 @@
           ]
         },
         {
-          "name": "wild-dogs",
-          "title": "portfolio",
-          "note": "pdf"
+          "name": "pdf",
+          "title": "portfolio cabz—",
+          "label": "pdf",
+          "versions": [
+            {
+              "id": "v00",
+              "label": "v00",
+              "date": "2025-03-23T00:00:00+01:00",
+              "msg": "portfolio v00",
+              "file": "25-03-23_portafolio_00.pdf",
+              "live": false
+            },
+            {
+              "id": "v01",
+              "label": "v01",
+              "date": "2026-03-01T00:00:00+01:00",
+              "msg": "portfolio v01",
+              "file": "26-03-01_portfolio_01.pdf",
+              "live": false
+            },
+            {
+              "id": "v02",
+              "label": "v02",
+              "date": "2026-03-23T00:00:00+01:00",
+              "msg": "portfolio v02",
+              "file": "26-03-23_portfolio_02.pdf",
+              "live": true
+            }
+          ],
+          "activeLabel": "portfolio cabz—",
+          "former": [
+            "pp/wild-dogs"
+          ]
         }
       ]
     }

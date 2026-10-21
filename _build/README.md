@@ -7,7 +7,7 @@ versions, starts a small server and opens http://localhost:8000. Close the Termi
 window to stop it.
 
 Opening the html files directly (file://) only half works: browsers block the data
-that perros, mouna and langues load, and the bar shows "local file" as a reminder.
+that perros, mouna and volcano load, and the bar shows "local file" as a reminder.
 
 ## Navigation
 
@@ -28,10 +28,18 @@ and a place in the order.
 Start the message with the project's name. Put [minor] in it for fixes that shouldn't
 show up as a version. To backdate one: git commit --date="2026-02-24T13:58" -m "…"
 
+## Versions from before git
+
+A project can start with versions that were never committed (old prototypes, exported
+artifacts). Put each one as a single html file in `_build/snapshots/<project>/` and list
+them in `_build/projects.json` under `"snapshots"` (file, date, msg). They come first,
+then the git versions. See fw/volcano.
+
 ## Renaming a version
 
 Versions are named after their commit message. To give one another name, add it to the
 project in `_build/projects.json`, e.g. `"names": { "v02": "☀︎.gif" }`, then rebuild.
+The project's name in the bar can change per version too: `"headers": { "v00": "word-volcano" }`.
 
 ## What gets generated (git-ignored, rebuilt every time)
 
