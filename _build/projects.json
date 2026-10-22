@@ -32,8 +32,8 @@
         },
         {
           "name": "volcano",
-          "label": "voie-du-volcan",
-          "title": "la voie du volcan",
+          "label": "les-voies-du-volcan",
+          "title": "les voies du volcan",
           "offset": true,
           "cursor": "normal",
           "former": [
@@ -48,7 +48,8 @@
             "v00": "word-volcano",
             "v01": "word-volcano",
             "v02": "under-pressure",
-            "v03": "langues"
+            "v03": "langues",
+            "v04": "voie-du-volcan"
           },
           "snapshots": [
             {
