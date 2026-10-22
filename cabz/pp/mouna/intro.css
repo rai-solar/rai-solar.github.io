@@ -1,0 +1,100 @@
+:root{
+  --intro-bg: #F5F5F5;
+  --intro-fill: #FFFEEE;
+
+  --t-intro-fill: 2400ms;
+}
+
+html, body{
+  height: 100%;
+  margin: 0;
+}
+
+body.intro{
+  background: var(--intro-bg);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+/* Stage */
+.intro__stage{
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+/* ------------------ */
+/* LAYER 1 — CONTENT  */
+/* ------------------ */
+
+.intro__content{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 1.2rem;
+}
+
+.intro__title{
+  font-size: 2.2rem;
+  font-weight: 550;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.intro__enter{
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 220ms ease;
+}
+
+.intro__enter img{
+  width: 7rem;
+  height: auto;
+  display: block;
+}
+
+.intro__enter:hover{
+  transform: scale(1.05);
+}
+
+.intro__enter:active{
+  transform: scale(0.97);
+}
+
+.intro__enter:disabled{
+  cursor: default;
+}
+
+/* ------------------ */
+/* LAYER 2 — LIQUID   */
+/* ------------------ */
+
+.intro__liquid-layer{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  pointer-events: none;
+
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+
+.intro.is-filling .intro__liquid-layer{
+  opacity: 1;
+}
+
+#introLiquid{
+  width: 100%;
+  height: 100%;
+  display: block;
+}

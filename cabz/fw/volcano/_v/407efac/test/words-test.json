@@ -1,0 +1,176 @@
+{
+  "_about": "Test vocabulary for the links of Langues. Open index.html?words=test/words-test.json . Words added to a word that already has company become branches (sleeping -> gently / never), so one word can lead to several pathways, and every word stays linked to the word it came from.",
+  "words": [
+    {
+      "id": "r1",
+      "w": "volcano",
+      "to": null,
+      "side": null,
+      "name": "",
+      "trip": "",
+      "t": 1
+    },
+    {
+      "id": "r2",
+      "w": "river",
+      "to": null,
+      "side": null,
+      "name": "",
+      "trip": "",
+      "t": 2
+    },
+    {
+      "id": "r3",
+      "w": "fire",
+      "to": null,
+      "side": null,
+      "name": "",
+      "trip": "",
+      "t": 3
+    },
+    {
+      "id": "r4",
+      "w": "stone",
+      "to": null,
+      "side": null,
+      "name": "",
+      "trip": "",
+      "t": 4
+    },
+    {
+      "id": "a1",
+      "w": "sleeping",
+      "to": "r1",
+      "side": "before",
+      "name": "",
+      "trip": "",
+      "t": 5
+    },
+    {
+      "id": "a2",
+      "w": "slowly",
+      "to": "a1",
+      "side": "before",
+      "name": "",
+      "trip": "",
+      "t": 6
+    },
+    {
+      "id": "b1",
+      "w": "gently",
+      "to": "a1",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 7
+    },
+    {
+      "id": "b2",
+      "w": "never",
+      "to": "a1",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 8
+    },
+    {
+      "id": "b3",
+      "w": "again",
+      "to": "b2",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 9
+    },
+    {
+      "id": "c1",
+      "w": "wide",
+      "to": "r2",
+      "side": "before",
+      "name": "",
+      "trip": "",
+      "t": 10
+    },
+    {
+      "id": "c2",
+      "w": "bends",
+      "to": "r2",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 11
+    },
+    {
+      "id": "c3",
+      "w": "floods",
+      "to": "r2",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 12
+    },
+    {
+      "id": "c4",
+      "w": "slowly",
+      "to": "c2",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 13
+    },
+    {
+      "id": "d1",
+      "w": "cold",
+      "to": "r3",
+      "side": "before",
+      "name": "",
+      "trip": "",
+      "t": 14
+    },
+    {
+      "id": "d2",
+      "w": "tongue",
+      "to": "r3",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 15
+    },
+    {
+      "id": "d3",
+      "w": "speaks",
+      "to": "d2",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 16
+    },
+    {
+      "id": "d4",
+      "w": "lies",
+      "to": "d2",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 17
+    },
+    {
+      "id": "e1",
+      "w": "old",
+      "to": "r4",
+      "side": "before",
+      "name": "",
+      "trip": "",
+      "t": 18
+    },
+    {
+      "id": "e2",
+      "w": "remembers",
+      "to": "r4",
+      "side": "after",
+      "name": "",
+      "trip": "",
+      "t": 19
+    }
+  ]
+}

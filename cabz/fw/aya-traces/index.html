@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aya Traces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400&display=swap">
+<style>
+/* Layout: one full-window night sky; a centred picker floats over it before play. Single dark world by choice. */
+:root {
+  --night: #050608;
+  --ash: #5d5e66;
+  --mist: #c9ccd6;
+  --faint: #6f7380;
+  --ice: #bfe3ff;
+  --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --mono: "DM Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--night); color: var(--mist); font-family: var(--mono); overflow: hidden; }
+canvas { position: fixed; inset: 0; display: block; touch-action: none; }
+.home { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; z-index: 50; padding: 4px 8px; font: 400 22px/1 "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--mist); text-decoration: none; opacity: .75; cursor: pointer; }
+.home:hover { opacity: 1; }
+body.playing { cursor: none; }
+
+#menu {
+  position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; padding-inline: 16px; text-align: center; overflow-y: auto;
+}
+h1 { margin: 0; font-family: var(--display); font-style: italic; font-weight: 400; font-size: clamp(44px, 9vw, 76px); letter-spacing: .01em; color: var(--mist); }
+.lede { margin: -8px 0 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.seats { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 40px; }
+.seat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.seat .who { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.wheel { position: relative; width: 190px; height: 190px; }
+.orb, .petal { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 0; padding: 0; cursor: pointer; }
+.orb { width: 46px; height: 46px; margin: -23px 0 0 -23px; background: var(--ash); z-index: 2; transition: background .4s, box-shadow .4s, transform .2s; }
+.orb:hover { transform: scale(1.08); }
+.petal {
+  width: 34px; height: 34px; margin: -17px 0 0 -17px; opacity: 0; pointer-events: none;
+  transform: rotate(var(--a)) translate(0) scale(.3);
+  transition: transform .45s cubic-bezier(.2,.9,.25,1.25), opacity .3s; transition-delay: calc(var(--i) * 30ms);
+}
+.open .petal { opacity: 1; pointer-events: auto; transform: rotate(var(--a)) translate(68px) rotate(calc(-1 * var(--a))) scale(1); }
+.petal:hover { filter: brightness(1.25); }
+.seat .name { font-family: var(--display); font-style: italic; font-size: 20px; color: var(--mist); min-height: 26px; }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+button.txt {
+  font: inherit; font-size: 13px; letter-spacing: .08em; color: var(--mist); background: transparent;
+  border: 1px solid #2a2d36; border-radius: 999px; padding: 10px 20px; cursor: pointer;
+}
+button.txt:hover:not(:disabled) { border-color: var(--mist); }
+button.txt:disabled { color: var(--faint); cursor: default; opacity: .5; }
+#play:not(:disabled) { background: var(--mist); color: var(--night); border-color: var(--mist); }
+button:focus-visible { outline: 2px solid var(--ice); outline-offset: 3px; }
+.help { max-width: 52ch; margin: 0; font-size: 12px; line-height: 1.7; color: var(--faint); }
+.help em { font-family: var(--display); font-size: 15px; color: var(--mist); }
+.line { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+button.small { font-size: 12px; padding: 7px 16px; }
+#waiting { display: flex; flex-direction: column; gap: 6px; }
+.waiter { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .1em; color: var(--faint); }
+.waiter .dot { width: 18px; height: 18px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; opacity: .35; transition: opacity .2s, transform .2s; }
+.waiter .dot.on { opacity: 1; transform: scale(1.2); }
+.waiter .x { background: none; border: 0; color: var(--faint); cursor: pointer; font: inherit; font-size: 14px; padding: 0 4px; }
+@media (prefers-reduced-motion: reduce) { .petal, .orb { transition: none; } }
+</style>
+
+<canvas id="c"></canvas>
+
+<div id="menu">
+  <h1>Aya Traces</h1>
+  <p class="lede" id="lede">shooting stars that meet and part</p>
+  <div class="seats">
+    <div class="seat" id="seat0">
+      <span class="who">your star</span>
+      <div class="wheel"><button class="orb" id="orb0" aria-label="Choose a colour for the mouse star"></button></div>
+      <span class="name">touch the grey star</span>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="txt" id="play" disabled>join the sky</button>
+  </div>
+  <p class="help">Everyone who joins is in the same sky. The first two take the stars; the others wait in line, and whoever falls hands their seat to the next one waiting and goes to the back. Touch another star to merge into one bigger star of the mixed colour. Pull apart to split. Walls and the edges of the sky are deadly. <em>alone</em> gaps only let a small star through. <em>together</em> ice only breaks under a merged star. Now and then the sky stops at a <em>rest</em>: one star in each haven, and a labyrinth grows around you while the dark closes in. Reach the <em>heart</em> before it does.</p>
+</div>
+
+<script>window.playhtmlReady = new Promise(r => { window.__playhtmlResolve = r; });</script>
+<script type="module">
+  // the sky is shared through playhtml (https://playhtml.fun): presence is live and clears when a person leaves
+  try {
+    const { playhtml } = await import("https://unpkg.com/playhtml@2.15.0");
+    await playhtml.init({ room: "aya-traces" });   // a fixed room, so everyone meets whatever form of the address they typed
+    window.__playhtmlResolve(playhtml);
+  } catch (e) { console.warn("playhtml unavailable", e); window.__playhtmlResolve(null); }
+</script>
+
+<script>
+// ---------- colour: painter's RYB mixing ----------
+const CHOICES = [
+  { name: "red",    v: [1, 0, 0] },
+  { name: "orange", v: [1, 1, 0] },
+  { name: "yellow", v: [0, 1, 0] },
+  { name: "green",  v: [0, 1, 1] },
+  { name: "blue",   v: [0, 0, 1] },
+  { name: "violet", v: [1, 0, 1] },
+];
+// corners of the RYB cube in RGB, tuned to glow on black
+const CORN = { w:[1,1,1], r:[.98,.14,.16], y:[1,.88,.14], b:[.18,.44,1], o:[1,.54,.08], g:[.14,.8,.38], p:[.64,.2,.9], k:[.5,.32,.2] };
+function ryb2rgb([r, y, b]) {
+  const out = [0, 0, 0];
+  for (let i = 0; i < 3; i++) {
+    out[i] = CORN.w[i]*(1-r)*(1-y)*(1-b) + CORN.r[i]*r*(1-y)*(1-b) + CORN.y[i]*(1-r)*y*(1-b)
+           + CORN.b[i]*(1-r)*(1-y)*b + CORN.o[i]*r*y*(1-b) + CORN.p[i]*r*(1-y)*b
+           + CORN.g[i]*(1-r)*y*b + CORN.k[i]*r*y*b;
+  }
+  return out.map(v => Math.round(Math.min(1, Math.max(0, v)) * 255));
+}
+function mix(members) {
+  const s = [0, 0, 0];
+  members.forEach(p => p.ryb.forEach((v, i) => s[i] += v / members.length));
+  const m = Math.max(...s) || 1;
+  return s.map(v => v / m);
+}
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+
+// ---------- menu ----------
+const seats = [{ choice: null, on: true }];
+const menu = document.getElementById("menu");
+const playBtn = document.getElementById("play");
+
+function buildSeat(i) {
+  const el = document.getElementById("seat" + i);
+  const wheel = el.querySelector(".wheel");
+  const orb = el.querySelector(".orb");
+  CHOICES.forEach((c, k) => {
+    const col = ryb2rgb(c.v);
+    const p = document.createElement("button");
+    p.className = "petal";
+    p.style.setProperty("--a", (k * 60 - 90) + "deg");
+    p.style.setProperty("--i", k);
+    p.style.background = rgba(col, 1);
+    p.setAttribute("aria-label", c.name);
+    p.addEventListener("click", () => {
+      seats[i].choice = c;
+      orb.style.background = rgba(col, 1);
+      orb.style.boxShadow = `0 0 28px 6px ${rgba(col, .45)}`;
+      el.classList.remove("open");
+      el.querySelector(".name").textContent = c.name;
+      refresh();
+    });
+    wheel.appendChild(p);
+  });
+  orb.addEventListener("click", () => el.classList.toggle("open"));
+}
+buildSeat(0);
+function refresh() { playBtn.disabled = !(seats[0].choice && net); }
+playBtn.addEventListener("click", join);
+
+// ---------- canvas ----------
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+let W = 0, H = 0;
+function resize() {
+  const d = window.devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  cv.width = W * d; cv.height = H * d; cv.style.width = W + "px"; cv.style.height = H + "px";
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+}
+addEventListener("resize", resize); resize();
+
+const mouse = { x: innerWidth * .2, y: innerHeight / 2 };
+addEventListener("pointermove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+addEventListener("pointerdown", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+const keys = {};
+addEventListener("keydown", e => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key.toLowerCase() === "l" && state === "play" && isHost && !ev) spawnRest();
+});
+addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+
+// ---------- world ----------
+const R0 = 13;                       // a lone star
+const radiusFor = n => R0 * (1 + .7 * (n - 1));
+const GAP = R0 * 2 + 12;             // "alone" gaps: a single star fits, two merged do not
+const SPLIT_D = 220;                 // pull this far apart and a merged star splits
+
+let state = "menu", players = [], bodies = [], walls = [], labels = [], sparks = [];
+let speed = 140, cruise = 140, dist = 0, untilNext = 0, spawned = 0, deaths = 0, groupId = 0;
+let ev = null, nextRest = 5, hearts = 0;
+let dances = [], shells = [], queue = [], notes = [];   // merge spins, broken egg shells, people waiting, swap notices
+const SPIN = .85, CRACK = .6;                           // seconds a merge spins, seconds an egg takes to crack   // ev: the current rest + labyrinth moment
+const cam = { z: 1 };                       // zoom around the screen centre (the labyrinth's heart)
+const TAU = Math.PI * 2;
+const toWorld = (x, y) => ({ x: (x - W / 2) / cam.z + W / 2, y: (y - H / 2) / cam.z + H / 2 });
+const sky = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random(), z: Math.random() }));
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ---------- the shared sky ----------
+// Everyone who joins takes a seat. The person who arrived first runs the game (host) and sends the sky about
+// 15 times a second; everyone else sends only where their pointer is. Two stars play at a time, the rest wait in line.
+let net = null, myId = null, hostId = null, isHost = false, joined = false, evSeq = 0;
+let roster = [], tableAt = 0, lastTable = 0, lastAim = 0, lastAimTxt = "", worldW = 0, worldH = 0;
+const aimOf = new Map();    // peer -> [x / width, y / height]
+const SINCE = Date.now();
+let fxOut = [];             // bursts the host tells the guests to draw
+
+function join() {
+  if (!net || !seats[0].choice) return;
+  joined = true; state = "wait";
+  menu.hidden = true;
+  document.body.classList.add("playing");
+  net.setMyPresence("aya", { since: SINCE, ryb: seats[0].choice.v, name: seats[0].choice.name });
+  syncRoster();
+}
+
+function newGame() {
+  players = []; queue = []; bodies = []; walls = []; labels = []; sparks = []; shells = []; dances = []; notes = [];
+  speed = cruise = 140; dist = 0; untilNext = 260; spawned = 0; deaths = 0;
+  ev = null; nextRest = 5; hearts = 0; cam.z = 1;
+  state = "play";
+  reconcile();
+}
+function seatPlayer(h) {
+  const id = players.some(p => p.id === 0) ? 1 : 0;
+  const p = { id, input: "mouse", ryb: h.ryb, name: h.name, peer: h.id,
+    target: { x: W * .18, y: H * (id === 0 ? .42 : .58) }, alive: true, respawn: 0 };
+  players.push(p);
+  spawnBody([p], p.target.x, p.target.y, 1.2);
+}
+function removePlayer(p) {
+  const b = p.body;
+  if (b) {
+    if (b.dance) { dances.splice(dances.indexOf(b.dance), 1); const o = b.dance.a === b ? b.dance.c : b.dance.a; o.dance = null; o.cool = .5; b.dance = null; }
+    b.members = b.members.filter(m => m !== p);
+    if (!b.members.length) bodies.splice(bodies.indexOf(b), 1);
+    else { b.r = radiusFor(b.members.length); b.rgb = ryb2rgb(mix(b.members)); b.crack = null; }
+  }
+  players.splice(players.indexOf(p), 1);
+}
+// host: people came or left; the game goes on
+function reconcile() {
+  const here = new Map(roster.map(h => [h.id, h]));
+  queue = queue.filter(q => here.has(q.peer));
+  for (const p of [...players]) {
+    if (here.has(p.peer)) continue;
+    const next = queue.shift();
+    if (next) { p.ryb = next.ryb; p.name = next.name; p.peer = next.peer; if (p.body) p.body.rgb = ryb2rgb(mix(p.body.members)); }
+    else removePlayer(p);
+  }
+  const have = new Set([...players.map(p => p.peer), ...queue.map(q => q.peer)]);
+  for (const h of roster) {
+    if (have.has(h.id)) continue;
+    if (players.length < 2) seatPlayer(h); else queue.push({ ryb: h.ryb, name: h.name, peer: h.id });
+  }
+}
+
+function syncRoster() {
+  if (!net) return;
+  const list = [];
+  for (const [id, e] of net.getPresences()) {
+    if (e.isMe) myId = id;
+    if (!e.aya || !Number.isFinite(e.aya.since)) continue;
+    list.push({ id, since: e.aya.since, ryb: e.aya.ryb, name: e.aya.name, isMe: !!e.isMe });
+    if (Array.isArray(e.aim) && !e.isMe) aimOf.set(id, e.aim);
+  }
+  list.sort((a, b) => a.since - b.since || (a.id < b.id ? -1 : 1));
+  roster = list;
+  for (const id of [...aimOf.keys()]) if (!list.some(h => h.id === id)) aimOf.delete(id);
+  if (!joined || !list.some(h => h.isMe)) return;
+  const was = isHost;
+  hostId = list[0].id; isHost = list[0].isMe;
+  if (isHost) { if (!was || state !== "play") newGame(); else reconcile(); }
+  else readTable();
+}
+
+// guest: take the host's sky
+function readTable() {
+  if (isHost || !net || !joined) return;
+  const e = net.getPresences().get(hostId), t = e && e.table;
+  if (!t || t.t === tableAt || !Array.isArray(t.b)) return;
+  tableAt = t.t;
+  worldW = t.w; worldH = t.h; cam.z = t.z; speed = t.sp; dist = t.d; deaths = t.de; hearts = t.he;
+  players = t.pl.map(r => ({ id: r[0], name: r[1], ryb: r[2], alive: !!r[3], respawn: r[4], target: { x: r[5], y: r[6] }, peer: r[7], input: "mouse" }));
+  queue = t.q.map(r => ({ ryb: r[0], name: r[1], peer: r[2] }));
+  notes = t.nt.map(r => ({ text: r[0], rgb: r[1], life: r[2] }));
+  const old = bodies;
+  bodies = t.b.map(r => {
+    let trail = [], best = 120;
+    for (const o of old) { const d = Math.hypot(o.x - r[0], o.y - r[1]); if (d < best) { best = d; trail = o.trail; } }
+    return { x: r[0], y: r[1], r: r[2], rgb: r[3], inv: r[4] ? 1 : 0, vx: r[5], vy: r[6], trail, members: [],
+      crack: r[7] ? { t: r[7][0], nx: r[7][1], ny: r[7][2], seed: r[7][3] } : null };
+  });
+  walls = t.wl.map(r => ({ x: r[0], y: r[1], w: r[2], h: r[3], kind: r[4] === 2 ? "ice" : r[4] === 1 ? "narrow" : "rock" }));
+  labels = t.lb.map(r => ({ x: r[0], y: r[1], text: r[2], vertical: !!r[3] }));
+  for (const f of t.fx || []) burst(f[0], f[1], f[2], f[3], f[4]);
+  if (t.ev) {
+    const m = e.maze && e.maze.id === t.ev.id ? e.maze : { arcs: [], rad: [] };
+    ev = { id: t.ev.id, phase: t.ev.ph, cx: t.ev.cx, cy: t.ev.cy, N: t.ev.N, w: t.ev.w, Rm: t.ev.Rm, L0: t.ev.L0, L: t.ev.L,
+      t: t.ev.t, hold: t.ev.hold, alpha: t.ev.al, word: t.ev.word, heart: t.ev.heart,
+      havens: t.ev.hv.map(h => ({ dx: h[0], dy: h[1], r: h[2], b: h[3] >= 0 ? bodies[h[3]] || null : null })),
+      arcs: m.arcs.map(a => ({ R: a[0], a0: a[1], a1: a[2] })),
+      radials: m.rad.map(s => ({ ax: s[0], ay: s[1], bx: s[2], by: s[3] })) };
+  } else ev = null;
+  state = "play";
+}
+
+function sendTable(now) {
+  if (!net || !isHost || state !== "play" || now - lastTable < 66) return;
+  lastTable = now;
+  const bi = new Map(bodies.map((b, i) => [b, i]));
+  net.setMyPresence("table", {
+    t: Date.now(), w: W, h: H, z: +cam.z.toFixed(3), sp: Math.round(speed), d: Math.round(dist), de: deaths, he: hearts,
+    b: bodies.map(b => [Math.round(b.x), Math.round(b.y), +b.r.toFixed(1), b.rgb, b.inv > 0 ? 1 : 0, Math.round(b.vx), Math.round(b.vy),
+      b.crack ? [+b.crack.t.toFixed(2), +b.crack.nx.toFixed(3), +b.crack.ny.toFixed(3), Math.round(b.crack.seed)] : 0]),
+    wl: walls.map(o => [Math.round(o.x), Math.round(o.y), Math.round(o.w), Math.round(o.h), o.kind === "ice" ? 2 : o.kind === "narrow" ? 1 : 0]),
+    lb: labels.map(l => [Math.round(l.x), Math.round(l.y), l.text, l.vertical ? 1 : 0]),
+    pl: players.map(p => [p.id, p.name, p.ryb, p.alive ? 1 : 0, +Math.max(0, p.respawn).toFixed(1), Math.round(p.target.x), Math.round(p.target.y), p.peer]),
+    q: queue.map(q => [q.ryb, q.name, q.peer]),
+    nt: notes.map(n => [n.text, n.rgb, +n.life.toFixed(1)]),
+    fx: fxOut.splice(0).slice(0, 6),
+    ev: ev ? { id: ev.id, ph: ev.phase, cx: Math.round(ev.cx), cy: Math.round(ev.cy), N: ev.N, w: +ev.w.toFixed(1), Rm: +ev.Rm.toFixed(1),
+      L0: +ev.L0.toFixed(1), L: +ev.L.toFixed(1), t: +ev.t.toFixed(2), hold: +ev.hold.toFixed(2), al: +ev.alpha.toFixed(2),
+      word: ev.word || "", heart: ev.heart, hv: ev.havens.map(h => [h.dx, h.dy, h.r, h.b ? (bi.has(h.b) ? bi.get(h.b) : -1) : -1]) } : null
+  });
+}
+
+// guest: my pointer in the host's world, as a fraction of its screen
+function sendAim(now) {
+  if (!net || isHost || !joined || !worldW || now - lastAim < 50) return;
+  const RW = innerWidth, RH = innerHeight, sc = Math.min(RW / worldW, RH / worldH);
+  const wx = (mouse.x - (RW - worldW * sc) / 2) / sc, wy = (mouse.y - (RH - worldH * sc) / 2) / sc;
+  const x = (wx - worldW / 2) / cam.z + worldW / 2, y = (wy - worldH / 2) / cam.z + worldH / 2;
+  const txt = [Math.round(x / worldW * 1000) / 1000, Math.round(y / worldH * 1000) / 1000];
+  const j = txt.join(",");
+  if (j === lastAimTxt) return;
+  lastAim = now; lastAimTxt = j;
+  net.setMyPresence("aim", txt);
+}
+
+// guests don't run the game: they keep the host's sky moving between tables
+function tickGuest(dt) {
+  const shift = ev && ev.phase !== "approach" ? 0 : speed * dt;
+  for (const o of walls) o.x -= shift;
+  for (const l of labels) l.x -= shift;
+  if (ev && ev.phase === "approach") ev.cx -= shift;
+  for (const b of bodies) {
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    for (const t of b.trail) t.x -= shift;
+    b.trail.push({ x: b.x, y: b.y });
+    if (b.trail.length > 42) b.trail.shift();
+  }
+  for (const p of players) if (!p.alive) p.respawn -= dt;
+  dist += shift;
+  for (const s of sparks) { s.x += (s.vx - speed * .3) * dt; s.y += s.vy * dt; s.vx *= .97; s.vy *= .97; s.life -= dt; }
+  sparks = sparks.filter(s => s.life > 0);
+  for (const n of notes) n.life -= dt;
+  notes = notes.filter(n => n.life > 0);
+}
+
+function spawnBody(members, x, y, inv = 0) {
+  const b = { members, x, y, vx: 0, vy: 0, r: radiusFor(members.length), trail: [], cool: .5, inv };
+  b.rgb = ryb2rgb(mix(members));
+  members.forEach(p => { p.alive = true; p.body = b; });
+  bodies.push(b);
+  return b;
+}
+
+// ---------- stage patterns ----------
+function spawnPattern() {
+  if (spawned >= nextRest) { nextRest = spawned + 7; spawnRest(); return; }
+  const x0 = W + 40, two = players.length >= 2, n = spawned++;
+  let kind;
+  if (n < 3) kind = "pillar";
+  else { const r = Math.random(); kind = r < .42 ? "pillar" : (r < .72 || !two) ? "narrow" : "ice"; }
+  const g = ++groupId;
+  let width = 0;
+  if (kind === "pillar") {
+    const w = rand(36, 64), h = rand(.3, .56) * H, top = Math.random() < .5;
+    walls.push({ x: x0, y: top ? 0 : H - h, w, h, kind: "rock", g });
+    width = w;
+    if (Math.random() < .5) {
+      const w2 = rand(36, 64), h2 = rand(.25, .45) * H, off = rand(170, 260);
+      walls.push({ x: x0 + off, y: top ? H - h2 : 0, w: w2, h: h2, kind: "rock", g });
+      width = off + w2;
+    }
+  } else if (kind === "narrow") {
+    const w = 44, gy = rand(.2, .8) * H;
+    walls.push({ x: x0, y: 0, w, h: gy - GAP / 2, kind: "narrow", g });
+    walls.push({ x: x0, y: gy + GAP / 2, w, h: H - gy - GAP / 2, kind: "narrow", g });
+    labels.push({ x: x0 + w / 2, y: gy + GAP / 2 + 26, text: "alone", g });
+    width = w;
+  } else {
+    const w = 30;
+    walls.push({ x: x0, y: 0, w, h: H, kind: "ice", g });
+    labels.push({ x: x0 + w / 2, y: H / 2, text: "together", g, vertical: true });
+    width = w + 120;
+  }
+  untilNext = width + rand(320, 470);
+}
+
+// ---------- rest + labyrinth ----------
+// A round (theta) labyrinth. Ring 0 is the heart; every ring is cut into runs of cells,
+// and each run has exactly one door inward, so the way to the heart never asks you to go back out.
+// The dark does not forgive going backwards.
+function makeMaze(N, w) {
+  const counts = [1, 6];
+  for (let k = 2; k < N; k++) {
+    let c = counts[k - 1];
+    if (TAU * (k + .5) * w / c > 1.9 * w) c *= 2;
+    counts.push(c);
+  }
+  const cO = counts[N - 1];
+  const t0 = -Math.PI / 2 - Math.PI / cO;     // puts the middle of an outer cell straight up
+  const arcs = [], radials = [];
+  for (let k = 1; k < N; k++) {
+    const c = counts[k], step = TAU / c;
+    const cuts = [];
+    for (let i = 0; i < c; i++) if (Math.random() < .26) cuts.push(i);
+    if (!cuts.length) cuts.push(Math.floor(Math.random() * c));
+    for (const i of cuts) {
+      const a = t0 + i * step;
+      radials.push({ ax: Math.cos(a) * k * w, ay: Math.sin(a) * k * w, bx: Math.cos(a) * (k + 1) * w, by: Math.sin(a) * (k + 1) * w });
+    }
+    const doors = new Set();
+    cuts.forEach((s, j) => {
+      const e = j + 1 < cuts.length ? cuts[j + 1] : cuts[0] + c;   // run from s to e-1, wrapping
+      doors.add((s + Math.floor(Math.random() * (e - s))) % c);
+    });
+    for (let i = 0; i < c; i++) if (!doors.has(i)) arcs.push({ R: k * w, a0: t0 + i * step, a1: t0 + (i + 1) * step });
+  }
+  arcs.push({ R: N * w, a0: 0, a1: TAU });
+  return { arcs, radials, cO, t0 };
+}
+
+function spawnRest() {
+  const L0 = Math.min(W, H) / 2 - 6, Rm = L0 - 18;
+  const N = clamp(Math.floor(Rm / 52), 4, 8), w = Rm / N;
+  const maze = makeMaze(N, w), hr = (N - .5) * w;
+  // two stars rest top and bottom of the outer ring; a lone star rests on the left
+  const spots = players.length >= 2 ? [[0, -hr], [0, hr]] : [[-hr, 0]];
+  ev = {
+    id: ++evSeq, phase: "approach", cx: W + 40 + Rm, cy: H / 2, N, w, Rm, L0, L: L0, Lend: w * 1.1,
+    T: 10 + N * 5, grace: 3, t: 0, hold: 0, alpha: 0, ...maze,
+    havens: spots.map(([dx, dy]) => ({ dx, dy, r: 21, b: null })),
+    heart: ryb2rgb(mix(players)),
+  };
+  if (net) net.setMyPresence("maze", {      // the maze is big and never changes, so it goes out once
+    id: ev.id, arcs: ev.arcs.map(a => [+a.R.toFixed(1), +a.a0.toFixed(3), +a.a1.toFixed(3)]),
+    rad: ev.radials.map(s => [+s.ax.toFixed(1), +s.ay.toFixed(1), +s.bx.toFixed(1), +s.by.toFixed(1)])
+  });
+}
+
+function collideMaze(b) {
+  const rr = b.r + 2;
+  let dx = b.x - ev.cx, dy = b.y - ev.cy;
+  const push = (px, py) => {
+    let ex = dx - px, ey = dy - py, d = Math.hypot(ex, ey);
+    if (d >= rr) return;
+    if (d < 1e-6) { ex = dx; ey = dy; d = Math.hypot(ex, ey) || 1; }
+    const nx = ex / d, ny = ey / d;
+    dx = px + nx * rr; dy = py + ny * rr;
+    const vn = b.vx * nx + b.vy * ny;
+    if (vn < 0) { b.vx -= vn * nx; b.vy -= vn * ny; }
+  };
+  for (let it = 0; it < 2; it++) {
+    for (const a of ev.arcs) {
+      const rho = Math.hypot(dx, dy);
+      if (Math.abs(rho - a.R) >= rr) continue;
+      const rel = ((Math.atan2(dy, dx) - a.a0) % TAU + TAU) % TAU;
+      if (rel <= a.a1 - a.a0) { const s = rho || 1; push(dx / s * a.R, dy / s * a.R); }
+      else {
+        const p0x = Math.cos(a.a0) * a.R, p0y = Math.sin(a.a0) * a.R, p1x = Math.cos(a.a1) * a.R, p1y = Math.sin(a.a1) * a.R;
+        if ((dx - p0x) ** 2 + (dy - p0y) ** 2 < (dx - p1x) ** 2 + (dy - p1y) ** 2) push(p0x, p0y); else push(p1x, p1y);
+      }
+    }
+    for (const s of ev.radials) {
+      const ux = s.bx - s.ax, uy = s.by - s.ay;
+      const k = clamp(((dx - s.ax) * ux + (dy - s.ay) * uy) / (ux * ux + uy * uy), 0, 1);
+      push(s.ax + ux * k, s.ay + uy * k);
+    }
+  }
+  b.x = ev.cx + dx; b.y = ev.cy + dy;
+}
+
+// approach → rest → bloom (labyrinth grows) → maze (dark closes) → end (zoom back out)
+function updateRest(dt) {
+  if (ev.phase === "approach" || ev.phase === "rest") {
+    ev.alpha = Math.min(1, ev.alpha + dt);
+    if (ev.phase === "approach" && ev.cx - W / 2 < 1) { ev.cx = W / 2; ev.phase = "rest"; }
+    const taken = new Set();
+    for (const h of ev.havens) {
+      const hx = ev.cx + h.dx, hy = ev.cy + h.dy;
+      h.b = bodies.find(b => b.members.length === 1 && !taken.has(b) && Math.hypot(b.x - hx, b.y - hy) < 16) || null;
+      if (h.b) taken.add(h.b);
+    }
+    const all = ev.phase === "rest" && players.every(p => p.alive) && ev.havens.every(h => h.b);
+    ev.hold = all ? ev.hold + dt : Math.max(0, ev.hold - dt * 2);
+    if (ev.hold >= 1.2) { ev.phase = "bloom"; ev.t = 0; ev.heart = ryb2rgb(mix(players)); }
+  } else if (ev.phase === "bloom") {
+    ev.t += dt;
+    for (const h of ev.havens) if (h.b) {
+      h.b.x += (ev.cx + h.dx - h.b.x) * Math.min(1, dt * 10); h.b.y += (ev.cy + h.dy - h.b.y) * Math.min(1, dt * 10);
+      h.b.vx = h.b.vy = 0;
+      h.b.members.forEach(p => { if (p.input === "keys") { p.target.x = h.b.x; p.target.y = h.b.y; } });
+    }
+    if (ev.t >= 1.4) { ev.phase = "maze"; ev.t = 0; }
+  } else if (ev.phase === "maze") {
+    ev.t += dt;
+    const k = clamp((ev.t - ev.grace) / ev.T, 0, 1);
+    ev.L = ev.L0 - (ev.L0 - ev.Lend) * k;
+    cam.z = ev.L0 / ev.L;
+    for (const b of [...bodies]) {
+      if (Math.hypot(b.x - ev.cx, b.y - ev.cy) > ev.L - b.r * .3) { kill(b); endRest("lost in the dark"); return; }
+    }
+    if (players.every(p => p.alive && p.body && Math.hypot(p.body.x - ev.cx, p.body.y - ev.cy) < ev.w * .8)) {
+      const trail = bodies[0] ? bodies[0].trail : [];
+      bodies = [];
+      const nb = spawnBody([...players], ev.cx, ev.cy);
+      nb.trail = trail; nb.cool = 1;
+      burst(ev.cx, ev.cy, ev.heart, 120, 200 / cam.z);
+      hearts++;
+      endRest(players.length > 1 ? "together" : "home");
+    }
+  } else if (ev.phase === "end") {
+    ev.t += dt;
+    const e = Math.min(1, ev.t / 2), s = e * e * (3 - 2 * e);
+    cam.z = ev.z0 + (1 - ev.z0) * s;
+    ev.alpha = 1 - s;
+    if (e >= 1) { ev = null; cam.z = 1; untilNext = W * .45; }
+  }
+}
+function endRest(word) { ev.phase = "end"; ev.t = 0; ev.z0 = cam.z; ev.word = word; }
+
+function hitsRect(b, o) {
+  const nx = clamp(b.x, o.x, o.x + o.w), ny = clamp(b.y, o.y, o.y + o.h);
+  return (b.x - nx) ** 2 + (b.y - ny) ** 2 < b.r * b.r;
+}
+function burst(x, y, rgb, n, power) {
+  if (isHost && net && fxOut.length < 12) fxOut.push([Math.round(x), Math.round(y), rgb, n, Math.round(power)]);
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = rand(.2, 1) * power;
+    sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(.5, 1.1), max: 1.1, rgb, r: rand(1, 3) });
+  }
+}
+function kill(b) {
+  burst(b.x, b.y, b.rgb, 40 + b.members.length * 20, 260);
+  if (b.dance) { dances.splice(dances.indexOf(b.dance), 1); const o = b.dance.a === b ? b.dance.c : b.dance.a; o.dance = null; o.cool = .5; }
+  b.members.forEach(p => {
+    p.alive = false; p.respawn = 1.6; p.body = null;
+    if (queue.length) {
+      queue.push({ ryb: p.ryb, name: p.name, peer: p.peer });       // the fallen go to the back of the line
+      const next = queue.shift();
+      notes.push({ text: `${next.name} takes a star`, rgb: ryb2rgb(next.ryb), life: 2.2 });
+      p.ryb = next.ryb; p.name = next.name; p.peer = next.peer;
+    }
+  });
+  bodies.splice(bodies.indexOf(b), 1);
+  deaths++;
+}
+function shatter(g) {
+  walls.filter(o => o.g === g).forEach(o => {
+    for (let i = 0; i < 70; i++) sparks.push({
+      x: o.x + Math.random() * o.w, y: Math.random() * H, vx: rand(-60, 160), vy: rand(-80, 80),
+      life: rand(.6, 1.4), max: 1.4, rgb: [190, 228, 255], r: rand(1, 2.5),
+    });
+  });
+  walls = walls.filter(o => o.g !== g);
+  labels = labels.filter(l => l.g !== g);
+}
+
+// ---------- update ----------
+function update(dt) {
+  if (!ev) cruise = Math.min(330, cruise + 3.5 * dt);
+  // the sky slows to a stop when a rest arrives, and holds still until the labyrinth is over
+  let goal = cruise;
+  if (ev) goal = ev.phase === "approach" ? Math.min(cruise, (ev.cx - W / 2) * 1.6 + 8) : 0;
+  speed += (goal - speed) * Math.min(1, dt * 2.5);
+  let shift = speed * dt;
+  if (ev && ev.phase === "approach") shift = Math.min(shift, Math.max(0, ev.cx - W / 2));
+  else if (ev) shift = 0;
+  dist += shift;
+  const inMaze = ev && (ev.phase === "bloom" || ev.phase === "maze");
+
+  // inputs
+  for (const p of players) {
+    if (p.peer === myId) { const m = toWorld(mouse.x, mouse.y); p.target.x = m.x; p.target.y = m.y; }
+    else {
+      const a = aimOf.get(p.peer);      // somewhere else: where their pointer is, in this world
+      if (a) { p.target.x = clamp(a[0] * W, 0, W); p.target.y = clamp(a[1] * H, 0, H); }
+    }
+    if (!p.alive && !inMaze) {
+      p.respawn -= dt;
+      if (p.respawn <= 0) {
+        const y = H * (p.id === 0 ? .42 : .58);
+        spawnBody([p], W * .15, p.peer === myId ? clamp(mouse.y, 40, H - 40) : clamp(p.target.y, 40, H - 40) || y, 1.6);
+      }
+    }
+  }
+
+  // stage
+  for (const o of walls) o.x -= shift;
+  for (const l of labels) l.x -= shift;
+  walls = walls.filter(o => o.x + o.w > -60);
+  labels = labels.filter(l => l.x > -120);
+  if (ev) { ev.cx -= shift; updateRest(dt); }
+  else { untilNext -= shift; if (untilNext <= 0) spawnPattern(); }
+
+  // movement
+  for (const d of dances) {
+    d.t += dt;
+    const k = Math.min(1, d.t / SPIN);
+    d.ang += (4 + 22 * k * k) * dt;                 // they whirl faster and faster
+    d.cx -= shift;
+    const rad = d.r0 * (1 - k * k);
+    d.a.x = d.cx + Math.cos(d.ang) * rad; d.a.y = d.cy + Math.sin(d.ang) * rad;
+    d.c.x = d.cx - Math.cos(d.ang) * rad; d.c.y = d.cy - Math.sin(d.ang) * rad;
+  }
+  for (const b of bodies) {
+    if (b.dance) {
+      b.vx = b.vy = 0;
+      for (const t of b.trail) t.x -= shift;
+      b.trail.push({ x: b.x, y: b.y });
+      if (b.trail.length > 42) b.trail.shift();
+      continue;
+    }
+    let tx = 0, ty = 0;
+    b.members.forEach(p => { tx += p.target.x / b.members.length; ty += p.target.y / b.members.length; });
+    const maxV = 780 / Math.sqrt(b.members.length);
+    let dvx = (tx - b.x) * 10, dvy = (ty - b.y) * 10;
+    const m = Math.hypot(dvx, dvy);
+    if (m > maxV) { dvx *= maxV / m; dvy *= maxV / m; }
+    const k = Math.min(1, dt * (b.kick > 0 ? 2 : 14));
+    b.kick = (b.kick || 0) - dt;
+    b.vx += (dvx - b.vx) * k; b.vy += (dvy - b.vy) * k;
+    if (ev && ev.phase === "maze") {
+      const steps = Math.min(16, Math.ceil(Math.hypot(b.vx, b.vy) * dt / (b.r * .4)) || 1);
+      for (let s = 0; s < steps; s++) { b.x += b.vx * dt / steps; b.y += b.vy * dt / steps; collideMaze(b); }
+    } else {
+      b.x = clamp(b.x + b.vx * dt, b.r, W - b.r);
+      b.y += b.vy * dt;
+    }
+    b.cool -= dt; b.inv -= dt;
+    for (const t of b.trail) t.x -= shift;
+    b.trail.push({ x: b.x, y: b.y });
+    if (b.trail.length > 42) b.trail.shift();
+  }
+
+  // split: members pulling apart crack the merged star like an egg, then burst out opposite ways
+  for (const b of [...bodies]) {
+    if (b.members.length < 2) continue;
+    const [a, c] = b.members;
+    if (!b.crack && Math.hypot(a.target.x - c.target.x, a.target.y - c.target.y) > SPLIT_D) {
+      const ax = c.target.x - a.target.x, ay = c.target.y - a.target.y, l = Math.hypot(ax, ay) || 1;
+      b.crack = { t: 0, nx: ax / l, ny: ay / l, seed: Math.random() * 1000 };
+    }
+    if (!b.crack) continue;
+    b.crack.t += dt;
+    if (b.crack.t < CRACK) continue;
+    const { nx, ny } = b.crack;
+    bodies.splice(bodies.indexOf(b), 1);
+    [a, c].forEach((p, i) => {
+      const sg = i === 0 ? -1 : 1;
+      const nb = spawnBody([p], b.x + nx * sg * b.r * .6, b.y + ny * sg * b.r * .6);
+      nb.trail = b.trail.map(t => ({ ...t }));
+      nb.vx = b.vx + nx * sg * 620; nb.vy = b.vy + ny * sg * 620; nb.cool = .7; nb.inv = b.inv;
+      nb.kick = .28;                                  // let the push carry them before steering returns
+      shells.push({ x: b.x, y: b.y, vx: nx * sg * 140 + b.vx * .3, vy: ny * sg * 140 + b.vy * .3,
+        ang: Math.atan2(ny, nx) + (sg < 0 ? Math.PI : 0), spin: rand(-3, 3), r: b.r, rgb: b.rgb, life: 1.1 });
+    });
+    burst(b.x, b.y, b.rgb, 30, 160);
+  }
+
+  // merge: touching stars become one
+  if (!inMaze) outer: for (let i = 0; i < bodies.length; i++) for (let j = i + 1; j < bodies.length; j++) {
+    const a = bodies[i], c = bodies[j];
+    if (a.cool > 0 || c.cool > 0 || a.dance || c.dance || a.crack || c.crack) continue;
+    if (a.members.length + c.members.length > 2) continue;   // a merged star holds two
+    if (Math.hypot(a.x - c.x, a.y - c.y) < a.r + c.r) {
+      const d = { a, c, t: 0, cx: (a.x + c.x) / 2, cy: (a.y + c.y) / 2, r0: Math.hypot(a.x - c.x, a.y - c.y) / 2 + 4,
+        ang: Math.atan2(a.y - c.y, a.x - c.x) };
+      a.dance = c.dance = d;
+      dances.push(d);
+      break outer;
+    }
+  }
+  for (const d of [...dances]) {
+    if (d.t < SPIN) continue;
+    dances.splice(dances.indexOf(d), 1);
+    const { a, c } = d;
+    if (!bodies.includes(a) || !bodies.includes(c)) continue;
+    bodies.splice(bodies.indexOf(a), 1); bodies.splice(bodies.indexOf(c), 1);
+    const nb = spawnBody([...a.members, ...c.members], d.cx, d.cy);
+    nb.trail = a.trail.concat(c.trail).slice(-42); nb.cool = 0; nb.inv = Math.max(a.inv, c.inv, 0);
+    burst(nb.x, nb.y, nb.rgb, 40, 140);
+  }
+
+  // collisions
+  for (const b of [...bodies]) {
+    if (b.inv > 0 || b.dance) continue;
+    if (!ev && (b.y - b.r < 0 || b.y + b.r > H)) { kill(b); continue; }
+    if (ev && (ev.phase === "approach" || ev.phase === "rest") && (b.y - b.r < 0 || b.y + b.r > H)) { kill(b); continue; }
+    for (const o of walls) {
+      if (!hitsRect(b, o)) continue;
+      if (o.kind === "ice" && b.members.length >= 2) { shatter(o.g); break; }
+      kill(b); break;
+    }
+  }
+
+  for (const s of sparks) { s.x += (s.vx - speed * .3) * dt; s.y += s.vy * dt; s.vx *= .97; s.vy *= .97; s.life -= dt; }
+  sparks = sparks.filter(s => s.life > 0);
+  for (const h of shells) { h.x += (h.vx - speed * .3) * dt; h.y += h.vy * dt; h.vx *= .96; h.vy *= .96; h.ang += h.spin * dt; h.life -= dt; }
+  shells = shells.filter(h => h.life > 0);
+  for (const n of notes) n.life -= dt;
+  notes = notes.filter(n => n.life > 0);
+}
+
+// ---------- draw ----------
+function drawRest(t) {
+  const { cx, cy } = ev, z = cam.z;
+  ctx.save();
+  ctx.lineCap = "round";
+  if (ev.phase === "approach" || ev.phase === "rest") {
+    // the labyrinth's outline arriving, still only a promise
+    ctx.setLineDash([3, 9]); ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgba(200,210,235,${.2 * ev.alpha})`;
+    ctx.beginPath(); ctx.arc(cx, cy, ev.Rm, 0, TAU); ctx.stroke();
+    ctx.setLineDash([]);
+  } else {
+    const a = ev.phase === "bloom" ? ev.t / 1.4 : ev.phase === "end" ? ev.alpha : 1;
+    const grow = ev.phase === "bloom" ? .6 + .4 * Math.min(1, ev.t / 1.4) : 1;
+    const path = () => {
+      ctx.beginPath();
+      for (const r of ev.arcs) { ctx.moveTo(cx + Math.cos(r.a0) * r.R * grow, cy + Math.sin(r.a0) * r.R * grow); ctx.arc(cx, cy, r.R * grow, r.a0, r.a1); }
+      for (const s of ev.radials) { ctx.moveTo(cx + s.ax * grow, cy + s.ay * grow); ctx.lineTo(cx + s.bx * grow, cy + s.by * grow); }
+    };
+    path();
+    ctx.strokeStyle = `rgba(150,170,220,${.12 * a})`; ctx.lineWidth = 10; ctx.stroke();
+    ctx.strokeStyle = `rgba(214,222,242,${.8 * a})`; ctx.lineWidth = 3.2; ctx.stroke();
+    // the heart, already wearing the colour the stars will make together
+    const pulse = 1 + .08 * Math.sin(t * .004);
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, ev.w * .85 * pulse);
+    g.addColorStop(0, rgba(ev.heart, .55 * a)); g.addColorStop(1, rgba(ev.heart, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, ev.w * .85 * pulse, 0, TAU); ctx.fill();
+    ctx.font = `italic ${15 / Math.sqrt(z)}px 'Instrument Serif', Georgia, serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = `rgba(235,238,250,${.55 * a})`;
+    ctx.fillText("heart", cx, cy);
+  }
+  // havens: small round rests that only a lone star fits
+  const ha = ev.phase === "approach" || ev.phase === "rest" ? ev.alpha : ev.phase === "bloom" ? 1 - ev.t / 1.4 : 0;
+  if (ha > 0) for (const h of ev.havens) {
+    const hx = cx + h.dx, hy = cy + h.dy;
+    ctx.fillStyle = `rgba(200,210,235,${.06 * ha})`;
+    ctx.beginPath(); ctx.arc(hx, hy, h.r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = `rgba(225,230,245,${(h.b ? .8 : .4) * ha})`; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(hx, hy, h.r, 0, TAU); ctx.stroke();
+    if (h.b && ev.hold > 0) {
+      ctx.strokeStyle = rgba(h.b.rgb, .9 * ha); ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(hx, hy, h.r + 5, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(1, ev.hold / 1.2)); ctx.stroke();
+    }
+    ctx.font = "italic 16px 'Instrument Serif', Georgia, serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = `rgba(225,228,240,${.6 * ha})`;
+    ctx.fillText("rest", hx, hy + (h.dy < 0 ? h.r + 18 : h.dy > 0 ? -h.r - 18 : h.r + 18));
+  }
+  ctx.restore();
+}
+
+function draw(t) {
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#050608";
+  ctx.fillRect(0, 0, W, H);
+
+  // distant sky drifting left
+  const drift = state === "play" ? dist : t * .02;
+  for (const s of sky) {
+    const x = ((s.x * W - drift * (.05 + s.z * .25)) % W + W) % W;
+    const zz = 1 + (cam.z - 1) * s.z * .12;   // near stars lean in a little when the camera zooms
+    ctx.fillStyle = `rgba(200,205,225,${.15 + s.z * .4})`;
+    ctx.fillRect((x - W / 2) * zz + W / 2, (s.y * H - H / 2) * zz + H / 2, s.z > .8 ? 1.6 : 1, s.z > .8 ? 1.6 : 1);
+  }
+  if (state !== "play") return;
+
+  ctx.save();
+  ctx.translate(W / 2, H / 2); ctx.scale(cam.z, cam.z); ctx.translate(-W / 2, -H / 2);
+  if (ev) drawRest(t);
+
+  // walls
+  for (const o of walls) {
+    if (o.kind === "ice") {
+      ctx.fillStyle = "rgba(170,215,255,.10)";
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      ctx.strokeStyle = "rgba(190,228,255,.55)"; ctx.lineWidth = 1;
+      ctx.strokeRect(o.x + .5, o.y + .5, o.w - 1, o.h - 1);
+      ctx.beginPath();
+      for (let y = 0; y < o.h; y += 46) { ctx.moveTo(o.x, y); ctx.lineTo(o.x + o.w, y + 23); ctx.lineTo(o.x, y + 46); }
+      ctx.strokeStyle = "rgba(190,228,255,.18)"; ctx.stroke();
+    } else {
+      ctx.fillStyle = "#11141b";
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+      ctx.strokeStyle = "rgba(170,180,205,.2)"; ctx.lineWidth = 1;
+      ctx.strokeRect(o.x + .5, o.y + .5, o.w - 1, o.h - 1);
+      if (o.kind === "narrow") {
+        ctx.strokeStyle = "rgba(235,238,255,.7)"; ctx.lineWidth = 2;
+        ctx.beginPath();
+        const edge = o.y === 0 ? o.h : o.y;
+        ctx.moveTo(o.x, edge); ctx.lineTo(o.x + o.w, edge); ctx.stroke();
+      }
+    }
+  }
+  ctx.font = "italic 17px 'Instrument Serif', Georgia, serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const l of labels) {
+    ctx.fillStyle = l.vertical ? "rgba(200,232,255,.75)" : "rgba(225,228,240,.6)";
+    if (l.vertical) {
+      ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(-Math.PI / 2); ctx.fillText(l.text, 0, 0); ctx.restore();
+    } else ctx.fillText(l.text, l.x, l.y);
+  }
+
+  // stars and their tails
+  for (const b of bodies) {
+    const blink = b.inv > 0 ? .45 + .35 * Math.sin(t * .025) : 1;
+    const n = b.trail.length;
+    for (let i = 0; i < n; i++) {
+      const k = (i + 1) / n;
+      ctx.fillStyle = rgba(b.rgb, k * k * .5 * blink);
+      ctx.beginPath(); ctx.arc(b.trail[i].x, b.trail[i].y, Math.max(.6, b.r * k * .92), 0, 7); ctx.fill();
+    }
+    ctx.globalCompositeOperation = "lighter";
+    const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * 3.2);
+    g.addColorStop(0, rgba(b.rgb, .55 * blink)); g.addColorStop(1, rgba(b.rgb, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 3.2, 0, 7); ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  ctx.globalCompositeOperation = "source-over";
+  for (const b of bodies) {
+    const blink = b.inv > 0 ? .45 + .35 * Math.sin(t * .025) : 1;
+    ctx.fillStyle = rgba(b.rgb, blink);
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 7); ctx.fill();
+    ctx.fillStyle = `rgba(255,255,255,${.35 * blink})`;
+    ctx.beginPath(); ctx.arc(b.x - b.r * .25, b.y - b.r * .25, b.r * .35, 0, 7); ctx.fill();
+  }
+  // cracks spreading over a merged star that is being pulled apart
+  for (const b of bodies) if (b.crack) {
+    const k = Math.min(1, b.crack.t / CRACK), px = -b.crack.ny, py = b.crack.nx;
+    ctx.save();
+    ctx.translate(b.x + (Math.random() - .5) * 3 * k, b.y + (Math.random() - .5) * 3 * k);
+    ctx.strokeStyle = `rgba(5,6,8,${.6 + .4 * k})`; ctx.lineWidth = 1.6 + k; ctx.lineJoin = "round";
+    ctx.beginPath();
+    const len = b.r * 1.05 * k, segs = 7;
+    for (let s2 = -segs; s2 <= segs; s2++) {
+      const u = s2 / segs * len, zig = (s2 % 2 ? 1 : -1) * b.r * .16 * Math.sin(b.crack.seed + s2);
+      const x = px * u + b.crack.nx * zig, y = py * u + b.crack.ny * zig;
+      s2 === -segs ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  for (const h of shells) {
+    const a = Math.max(0, h.life / 1.1);
+    ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(h.ang);
+    ctx.fillStyle = rgba(h.rgb, .25 * a); ctx.strokeStyle = rgba(h.rgb, .8 * a); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 0, h.r * (1 + (1 - a) * .3), -Math.PI / 2, Math.PI / 2);
+    for (let i = 0; i <= 6; i++) ctx.lineTo((i % 2 ? 3 : -1) * (1 - a + .4), h.r * (1 - i / 3));   // jagged broken edge
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.globalCompositeOperation = "lighter";
+  for (const s of sparks) {
+    ctx.fillStyle = rgba(s.rgb, Math.max(0, s.life / s.max));
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
+  }
+  ctx.globalCompositeOperation = "source-over";
+
+  // aims: always for the keyboard friend, and for the mouse once the camera zooms
+  for (const p of players) if (p.alive && (p.peer !== myId || cam.z > 1.02)) {
+    ctx.strokeStyle = rgba(ryb2rgb(p.ryb), .35); ctx.lineWidth = 1 / cam.z;
+    ctx.beginPath(); ctx.arc(p.target.x, p.target.y, 7 / cam.z, 0, 7); ctx.stroke();
+  }
+  ctx.restore();
+
+  // the dark: a fixed window on screen, so as the camera zooms in the labyrinth's world shrinks
+  if (ev && ev.phase !== "approach" && ev.phase !== "rest") {
+    const a = ev.phase === "bloom" ? ev.t / 1.4 : ev.phase === "end" ? ev.alpha : 1;
+    const g = ctx.createRadialGradient(W / 2, H / 2, ev.L0 * .8, W / 2, H / 2, ev.L0);
+    g.addColorStop(0, "rgba(5,6,8,0)"); g.addColorStop(1, "rgba(5,6,8,1)");
+    ctx.globalAlpha = a; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = `rgba(190,200,230,${.1 + .06 * Math.sin(t * .004)})`; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(W / 2, H / 2, ev.L0 * .92, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // HUD
+  ctx.font = "12px 'DM Mono', Menlo, monospace"; ctx.textBaseline = "top";
+  ctx.textAlign = "left"; ctx.fillStyle = "rgba(201,204,214,.7)";
+  ctx.fillText(`${Math.floor(dist / 10).toLocaleString()} m travelled   ·   ${deaths} fallen   ·   ${hearts} ${hearts === 1 ? "heart" : "hearts"} reached`, 52, 16);
+  if (ev) {
+    let msg = "", a = 0;
+    if (ev.phase === "approach" || ev.phase === "rest") { msg = players.length > 1 ? "rest · one star in each haven" : "rest in the haven"; a = ev.alpha; }
+    else if (ev.phase === "bloom") { msg = "find the heart"; a = 1; }
+    else if (ev.phase === "maze") { msg = "find the heart"; a = clamp(1 - (ev.t - 2.5) / 1.5, 0, 1); }
+    else { msg = ev.word; a = Math.min(1, 2.4 - ev.t * 1.2); }
+    if (a > 0) {
+      ctx.font = "italic 24px 'Instrument Serif', Georgia, serif"; ctx.textAlign = "center";
+      ctx.fillStyle = `rgba(225,228,240,${.85 * a})`;
+      ctx.textBaseline = "middle";
+      ctx.fillText(msg, W / 2, ev.phase === "approach" || ev.phase === "rest" ? H / 2 : H / 2 + 80);
+      ctx.textBaseline = "top";
+    }
+    ctx.font = "12px 'DM Mono', Menlo, monospace"; ctx.textAlign = "left";
+  }
+  ctx.textAlign = "right"; ctx.fillStyle = "rgba(111,115,128,.9)";
+  {
+    const mineP = players.find(p => p.peer === myId), qi = queue.findIndex(q => q.peer === myId);
+    ctx.fillText(`${roster.length} ${roster.length === 1 ? "person" : "people"} here`, W - 18, 16);
+    if (mineP) { ctx.fillStyle = rgba(ryb2rgb(mineP.ryb), .9); ctx.fillText(`you are the ${mineP.name} star`, W - 18, 36); }
+    else if (qi >= 0) ctx.fillText(`you are waiting · ${qi + 1} in line`, W - 18, 36);
+  }
+  players.forEach((p, i) => {
+    if (p.alive) return;
+    ctx.textAlign = "left"; ctx.fillStyle = rgba(ryb2rgb(p.ryb), .8);
+    ctx.fillText(`${p.name} enters in ${Math.max(0, p.respawn).toFixed(1)}`, 52, 36 + i * 18);
+  });
+  // the line of people waiting, watching the others try
+  if (queue.length) {
+    ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillStyle = "rgba(111,115,128,.9)";
+    ctx.fillText("waiting", 18, H - 22);
+    queue.forEach((q, i) => {
+      ctx.fillStyle = rgba(ryb2rgb(q.ryb), i === 0 ? 1 : .55);
+      ctx.beginPath(); ctx.arc(92 + i * 22, H - 22, i === 0 ? 7 : 5.5, 0, TAU); ctx.fill();
+    });
+  }
+  notes.forEach((n, i) => {
+    ctx.font = "italic 22px 'Instrument Serif', Georgia, serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = rgba(n.rgb, Math.min(1, n.life) * .9);
+    ctx.fillText(n.text, W / 2, H - 48 - i * 28);
+  });
+}
+
+function drawGuest(t) {
+  // the host's screen is the world; fit it into mine, with the rest left black
+  const RW = W, RH = H, sc = Math.min(RW / worldW, RH / worldH);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#050608"; ctx.fillRect(0, 0, RW, RH);
+  ctx.save();
+  ctx.translate((RW - worldW * sc) / 2, (RH - worldH * sc) / 2); ctx.scale(sc, sc);
+  ctx.beginPath(); ctx.rect(0, 0, worldW, worldH); ctx.clip();
+  W = worldW; H = worldH;
+  try { draw(t); } finally { W = RW; H = RH; ctx.restore(); }
+}
+
+let last = 0;
+function loop(t) {
+  const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
+  if (state === "play") { if (isHost) update(dt); else tickGuest(dt); }
+  sendTable(t); sendAim(t);
+  if (state === "play" && !isHost && worldW) drawGuest(t);
+  else {
+    draw(t);
+    if (state === "wait") {
+      ctx.font = "italic 24px 'Instrument Serif', Georgia, serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(225,228,240,.7)"; ctx.fillText("finding the sky…", W / 2, H / 2);
+    }
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ---------- connect ----------
+(async () => {
+  const ph = await window.playhtmlReady;
+  let pr = null;
+  try { pr = ph && ph.presence; } catch {}
+  if (!pr) { document.getElementById("lede").textContent = "can't reach the sky"; return; }
+  net = pr;
+  pr.onPresenceChange("aya", syncRoster);
+  pr.onPresenceChange("aim", syncRoster);
+  pr.onPresenceChange("table", readTable);
+  setInterval(syncRoster, 1000);      // also notices people who leave
+  refresh();
+})();
+</script>
+<script src="../../../site.js" defer></script>
+<script src="../../../nav.js" data-path="cabz/fw/aya-traces/index.html" defer></script>

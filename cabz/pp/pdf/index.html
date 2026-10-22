@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>portfolio cabz—</title>
+<link rel="icon" href="../../../icon.svg" type="image/svg+xml">
+<style>
+  html, body { height: 100%; margin: 0; background: #1a1a1a; color: #fff; }
+  body { display: flex; flex-direction: column; font: 400 13px/1 Spectral, Georgia, serif; letter-spacing: .06em; }
+  object { flex: 1; width: 100%; border: 0; padding-top: 32px; box-sizing: border-box; }
+  .dl { position: fixed; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); padding: 8px; background: rgba(0,0,0,.86); color: #ccc; text-decoration: none; border: 1px solid #444; border-radius: 2px; }
+  .dl:hover { color: #fff; border-color: #fff; }
+  .fallback { margin: auto; padding: 80px 16px; text-align: center; line-height: 1.8; }
+  .fallback a { color: #fff; }
+</style>
+</head>
+<body>
+<object data="26-03-23_portfolio_02.pdf#view=FitH" type="application/pdf" aria-label="portfolio">
+  <p class="fallback">this browser can't show the pdf here.<br><a href="26-03-23_portfolio_02.pdf">open the portfolio (pdf)</a></p>
+</object>
+<a class="dl" href="26-03-23_portfolio_02.pdf" download>download pdf ↓</a>
+<script>
+addEventListener("DOMContentLoaded", () => {
+  const project = window.CABZ?.sections.flatMap((section) => section.projects)
+    .find((item) => item.id === "cabz/pp/pdf");
+  const requested = new URLSearchParams(location.search).get("version");
+  const edition = project?.versions.find((version) => version.id === requested)
+    || project?.versions.find((version) => version.live);
+  if (!edition?.file) return;
+  const object = document.querySelector("object");
+  object.data = edition.file + "#view=FitH";
+  object.setAttribute("aria-label", "portfolio " + edition.label);
+  document.querySelector(".fallback a").href = edition.file;
+  document.querySelector(".dl").href = edition.file;
+  document.title = "portfolio cabz— · " + edition.label;
+});
+</script>
+<script src="../../../site.js" defer></script>
+<script src="../../../nav.js" data-path="cabz/pp/pdf/index.html" defer></script>
+</body>
+</html>
