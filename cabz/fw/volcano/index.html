@@ -23,11 +23,12 @@ button, input, select { font: inherit; color: inherit; }
 
 /* the scene: the red field behind, the page that scrolls over it. The tremor moves both, never the controls */
 #view { position: absolute; inset: 0; overflow: hidden; }
-#field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#field, #marks { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#marks { pointer-events: none; }   /* shockwaves, morse and radar around the badges */
 #scroller { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; outline: none; }
 #outside { position: relative; height: 100%; }
-#rim { position: absolute; left: 0; bottom: -1px; width: 100%; height: 46%; display: block; }
-#descent { height: 120%; }
+#rim { position: absolute; left: 0; bottom: -1px; width: 100%; height: 62%; display: block; }
+#descent { height: 35%; }
 #soup { position: relative; height: 120%; overflow-x: clip; }   /* nothing sticks out sideways; thrown badges can still fly up */
 
 h1 { position: fixed; z-index: 4; top: 10px; left: 16px; margin: 0; font: 400 17px/30px var(--old); letter-spacing: .02em; color: rgba(242, 242, 242, .82); pointer-events: none; }
@@ -38,7 +39,7 @@ h1 { position: fixed; z-index: 4; top: 10px; left: 16px; margin: 0; font: 400 17
   font: 600 calc(var(--d, 22px) * .56)/1 var(--sys); font-variant-numeric: tabular-nums; letter-spacing: -.02em; -webkit-tap-highlight-color: transparent; }
 .badge[data-digits="2"] { font-size: calc(var(--d) * .46); }
 .badge[data-digits="3"] { font-size: calc(var(--d) * .36); }
-.badge.read { background: #000; transition: background-color 2s ease; }
+.badge.read { background: #000; color: transparent; transition: background-color 2s ease, color 2s ease; }   /* read: only the black disc */
 .badge:hover, .badge:focus-visible { z-index: 2; }
 .badge:focus-visible { outline: 1.5px solid #fff; outline-offset: 3px; }
 .badge .peek { position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); font: 400 12px/1.3 var(--sys); letter-spacing: 0;
@@ -68,8 +69,19 @@ body.composing #plus, body.chatting #plus { display: none; }
 .msgfield { flex: 1; min-width: 0; height: 44px; box-sizing: border-box; padding: 0 18px; border: 1px solid rgba(255, 255, 255, .09); border-radius: 22px;
   background: #1c1c1d; color: #fff; font: 400 17px var(--sys); outline: none; caret-color: #5e8bff; }
 .msgfield::placeholder { color: #7d7d82; }
+.fieldwrap { position: relative; flex: 1; min-width: 0; display: flex; }
+.fieldwrap.with-clip .msgfield { padding-right: 46px; }
+.clip { position: absolute; right: 4px; top: 4px; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 18px; background: none; color: #8e8e93; display: grid; place-items: center; cursor: pointer; }
+.clip svg { width: 22px; height: 22px; }
+.clip:hover, .clip:focus-visible { color: #fff; }
+.clip:focus-visible { outline: 1.5px solid rgba(255, 255, 255, .7); }
+/* a picture about to be sent, already as it will be seen: black and white cells */
+.att { position: relative; align-self: flex-start; margin: 0 0 8px 52px; padding: 6px; border-radius: 14px; background: #1c1c1d; border: 1px solid rgba(255, 255, 255, .09); }
+.att canvas, .msg .mosaic { display: block; width: 72px; height: 72px; image-rendering: pixelated; border-radius: 8px; }
+.att button { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 12px; background: #2c2c2e; color: #fff; font: 600 14px/24px var(--sys); cursor: pointer; }
+.msg .mosaic { width: 156px; height: 156px; margin-bottom: 6px; border-radius: 12px; }
 #composer { position: fixed; z-index: 6; left: calc(8px + env(safe-area-inset-left, 0px)); right: calc(8px + env(safe-area-inset-right, 0px));
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px)); max-width: 620px; margin: 0 auto; }
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px)); max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; }
 
 /* name + secret code */
 #idPanel { position: fixed; z-index: 8; left: calc(8px + env(safe-area-inset-left, 0px)); bottom: calc(64px + env(safe-area-inset-bottom, 0px));
@@ -134,16 +146,16 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
 
 <div id="view">
   <canvas id="field" aria-hidden="true"></canvas>
+  <canvas id="marks" aria-hidden="true"></canvas>
   <div id="scroller" tabindex="-1">
     <section id="outside" aria-label="the rim of the crater">
-      <!-- after Into the Inferno: a low mound on the left, a dip where the glow comes up, a taller rock on the right, someone very small -->
-      <svg id="rim" viewBox="0 0 1600 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-        <path fill="#040404" d="M0 400 L0 212 C70 200 150 172 250 168 C330 165 395 182 455 206 C520 232 590 262 690 270 C790 278 880 262 960 246
-          C1030 232 1080 200 1130 150 C1170 110 1215 64 1290 46 C1360 30 1440 38 1500 62 C1550 82 1580 100 1600 112 L1600 400 Z"/>
-        <g fill="#b9bcc0" opacity=".85">
-          <circle cx="602" cy="231" r="3.4"/>
-          <path d="M598.6 235.5 h6.8 l1 10 h-1.8 l-.8 9.5 h-1.8 l-.6-8 l-.6 8 h-1.8 l-.8-9.5 h-1.8 z"/>
-        </g>
+      <!-- a blue sky; across the crater its far side, lit red from below; the near rim black in front, with someone very small -->
+      <svg id="rim" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <defs><linearGradient id="farLit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset="1" stop-color="#5c1a12"/></linearGradient></defs>
+        <path fill="url(#farLit)" d="M0 560 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1600 560 Z"/>
+        <path fill="#040404" d="M0 560 L0 372 C70 360 150 332 250 328 C330 325 395 342 455 366 C520 392 590 422 690 430 C790 438 880 422 960 406
+          C1030 392 1080 360 1130 310 C1170 270 1215 224 1290 206 C1360 190 1440 198 1500 222 C1550 242 1580 260 1600 272 L1600 560 Z"/>
+        <rect x="757" y="421" width="5" height="13" fill="#fff"/>
       </svg>
     </section>
     <section id="descent" aria-hidden="true"></section>
@@ -225,7 +237,7 @@ let W = 0, H = 0;
 function resize() {
   const box = document.body.getBoundingClientRect();
   W = Math.round(box.width) || innerWidth; H = Math.round(box.height) || innerHeight;
-  sizeField(); layoutSoup();
+  sizeField(); sizeMarks(); layoutSoup();
 }
 
 // ================= who is here =================
@@ -318,11 +330,13 @@ async function loadSentences() {
   if (!data) { try { data = await getJSON("sentences.json"); sentMode = "read-only"; } catch {} }
   const seen = new Set(), out = [];
   const add = o => {
-    if (!o || typeof o.s !== "string" || !o.s.trim() || seen.has(String(o.id))) return;
+    if (!o || typeof o.s !== "string" || (!o.s.trim() && !o.img) || seen.has(String(o.id))) return;
     seen.add(String(o.id));
     out.push({ id: String(o.id), s: o.s.trim().slice(0, 240), t: Number(o.t) || 0,
       name: typeof o.name === "string" ? o.name.slice(0, 20) : "", trip: typeof o.trip === "string" ? o.trip.slice(0, 8) : "",
-      i: Number.isFinite(o.i) ? clamp(o.i, 0, 1) : null, re: typeof o.re === "string" ? o.re : null });
+      i: Number.isFinite(o.i) ? clamp(o.i, 0, 1) : null, re: typeof o.re === "string" ? o.re : null,
+      medium: ["voice", "text", "image"].includes(o.medium) ? o.medium : "text",
+      img: typeof o.img === "string" && /^(perref\/|uploads\/|data:image\/)/.test(o.img) ? o.img : null });
   };
   (Array.isArray(data?.sentences) ? data.sentences : []).forEach(add);
   if (sentMode !== "shared") { try { JSON.parse(localStorage.getItem(SENT_LOCAL_KEY) || "[]").forEach(add); } catch {} }
@@ -340,15 +354,17 @@ async function loadSentences() {
   if (picked) renderChat();
 }
 function addReply(r) { if (!replies.has(r.re)) replies.set(r.re, []); replies.get(r.re).push(r); }
-async function saveSentence(text, I, re = null) {
+// medium: how it was made, "voice", "text" or "image" (img: a small jpeg as a data URL)
+async function saveSentence(text, I, re = null, medium = "text", img = null) {
   const t = String(text || "").trim().replace(/\s+/g, " ").slice(0, 240);
-  if (!t || t.split(" ").length > 40) return;
+  if ((!t && !img) || t.split(" ").length > 40) return;
+  if (re) { medium = null; img = null; }       // replies are just words
   const i = I == null ? null : Math.round(clamp(I, 0, 1) * 100) / 100;
-  const o = { id: "l-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), s: t, t: Date.now(), name: me.name, trip: me.trip, i, re };
+  const o = { id: "l-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), s: t, t: Date.now(), name: me.name, trip: me.trip, i, re, medium, img };
   let saved = null;
   if (sentMode === "shared") {
     try {
-      const r = await fetch("api.php?kind=sentences", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ s: t, name: me.name, trip: me.trip, i, re }) });
+      const r = await fetch("api.php?kind=sentences", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ s: t, name: me.name, trip: me.trip, i, re, medium, img }) });
       const j = await r.json();
       if (r.ok && j && j.sentence) saved = { ...o, ...j.sentence };
     } catch {}
@@ -377,9 +393,12 @@ function showStatus() {
 // Deep reds (#1a0000 → #a8221a) warped by noise, darker shapes drifting in it. At the top of the page only a faint
 // glow comes up from below the rim; the red rises as you scroll down, and fills everything inside.
 const field = $("field"), FIELD_SCALE = .4;
-let gl = null, uni = {}, ctx2 = null;
+let gl = null, uni = {}, ctx2 = null, inflTex = null;
+// the badges' spots, drawn small: red unread ones in the red channel, black read ones in the green one
+const infl = document.createElement("canvas"); infl.width = infl.height = 64;
+const ictx = infl.getContext("2d");
 const FRAG = `precision mediump float;
-uniform vec2 uRes; uniform float uTime, uDepth, uHeat, uFlare;
+uniform vec2 uRes; uniform float uTime, uDepth, uHeat, uFlare, uRed; uniform sampler2D uInfl;
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
   return mix(mix(hash(i), hash(i + vec2(1., 0.)), f.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), f.x), f.y); }
@@ -390,14 +409,17 @@ void main() {
   float t = uTime;
   vec2 q = vec2(fbm(p + vec2(0., t * .05)), fbm(p + vec2(5.2, 1.3) - t * .04));
   float f = fbm(p + 1.7 * q + vec2(t * .03, -t * .02));
-  vec3 col = mix(vec3(.102, 0., 0.), vec3(.659, .133, .102), smoothstep(.08, .66, f));
-  float d = fbm(p * .5 + vec2(-t * .022, t * .016) + 3.1);           // the dark shapes that drift in it
-  col *= 1. - .6 * smoothstep(.5, .72, d);
+  // how red it is here: the share of unread badges (uRed), and each badge's own spot, bent by the flow so it isn't round
+  vec4 inf = texture2D(uInfl, clamp(vec2(uv.x, 1. - uv.y) + (q - .5) * .08, 0., 1.));
+  float red = clamp(uRed + inf.r * .9 - inf.g * .75, 0., 1.);
+  vec3 col = mix(vec3(.102, 0., 0.), vec3(.659, .133, .102), smoothstep(.08, .66, f) * (.22 + .78 * red));
+  float d = fbm(p * .5 + vec2(-t * .022, t * .016) + 3.1);           // the dark shapes that drift in it, more of them when it is less red
+  col *= 1. - (.45 + .35 * (1. - red)) * smoothstep(.5, .72, d);
   col *= .82 + uHeat * .45 + uFlare * .9;
   col *= 1. - .25 * pow(abs(uv.x - .5) * 2., 2.);                   // a little darker at the sides
-  vec3 sky = mix(vec3(.012, .012, .02), vec3(.03, .028, .04), uv.y);
-  float glow = exp(-max(uv.y - .1, 0.) * 5.) * (.3 + uDepth * .5 + uHeat * .15 + uFlare * .7);
-  sky += vec3(.66, .13, .1) * glow * (.75 + .25 * f);
+  vec3 sky = mix(vec3(.612, .753, .894), vec3(.184, .388, .659), smoothstep(.05, 1., uv.y));   // a blue sky, lighter at the horizon
+  float glow = exp(-max(uv.y - .12, 0.) * 9.) * (.12 + uDepth * .5 + uHeat * .12 + uFlare * .6);
+  sky = mix(sky, vec3(.75, .32, .24), clamp(glow, 0., 1.) * (.75 + .25 * f));
   float edge = uDepth * 1.6 - .3;                                     // where the red has risen to
   float m = smoothstep(edge + .3, edge - .3, uv.y + (f - .5) * .3);
   gl_FragColor = vec4(mix(sky, col, m), 1.);
@@ -415,7 +437,10 @@ function initField() {
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
       const a = gl.getAttribLocation(prog, "a"); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-      for (const n of ["uRes", "uTime", "uDepth", "uHeat", "uFlare"]) uni[n] = gl.getUniformLocation(prog, n);
+      for (const n of ["uRes", "uTime", "uDepth", "uHeat", "uFlare", "uRed", "uInfl"]) uni[n] = gl.getUniformLocation(prog, n);
+      inflTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, inflTex);
+      for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+      gl.uniform1i(uni.uInfl, 0);
     }
   }
   if (!gl) ctx2 = field.getContext("2d");      // no WebGL: a few large soft blobs instead
@@ -425,24 +450,27 @@ function sizeField() {
   if (gl) gl.viewport(0, 0, field.width, field.height);
 }
 const BLOBS = Array.from({ length: 7 }, (_, k) => ({ x: rand(0, 1), y: rand(0, 1), r: rand(.35, .7), ph: rand(0, 6.28), dark: k > 4 }));
-function drawField(t, depth, heat, flare) {
+function drawField(t, depth, heat, flare, redness) {
   const w = field.width, h = field.height;
   if (gl) {
     gl.uniform2f(uni.uRes, w, h); gl.uniform1f(uni.uTime, t); gl.uniform1f(uni.uDepth, depth);
-    gl.uniform1f(uni.uHeat, heat); gl.uniform1f(uni.uFlare, flare);
+    gl.uniform1f(uni.uHeat, heat); gl.uniform1f(uni.uFlare, flare); gl.uniform1f(uni.uRed, redness);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, inflTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, infl);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     return;
   }
   const c = ctx2, rise = clamp(depth * 1.6 - .3, -.3, 1.3);
-  c.fillStyle = "#030305"; c.fillRect(0, 0, w, h);
+  const sky = c.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, "#2f63a8"); sky.addColorStop(1, "#9cc0e4");
+  c.fillStyle = sky; c.fillRect(0, 0, w, h);
   const g = c.createLinearGradient(0, h, 0, 0);
-  g.addColorStop(0, `rgba(168,34,26,${.25 + depth * .5 + flare * .5})`); g.addColorStop(clamp(rise + .15, .05, 1), "rgba(26,0,0,0)");
+  g.addColorStop(0, `rgba(168,34,26,${(.25 + depth * .5 + flare * .5) * (.4 + .6 * redness)})`); g.addColorStop(clamp(rise + .15, .05, 1), "rgba(26,0,0,0)");
   c.fillStyle = g; c.fillRect(0, 0, w, h);
   c.globalAlpha = clamp(rise + .3, 0, 1);
   for (const b of BLOBS) {
     const x = (b.x + .08 * Math.sin(t * .05 + b.ph)) * w, y = (b.y + .08 * Math.cos(t * .04 + b.ph)) * h, r = b.r * Math.max(w, h);
     const rg = c.createRadialGradient(x, y, 0, x, y, r);
-    rg.addColorStop(0, b.dark ? "rgba(26,0,0,.8)" : `rgba(168,34,26,${.55 + heat * .3})`); rg.addColorStop(1, "rgba(26,0,0,0)");
+    rg.addColorStop(0, b.dark ? "rgba(26,0,0,.8)" : `rgba(168,34,26,${(.55 + heat * .3) * redness})`); rg.addColorStop(1, "rgba(26,0,0,0)");
     c.fillStyle = rg; c.fillRect(0, 0, w, h);
   }
   c.globalAlpha = 1;
@@ -455,7 +483,7 @@ const badges = new Map();
 let readMap = store.get("volcano-read", {}) || {};
 const countOf = s => 1 + (replies.get(s.id)?.length || 0);
 const diam = n => Math.round(22 + 6 * Math.log2(n));
-const shortNote = s => s.length > 40 ? s.slice(0, 38).trimEnd() + "…" : s;
+const shortNote = s => !s ? "a picture" : s.length > 40 ? s.slice(0, 38).trimEnd() + "…" : s;
 function hashStr(str) { let h = 2166136261; for (const ch of str) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return h >>> 0; }
 function seeded(a) { return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 let soupW = 0, soupH = 0, birth = null;
@@ -552,6 +580,151 @@ function updateBadges(dt, t) {
   }
 }
 
+// ================= what surrounds a badge: its medium =================
+// voice: shockwaves leave it. text: its first letters in Morse, appearing round it and fading.
+// image: the picture → hue/saturation (no colour) → curves (contrast) → mosaic → black and white cells; a radar scans
+// out from the badge and the black cells answer as it passes them.
+const marks = $("marks"), mctx = marks.getContext("2d");
+let MDPR = 1;
+function sizeMarks() { MDPR = Math.min(2, devicePixelRatio || 1); marks.width = Math.round(W * MDPR); marks.height = Math.round(H * MDPR); }
+
+const MOS = 25, mosaics = new Map();           // by image URL: { ready, black: Uint8Array(MOS*MOS), wait: [] }
+function mosaicOf(src, then) {
+  if (!src) return null;
+  let m = mosaics.get(src);
+  if (!m) {
+    m = { ready: false, wait: [] }; mosaics.set(src, m);
+    const img = new Image();
+    img.onload = () => { try { m.black = makeMosaic(img); m.ready = true; } catch { m.failed = true; } m.wait.splice(0).forEach(f => f(m)); };
+    img.onerror = () => { m.failed = true; };
+    img.src = src;
+  }
+  if (then) m.ready ? then(m) : m.wait.push(then);
+  return m;
+}
+function makeMosaic(img) {
+  const c = document.createElement("canvas"); c.width = c.height = MOS;
+  const x = c.getContext("2d", { willReadFrequently: true });
+  const w = img.naturalWidth, h = img.naturalHeight, sq = Math.min(w, h);
+  x.drawImage(img, (w - sq) / 2, (h - sq) / 2, sq, sq, 0, 0, MOS, MOS);   // mosaic: the middle of the picture in 25 × 25 cells
+  const d = x.getImageData(0, 0, MOS, MOS).data, v = new Float32Array(MOS * MOS);
+  for (let k = 0; k < v.length; k++) {
+    const L = (.2126 * d[k * 4] + .7152 * d[k * 4 + 1] + .0722 * d[k * 4 + 2]) / 255;   // hue/saturation: all the colour out
+    const u = clamp((L - .25) / .5, 0, 1);
+    v[k] = lerp(L, u * u * (3 - 2 * u), .8);                                       // curves: an S, for contrast
+  }
+  const med = Float32Array.from(v).sort()[v.length >> 1];
+  // black or white, about half and half; cells equal to the middle value (large flat areas) go with what they look like
+  return Uint8Array.from(v, x => x < med || (x === med && med < .5) ? 1 : 0);
+}
+function drawMosaic(canvas, m) {
+  canvas.width = canvas.height = MOS;
+  const x = canvas.getContext("2d");
+  x.fillStyle = "#fff"; x.fillRect(0, 0, MOS, MOS); x.fillStyle = "#000";
+  m.black.forEach((b, k) => { if (b) x.fillRect(k % MOS, Math.floor(k / MOS), 1, 1); });
+}
+function blipsOf(b) {                          // the badge's black cells round it, nearest first
+  const m = mosaicOf(b.s.img);
+  if (!m || !m.ready) return null;
+  if (b.blips && b.blipsR === b.r) return b.blips;
+  const cs = 4, mid = (MOS - 1) / 2, out = [];
+  m.black.forEach((v, k) => {
+    if (!v) return;
+    const dx = (k % MOS - mid) * cs, dy = (Math.floor(k / MOS) - mid) * cs, dist = Math.hypot(dx, dy);
+    if (dist > b.r + 3) out.push({ dx, dy, dist });
+  });
+  out.sort((a, c) => a.dist - c.dist);
+  b.blips = out; b.blipsR = b.r; b.reach = Math.hypot(mid * cs, mid * cs);
+  return out;
+}
+
+const MORSE = { a: ".-", b: "-...", c: "-.-.", d: "-..", e: ".", f: "..-.", g: "--.", h: "....", i: "..", j: ".---", k: "-.-", l: ".-..", m: "--",
+  n: "-.", o: "---", p: ".--.", q: "--.-", r: ".-.", s: "...", t: "-", u: "..-", v: "...-", w: ".--", x: "-..-", y: "-.--", z: "--..",
+  0: "-----", 1: ".----", 2: "..---", 3: "...--", 4: "....-", 5: ".....", 6: "-....", 7: "--...", 8: "---..", 9: "----." };
+function morseOf(b) {                          // the first letters as timed marks: a dot is 1 unit, a dash 3; gaps 1, 3 between letters, 7 between words
+  if (b.morse) return b.morse;
+  const letters = b.s.s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim().slice(0, 10);
+  const els = []; let u = 0;
+  for (const ch of letters) {
+    if (ch === " ") { u += 4; continue; }
+    for (const sym of MORSE[ch] || "") { const len = sym === "." ? 1 : 3; els.push({ u, len }); u += len + 1; }
+    u += 2;
+  }
+  return (b.morse = { els, units: Math.max(1, u) });
+}
+
+function drawMarks(t) {
+  const x = mctx, calm = reduce.matches;
+  x.setTransform(MDPR, 0, 0, MDPR, 0, 0); x.clearRect(0, 0, W, H);
+  const off = soup.offsetTop - scroller.scrollTop, left = soup.getBoundingClientRect().left - view.getBoundingClientRect().left;
+  for (const b of badges.values()) {
+    const sx = b.x + left, sy = b.y + off;
+    if (sy < -140 || sy > H + 140) continue;
+    const ink = b.el.classList.contains("read") ? "0,0,0" : "255,226,218", me = b.s.medium;
+    if (me === "voice") {
+      const i = b.s.i ?? .5, per = 2.6 - 1.1 * i, reach = 46 + 40 * i;
+      x.lineWidth = 1.2;
+      for (let k = 0; k < 3; k++) {
+        const ph = calm ? .2 + k * .25 : ((t / per + b.ph / 6.283 + k / 3) % 1);
+        const a = calm ? .22 - k * .06 : .55 * Math.pow(1 - ph, 1.6);
+        x.strokeStyle = `rgba(${ink},${a.toFixed(3)})`;
+        x.beginPath(); x.arc(sx, sy, b.r + 2 + ph * reach, 0, 6.2832); x.stroke();
+      }
+    } else if (me === "text") {
+      const m = morseOf(b), unit = calm ? .14 : .085, R = b.r + 12;
+      const write = m.units * unit, cycle = write + 4.2, tau = (t + b.ph * 3) % cycle;
+      const fade = tau > write + 1.6 ? 1 - (tau - write - 1.6) / .9 : 1;
+      if (fade <= 0) continue;
+      const span = Math.min(6.283 * .9, m.units * .11), per = span / m.units, a0 = -Math.PI / 2 - span / 2 + Math.sin(b.ph) * .6;
+      x.lineCap = "round"; x.lineWidth = 2.4;
+      for (const e of m.els) {
+        const born = e.u * unit; if (tau < born) break;
+        const a = Math.min(1, (tau - born) / .12) * fade * .9;
+        x.strokeStyle = x.fillStyle = `rgba(${ink},${a.toFixed(3)})`;
+        const ang = a0 + (e.u + e.len / 2) * per;
+        if (e.len === 1) { x.beginPath(); x.arc(sx + Math.cos(ang) * R, sy + Math.sin(ang) * R, 1.3, 0, 6.2832); x.fill(); }
+        else { x.beginPath(); x.arc(sx, sy, R, a0 + e.u * per, a0 + (e.u + e.len) * per); x.stroke(); }
+      }
+    } else if (me === "image") {
+      const bl = blipsOf(b); if (!bl) continue;
+      const per = calm ? 6 : 3.4, sweep = 2.2, tau = (t + b.ph) % per, span = b.reach - b.r;
+      if (tau < sweep && !calm) {
+        x.lineWidth = 1; x.strokeStyle = `rgba(${ink},${(.35 * (1 - tau / sweep)).toFixed(3)})`;
+        x.beginPath(); x.arc(sx, sy, b.r + tau / sweep * span, 0, 6.2832); x.stroke();
+      }
+      for (const c of bl) {
+        const hit = (c.dist - b.r) / span * sweep; if (tau < hit) break;
+        const a = Math.max(0, 1 - (tau - hit) / 1.2); if (a <= 0) continue;
+        x.fillStyle = `rgba(${ink},${(a * .9).toFixed(3)})`;
+        x.fillRect(sx + c.dx - 1.6, sy + c.dy - 1.6, 3.2, 3.2);
+      }
+    }
+  }
+}
+
+// how red the inside is: the share of unread badges, never quite none, breathing with a little error; and every visible
+// badge leaves a spot of its own (red or dark) that wobbles, so the field follows them without copying them
+const wobble = (t, ph) => .5 * Math.sin(t * .37 + ph) + .3 * Math.sin(t * .83 + ph * 2.1) + .2 * Math.sin(t * 1.9 + ph * .7);
+function redness(t) {
+  let unread = 0; for (const b of badges.values()) if (!b.el.classList.contains("read")) unread++;
+  const share = badges.size ? unread / badges.size : 1;
+  return clamp(.14 + .86 * share + .12 * wobble(t * .2, 4.2), .1, 1);
+}
+function drawInfluence(t) {
+  const x = ictx, k = 64 / Math.max(1, W), kh = 64 / Math.max(1, H);
+  x.globalCompositeOperation = "source-over"; x.fillStyle = "#000"; x.fillRect(0, 0, 64, 64);
+  x.globalCompositeOperation = "lighter";
+  const off = soup.offsetTop - scroller.scrollTop;
+  for (const b of badges.values()) {
+    const sy = b.y + off; if (sy < -200 || sy > H + 200) continue;
+    const w = wobble(t, b.ph * 3), R = (120 + 40 * w) * k * (1 + b.n * .04), cx = b.x * k, cy = sy * kh;
+    const read = b.el.classList.contains("read"), a = clamp(.5 + .3 * w, .15, .85);
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, Math.max(1, R));
+    g.addColorStop(0, read ? `rgba(0,255,0,${a})` : `rgba(255,0,0,${a})`); g.addColorStop(1, "rgba(0,0,0,0)");
+    x.fillStyle = g; x.fillRect(cx - R, cy - R, R * 2, R * 2);
+  }
+}
+
 // ================= pressure =================
 // Pressure builds with time and with every note that comes in. It isn't shown: the view trembles more and more and the
 // red moves faster and brighter. At the top it erupts: one strong shake, the badges are thrown up and settle back, and
@@ -591,38 +764,77 @@ function tremor(t) {
 const ICON_MIC = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>';
 const ICON_SEND = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>';
 let active = null;                             // the composer the mic writes into
-function makeComposer(host, placeholder, onSend) {
+const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M17.5 11.2l-6.3 6.3a4.2 4.2 0 0 1-6-6l7.1-7.1a2.8 2.8 0 0 1 4 4l-7 7a1.4 1.4 0 0 1-2-2l6.4-6.4"/></svg>';
+// the medium of what is sent: image if a picture is attached, voice if the mic was used, text otherwise
+function makeComposer(host, placeholder, onSend, attach = false) {
   const form = document.createElement("form"); form.className = "bar";
   form.innerHTML = `<button type="button" class="round you" aria-label="your name" aria-expanded="false"></button>`
-    + `<input class="msgfield" placeholder="${placeholder}" aria-label="${placeholder}" maxlength="240" autocomplete="off" enterkeyhint="send">`
+    + `<div class="fieldwrap${attach ? " with-clip" : ""}"><input class="msgfield" placeholder="${placeholder}" aria-label="${placeholder}" maxlength="240" autocomplete="off" enterkeyhint="send">`
+    + (attach ? `<button type="button" class="clip" aria-label="attach a picture">${ICON_CLIP}</button><input type="file" accept="image/*" hidden>` : "") + `</div>`
     + `<button type="button" class="round mic" aria-label="talk" aria-pressed="false">${ICON_MIC}</button>`
     + `<button type="submit" class="round send" aria-label="send" hidden>${ICON_SEND}</button>`;
   host.append(form);
-  const c = { form, input: form.querySelector("input"), you: form.querySelector(".you"), mic: form.querySelector(".mic"), send: form.querySelector(".send"), peak: null };
+  const c = { form, input: form.querySelector(".msgfield"), you: form.querySelector(".you"), mic: form.querySelector(".mic"), send: form.querySelector(".send"), peak: null, spoke: false, img: null };
+  if (attach) {
+    const file = form.querySelector("input[type=file]"), att = document.createElement("div");
+    att.className = "att"; att.hidden = true;
+    att.innerHTML = '<canvas aria-label="the picture, as it will be seen"></canvas><button type="button" aria-label="remove the picture">×</button>';
+    host.insertBefore(att, form);
+    c.att = att;
+    form.querySelector(".clip").addEventListener("click", () => file.click());
+    file.addEventListener("change", async () => {
+      const f = file.files && file.files[0]; file.value = "";
+      if (!f) return;
+      try { setPicture(c, await shrink(f)); } catch { hint(c, "that picture can't be read"); }
+    });
+    att.querySelector("button").addEventListener("click", () => { setPicture(c, null); c.input.focus({ preventScroll: true }); });
+  }
   c.input.addEventListener("input", () => updateSend(c));
   c.input.addEventListener("focus", () => { active = c; });
   c.you.addEventListener("click", () => idPanel.hidden ? openId(c.you) : closeId());
   c.mic.addEventListener("click", () => { if (listening && micComp === c) stopMic(); else startMic(c); });
   form.addEventListener("submit", async e => {
     e.preventDefault();
-    const text = c.input.value.trim(); if (!text) return;
+    const text = c.input.value.trim(); if (!text && !c.img) return;
     if (listening && micComp === c) stopMic();
     const I = c.peak != null ? c.peak : dev && voiceMode === "debug" ? $("intensity").value / 100 : null;
-    c.input.value = ""; c.peak = null; updateSend(c);
-    await onSend(text, I);
+    const img = c.img, medium = img ? "image" : c.spoke ? "voice" : "text";
+    c.input.value = ""; c.peak = null; c.spoke = false; setPicture(c, null);
+    await onSend(text, I, medium, img);
   });
   return c;
 }
-function updateSend(c) {                        // as in Telegram: the mic becomes a send button once there is text
-  const has = !!c.input.value.trim(), rec = listening && micComp === c;
+// a picture, made small (160 px, a few KB) before it goes anywhere
+async function shrink(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const k = Math.min(1, 160 / Math.max(img.naturalWidth, img.naturalHeight)), cv = document.createElement("canvas");
+    cv.width = Math.max(1, Math.round(img.naturalWidth * k)); cv.height = Math.max(1, Math.round(img.naturalHeight * k));
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    let q = .8, d;
+    do { d = cv.toDataURL("image/jpeg", q); q -= .15; } while (d.length > 78000 && q > .2);
+    return d;
+  } finally { URL.revokeObjectURL(url); }
+}
+function setPicture(c, data) {
+  c.img = data;
+  if (c.att) {
+    c.att.hidden = !data;
+    if (data) mosaicOf(data, m => { if (c.img === data && m.ready) drawMosaic(c.att.querySelector("canvas"), m); });
+  }
+  updateSend(c);
+}
+function updateSend(c) {                        // as in Telegram: the mic becomes a send button once there is something to send
+  const has = !!c.input.value.trim() || !!c.img, rec = listening && micComp === c;
   c.send.hidden = !has; c.mic.hidden = has && !rec;
 }
 const composerEl = $("composer");
-const mainComp = makeComposer(composerEl, "Message", async (text, I) => {
+const mainComp = makeComposer(composerEl, "Message", async (text, I, medium, img) => {
   const r = composerEl.getBoundingClientRect(), sr = scroller.getBoundingClientRect();
   birth = { x: clamp(r.left - sr.left + 120, 30, soupW - 30), y: scroller.scrollTop + (r.top - sr.top) - soup.offsetTop - 30 };
-  await saveSentence(text, I);
-});
+  await saveSentence(text, I, null, medium, img);
+}, true);
 function openComposer() {
   closeChat();
   composerEl.hidden = false; document.body.classList.add("composing");
@@ -648,7 +860,13 @@ const chatComp = makeComposer(chatEl, "Reply", async (text, I) => {
 const when = t => { const d = new Date(t), z = n => String(n).padStart(2, "0"); return `${z(d.getDate())}/${z(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}, ${z(d.getHours())}:${z(d.getMinutes())}`; };
 function msgEl(s, kind) {
   const li = document.createElement("li"); li.className = "msg " + kind;
+  if (s.img) {                                 // a picture is only ever seen as its black and white cells
+    const cv = document.createElement("canvas"); cv.className = "mosaic"; cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "a picture, in black and white cells");
+    mosaicOf(s.img, m => { if (m.ready) drawMosaic(cv, m); });
+    li.append(cv);
+  }
   const body = document.createElement("p"); body.className = "body"; body.textContent = s.s;
+  if (!s.s) body.hidden = true;
   const meta = document.createElement("p"); meta.className = "meta";
   meta.textContent = [mineIds.has(s.id) ? "you" : signature(s.name, s.trip), s.t > 1e11 ? when(s.t) : ""].filter(Boolean).join(" · ");
   li.append(body, meta);
@@ -724,7 +942,7 @@ async function startMic(c) {
     ac.createMediaStreamSource(stream).connect(an);
     audio = { ac, an, stream, buf: new Float32Array(an.fftSize) };
   } catch { hint(c, "the microphone isn't available here"); return; }
-  micComp = c; active = c; micBase = c.input.value.trim() ? c.input.value.trim() + " " : ""; peak = 0; c.peak = 0;
+  micComp = c; active = c; micBase = c.input.value.trim() ? c.input.value.trim() + " " : ""; peak = 0; c.peak = 0; c.spoke = true;
   const r = rec = new SR(); r.lang = lang; r.continuous = true; r.interimResults = true;
   r.onresult = e => {
     let interim = "";
@@ -806,8 +1024,10 @@ function frame(now) {
   shake *= Math.exp(-dt * 3); flare *= Math.exp(-dt * 1.3);
   const heat = phase === "build" ? pressure : 1;
   fieldT += dt * lerp(1, 2.6, heat) * (reduce.matches ? .5 : 1);   // the red moves faster as the pressure builds
-  drawField(fieldT, clamp(scroller.scrollTop / Math.max(1, soup.offsetTop), 0, 1), heat, Math.min(1, flare));
   updateBadges(dt, t);
+  drawInfluence(t);
+  drawField(fieldT, clamp(scroller.scrollTop / Math.max(1, soup.offsetTop), 0, 1), heat, Math.min(1, flare), redness(t));
+  drawMarks(t);
   tremor(t);
   if (dev) showDev(dt);
   requestAnimationFrame(frame);

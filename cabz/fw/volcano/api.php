@@ -5,6 +5,8 @@
 // GET  api.php?kind=sentences   → every vented sentence
 // POST api.php?kind=sentences   → {"s":"the volcano is awake","name":"","trip":"","i":0.4} adds one sentence (name, trip and intensity are optional)
 //                                 with "re":"<id>" it is a reply to that sentence
+//                                 "medium": "voice", "text" or "image" says how it was made; an image comes as "img":
+//                                 a small data:image/jpeg;base64 (≤ 60 KB), saved to uploads/<id>.jpg; its caption "s" may be empty
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
@@ -29,8 +31,17 @@ if (!is_array($in)) fail(400, 'send JSON');
 if ($kind === 'sentences') {
   $s = isset($in['s']) ? trim(preg_replace('/\s+/u', ' ', (string)$in['s'])) : '';
   $len = mb_strlen($s);
-  if ($len < 1 || $len > 240) fail(400, 'a sentence of 1 to 240 characters');
-  if (count(preg_split('/ /', $s)) > 40) fail(400, 'at most 40 words');
+  $medium = isset($in['medium']) ? (string)$in['medium'] : 'text';
+  if (!in_array($medium, ['voice', 'text', 'image'], true)) fail(400, 'medium is voice, text or image');
+  $img = null;
+  if ($medium === 'image') {
+    $raw = isset($in['img']) ? (string)$in['img'] : '';
+    if (!preg_match('#^data:image/jpeg;base64,([A-Za-z0-9+/=]+)$#', $raw, $m)) fail(400, 'an image as a small jpeg');
+    $img = base64_decode($m[1], true);
+    if ($img === false || strlen($img) > 60000 || !@getimagesizefromstring($img)) fail(400, 'an image as a small jpeg');
+  }
+  if (($len < 1 && $medium !== 'image') || $len > 240) fail(400, 'a sentence of 1 to 240 characters');
+  if ($len && count(preg_split('/ /', $s)) > 40) fail(400, 'at most 40 words');
   if (preg_match('/[\x00-\x1f<>]/u', $s)) fail(400, 'plain text only');
   $name = isset($in['name']) ? mb_substr(trim((string)$in['name']), 0, 20) : '';
   $trip = isset($in['trip']) ? (string)$in['trip'] : '';
@@ -39,6 +50,7 @@ if ($kind === 'sentences') {
   if (preg_match('/[\x00-\x1f<>]/u', $name)) fail(400, 'plain text only');
   $re = isset($in['re']) ? (string)$in['re'] : '';
   if ($re !== '' && !preg_match('/^[A-Za-z0-9_-]{1,40}$/', $re)) fail(400, 'bad reply');
+  if ($re !== '' && $medium === 'image') fail(400, 'replies are words');
   $fh = fopen($file, 'c+');
   if (!$fh || !flock($fh, LOCK_EX)) fail(500, 'the volcano is busy, try again');
   $data = json_decode(stream_get_contents($fh) ?: '{"sentences":[]}', true);
@@ -50,6 +62,13 @@ if ($kind === 'sentences') {
   }
   if (count($data['sentences']) >= $MAX_SENTENCES) array_shift($data['sentences']);   // the oldest makes room
   $item = ['id' => bin2hex(random_bytes(6)), 's' => $s, 't' => (int) round(microtime(true) * 1000)];
+  if ($re === '') $item['medium'] = $medium;
+  if ($img !== null) {
+    $dir = __DIR__ . '/uploads';
+    if (!is_dir($dir)) @mkdir($dir, 0755);
+    if (@file_put_contents($dir . '/' . $item['id'] . '.jpg', $img) === false) { flock($fh, LOCK_UN); fclose($fh); fail(500, 'the image could not be kept'); }
+    $item['img'] = 'uploads/' . $item['id'] . '.jpg';
+  }
   if ($name !== '') { $item['name'] = $name; $item['trip'] = $trip; }
   if ($re !== '') $item['re'] = $re;
   if (isset($in['i']) && is_numeric($in['i'])) $item['i'] = round(max(0, min(1, (float)$in['i'])), 2);   // how loud it was said, 0 to 1

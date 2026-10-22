@@ -4,7 +4,9 @@
             "id": "n01",
             "s": "my landlord has ignored the leak in my ceiling for three weeks",
             "t": 1790847210632,
-            "i": 0.25
+            "i": 0.25,
+            "medium": "image",
+            "img": "perref/20250118-160113.jpg"
         },
         {
             "id": "r001",
@@ -20,19 +22,23 @@
             "t": 1790901699584,
             "name": "tom",
             "trip": "x3pfa9",
-            "i": 0.44
+            "i": 0.44,
+            "medium": "image",
+            "img": "perref/perro.jpg"
         },
         {
             "id": "n03",
             "s": "I said I'm fine eleven times today and I was not fine once",
             "t": 1790907114172,
-            "i": 0.28
+            "i": 0.28,
+            "medium": "text"
         },
         {
             "id": "n04",
             "s": "the 7:42 train was cancelled again and nobody even apologised",
             "t": 1790916279674,
-            "i": 0.69
+            "i": 0.69,
+            "medium": "voice"
         },
         {
             "id": "r010",
@@ -82,7 +88,9 @@
             "t": 1790963783042,
             "name": "noé",
             "trip": "e2vbt6",
-            "i": 0.45
+            "i": 0.45,
+            "medium": "image",
+            "img": "perref/mvp-studiobanlieue.jpg"
         },
         {
             "id": "r005",
@@ -118,7 +126,9 @@
             "t": 1791045888505,
             "name": "lu",
             "trip": "h8rmc4",
-            "i": 0.54
+            "i": 0.54,
+            "medium": "image",
+            "img": "perref/perros-absurdamelancolia-0.jpg"
         },
         {
             "id": "r011",
@@ -134,7 +144,9 @@
             "t": 1791061883206,
             "name": "ines",
             "trip": "q9dz3s",
-            "i": 0.79
+            "i": 0.79,
+            "medium": "image",
+            "img": "perref/canis-angel-diable-sr-dech.jpg"
         },
         {
             "id": "r015",
@@ -174,7 +186,8 @@
             "id": "n08",
             "s": "someone ate my lunch from the office fridge. it had my NAME on it",
             "t": 1791114690232,
-            "i": 0.94
+            "i": 0.94,
+            "medium": "voice"
         },
         {
             "id": "r021",
@@ -188,7 +201,8 @@
             "id": "n09",
             "s": "I've rewritten this email nine times and it still sounds passive aggressive",
             "t": 1791132570882,
-            "i": 0.86
+            "i": 0.86,
+            "medium": "voice"
         },
         {
             "id": "r017",
@@ -224,7 +238,8 @@
             "id": "n10",
             "s": "estoy harta de que me interrumpan cuando hablo",
             "t": 1791171307059,
-            "i": 0.76
+            "i": 0.76,
+            "medium": "voice"
         },
         {
             "id": "r023",
@@ -240,7 +255,8 @@
             "t": 1791209503747,
             "name": "noé",
             "trip": "e2vbt6",
-            "i": 0.7
+            "i": 0.7,
+            "medium": "text"
         },
         {
             "id": "r022",
@@ -254,7 +270,9 @@
             "id": "n12",
             "s": "deadline tomorrow, motivation somewhere in another country",
             "t": 1791222649309,
-            "i": 0.26
+            "i": 0.26,
+            "medium": "image",
+            "img": "perref/perros-absurdamelancolia-2.jpg"
         },
         {
             "id": "r027",
@@ -278,7 +296,9 @@
             "t": 1791251293791,
             "name": "noé",
             "trip": "e2vbt6",
-            "i": 0.23
+            "i": 0.23,
+            "medium": "image",
+            "img": "perref/perros-absurdamelancolia-11.jpg"
         },
         {
             "id": "n14",
@@ -286,13 +306,15 @@
             "t": 1791252073894,
             "name": "ines",
             "trip": "q9dz3s",
-            "i": 0.78
+            "i": 0.78,
+            "medium": "voice"
         },
         {
             "id": "n15",
             "s": "why is it always raining exactly when I leave the house",
             "t": 1791255903836,
-            "i": 0.67
+            "i": 0.67,
+            "medium": "text"
         },
         {
             "id": "n16",
@@ -300,7 +322,8 @@
             "t": 1791258003425,
             "name": "noé",
             "trip": "e2vbt6",
-            "i": 0.55
+            "i": 0.55,
+            "medium": "text"
         },
         {
             "id": "r029",
@@ -330,7 +353,9 @@
             "t": 1791421831366,
             "name": "noé",
             "trip": "e2vbt6",
-            "i": 0.31
+            "i": 0.31,
+            "medium": "image",
+            "img": "perref/canis-chasing-desert-john-divola-00.jpg"
         },
         {
             "id": "n18",
@@ -338,7 +363,9 @@
             "t": 1791446513391,
             "name": "noé",
             "trip": "e2vbt6",
-            "i": 0.76
+            "i": 0.76,
+            "medium": "image",
+            "img": "perref/perro-absurdamelancolia.jpg"
         },
         {
             "id": "r032",
@@ -358,7 +385,9 @@
             "t": 1791491539874,
             "name": "lu",
             "trip": "h8rmc4",
-            "i": 0.75
+            "i": 0.75,
+            "medium": "image",
+            "img": "perref/20250118-151014.jpg"
         },
         {
             "id": "n20",
@@ -366,7 +395,8 @@
             "t": 1791496126364,
             "name": "ines",
             "trip": "q9dz3s",
-            "i": 0.91
+            "i": 0.91,
+            "medium": "voice"
         },
         {
             "id": "r031",
@@ -394,7 +424,8 @@
             "id": "n21",
             "s": "they moved the meeting again, third time this week",
             "t": 1791640917075,
-            "i": 0.56
+            "i": 0.56,
+            "medium": "text"
         },
         {
             "id": "r036",
@@ -416,7 +447,8 @@
             "id": "n22",
             "s": "nobody tells you how lonely a new city is",
             "t": 1791686733232,
-            "i": 0.4
+            "i": 0.4,
+            "medium": "text"
         },
         {
             "id": "r038",
@@ -428,7 +460,8 @@
             "id": "n23",
             "s": "me duele la espalda de tanto estar sentado frente a la pantalla",
             "t": 1791696617218,
-            "i": 0.69
+            "i": 0.69,
+            "medium": "voice"
         },
         {
             "id": "r042",
@@ -448,7 +481,8 @@
             "id": "n24",
             "s": "I cleaned the whole flat and my flatmate didn't even notice",
             "t": 1791719282289,
-            "i": 0.35
+            "i": 0.35,
+            "medium": "text"
         },
         {
             "id": "n25",
@@ -456,7 +490,9 @@
             "t": 1791732568446,
             "name": "mara",
             "trip": "k7wq2n",
-            "i": 0.66
+            "i": 0.66,
+            "medium": "image",
+            "img": "perref/screenshot-2026-04-14-at-14-58-55-instagram.jpg"
         },
         {
             "id": "n26",
@@ -464,7 +500,8 @@
             "t": 1791745572806,
             "name": "mara",
             "trip": "k7wq2n",
-            "i": 0.53
+            "i": 0.53,
+            "medium": "voice"
         },
         {
             "id": "r037",
@@ -550,7 +587,8 @@
             "t": 1791815333071,
             "name": "tom",
             "trip": "x3pfa9",
-            "i": 0.85
+            "i": 0.85,
+            "medium": "voice"
         },
         {
             "id": "r048",
@@ -572,7 +610,8 @@
             "id": "n28",
             "s": "my thesis supervisor answered my email with one word: 'no'",
             "t": 1791874179445,
-            "i": 0.94
+            "i": 0.94,
+            "medium": "voice"
         },
         {
             "id": "r052",
@@ -604,7 +643,8 @@
             "t": 1791928030116,
             "name": "lu",
             "trip": "h8rmc4",
-            "i": 0.66
+            "i": 0.66,
+            "medium": "voice"
         },
         {
             "id": "n30",
@@ -612,7 +652,9 @@
             "t": 1791961739894,
             "name": "mara",
             "trip": "k7wq2n",
-            "i": 0.63
+            "i": 0.63,
+            "medium": "image",
+            "img": "perref/20250118-160136.jpg"
         },
         {
             "id": "r056",
@@ -647,17 +689,21 @@
         {
             "id": "ebfb8ca4daff",
             "s": "hungryyyyyyyy",
-            "t": 1792052306947
+            "t": 1792052306947,
+            "medium": "image",
+            "img": "perref/screenshot-2025-08-07-at-09-44-05-feed-linkedin.jpg"
         },
         {
             "id": "ae9547e70444",
             "s": "I'm hungryyyyyyyy",
-            "t": 1792054003625
+            "t": 1792054003625,
+            "medium": "voice"
         },
         {
             "id": "43095d5662d9",
             "s": "i'm tiredddddddd",
-            "t": 1792054016285
+            "t": 1792054016285,
+            "medium": "voice"
         },
         {
             "id": "n31",
@@ -665,12 +711,15 @@
             "t": 1792058348854,
             "name": "ines",
             "trip": "q9dz3s",
-            "i": 0.47
+            "i": 0.47,
+            "medium": "text"
         },
         {
             "id": "691087776e88",
             "s": "j'ai faiiiiiiiiiim",
-            "t": 1792076800630
+            "t": 1792076800630,
+            "medium": "image",
+            "img": "perref/canis-google-earth-rd.jpg"
         },
         {
             "id": "r059",
@@ -690,7 +739,8 @@
             "id": "n32",
             "s": "everyone at the party had a plus one except me",
             "t": 1792144645194,
-            "i": 0.3
+            "i": 0.3,
+            "medium": "voice"
         },
         {
             "id": "r061",
@@ -704,13 +754,16 @@
             "id": "n33",
             "s": "my plants are dying and honestly same",
             "t": 1792217977493,
-            "i": 0.21
+            "i": 0.21,
+            "medium": "image",
+            "img": "perref/20250118-161043.jpg"
         },
         {
             "id": "n34",
             "s": "I have forty tabs open and none of them is the one I need",
             "t": 1792239805243,
-            "i": 0.23
+            "i": 0.23,
+            "medium": "voice"
         },
         {
             "id": "n35",
@@ -718,7 +771,8 @@
             "t": 1792241776802,
             "name": "lu",
             "trip": "h8rmc4",
-            "i": 0.28
+            "i": 0.28,
+            "medium": "text"
         },
         {
             "id": "r063",
@@ -732,7 +786,8 @@
             "t": 1792266654988,
             "name": "noé",
             "trip": "e2vbt6",
-            "i": 0.86
+            "i": 0.86,
+            "medium": "voice"
         },
         {
             "id": "r066",
@@ -754,7 +809,9 @@
             "id": "n37",
             "s": "I'm angry and I don't even know at what",
             "t": 1792283686657,
-            "i": 0.68
+            "i": 0.68,
+            "medium": "image",
+            "img": "perref/canis-chasing-desert-john-divola-05.jpg"
         },
         {
             "id": "r064",
@@ -780,7 +837,8 @@
             "id": "n38",
             "s": "stop telling me to just relax",
             "t": 1792369022170,
-            "i": 0.5
+            "i": 0.5,
+            "medium": "voice"
         },
         {
             "id": "n39",
@@ -788,7 +846,9 @@
             "t": 1792385169714,
             "name": "lu",
             "trip": "h8rmc4",
-            "i": 0.38
+            "i": 0.38,
+            "medium": "image",
+            "img": "perref/screenshot-2026-04-14-at-15-19-50-instagram.jpg"
         },
         {
             "id": "r068",
@@ -816,7 +876,8 @@
             "t": 1792418555724,
             "name": "lu",
             "trip": "h8rmc4",
-            "i": 0.37
+            "i": 0.37,
+            "medium": "voice"
         },
         {
             "id": "r070",
@@ -852,7 +913,9 @@
             "id": "n41",
             "s": "I can't sleep because I'm worried about not sleeping",
             "t": 1792478492974,
-            "i": 0.18
+            "i": 0.18,
+            "medium": "image",
+            "img": "perref/screenshot-2025-11-20-at-12-15-43-instagram.jpg"
         },
         {
             "id": "r076",
@@ -866,7 +929,8 @@
             "t": 1792520864702,
             "name": "mara",
             "trip": "k7wq2n",
-            "i": 0.89
+            "i": 0.89,
+            "medium": "voice"
         },
         {
             "id": "r077",
@@ -880,7 +944,8 @@
             "id": "n43",
             "s": "why is adulthood mostly paperwork",
             "t": 1792550508511,
-            "i": 0.41
+            "i": 0.41,
+            "medium": "text"
         },
         {
             "id": "r075",
@@ -902,7 +967,8 @@
             "id": "n44",
             "s": "I just want one week where nothing breaks",
             "t": 1792601297972,
-            "i": 0.17
+            "i": 0.17,
+            "medium": "text"
         },
         {
             "id": "r079",
