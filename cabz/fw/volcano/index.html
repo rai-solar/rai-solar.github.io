@@ -969,7 +969,7 @@ addEventListener("keydown", e => { if (e.key === "Escape") { closeChat(); closeI
 // starts again from zero. The pressure is also the volcano's mood: the higher it is, the harder it throws.
 const FILL_TIME = 180, PER_NOTE = .12;        // seconds to fill with nobody writing; what one note adds
 const BLAST = 1.8;                            // how much faster than normal time an explosion plays
-let pressure = 0, phase = "build", phaseT = 0, holeOpen = 1, camY = 0, bombs = [], nextSmall = 14;
+let pressure = 0, phase = "build", phaseT = 0, holeOpen = 1, camY = 0, camV = 0, camPrev = null, camLead = null, bombs = [], nextSmall = 14;
 const gaugeEl = document.getElementById("gauge"), pFill = document.getElementById("pFill"), pVal = document.getElementById("pVal");
 function addPressure(x) { if (phase === "build") pressure = Math.min(1, pressure + x); }
 // the pressure can be set by hand: drag the tube (or use the arrow keys on it), or press "erupt"
@@ -1015,13 +1015,16 @@ function blast() {
   // the last 21 come out as what they say, thrown high into the sky; older notes come out as bombs
   const hot = sentences.filter(s => recentIds.has(s.id));
   let delay = 0;
+  camLead = null;
   for (const s of hot) {
     const line = sentenceLines(s.s)[0]; if (!line) continue;
-    const h = H * rand(1.1, 2.6);
+    const lead = !camLead;                      // the first one out goes highest and nearly straight up: the camera rides with it
+    const h = H * (lead ? 2.75 : rand(1.1, 2.6));
     const v = { t: line, sentence: true, bw: letterWidth(line), ext: letterWidth(line), I: 1, alpha: 1, heat: 1.4, delay, state: "fly", s: 0, s0: 0, blast: true,
-      x: c.x + rand(-c.half, c.half) * .5, y: c.y, vx: rand(-1, 1) * Math.min(W, 900) * .2, vy: -Math.sqrt(2 * g * h) };
+      x: c.x + rand(-c.half, c.half) * .5, y: c.y, vx: rand(-1, 1) * Math.min(W, 900) * (lead ? .03 : .2), vy: -Math.sqrt(2 * g * h) };
     v.fp = [{ x: v.x, y: v.y, l: 0 }]; v.pts = v.fp;
     slides.push(v);
+    if (lead) camLead = v;
     delay += rand(.02, .07);
     flashNote(s.id);
   }
@@ -1029,6 +1032,10 @@ function blast() {
   for (let k = 0; k < Math.min(48, 12 + old.length); k++) {
     const n = old.length ? pickOne(old) : null, h = H * rand(.5, 2.3);
     bombs.push({ spr: bombSprite(n && !n.hot ? bombR(n.s.s, false) + 1 : 2, "old", hashStr("b" + k)), x: c.x + rand(-c.half, c.half) * .6, y: c.y, vx: rand(-1, 1) * Math.min(W, 900) * .32, vy: -Math.sqrt(2 * g * h), delay: rand(0, .7) });
+  }
+  if (!camLead && bombs.length) {               // no sentences to throw: ride the bomb that goes highest
+    camLead = bombs.reduce((a, b) => b.vy < a.vy ? b : a);
+    camLead.vx *= .1; camLead.delay = 0;
   }
   for (let k = 0; k < 140; k++) bits.push({ x: c.x + rand(-c.half, c.half), y: c.y - rand(0, 30), vx: rand(-50, 50), vy: -rand(150, 700), life: rand(5, 11), ash: true, g: -.01 });
   sparkle(c, 140, 1.3);
@@ -1045,14 +1052,20 @@ function updateBombs(dt) {
   bombs = bombs.filter(b => !b.gone);
 }
 function updateCamera(dt) {
-  // follow the upper part of what is in the air, up into the sky and back down
-  const ys = [];
-  for (const v of slides) if (v.blast && v.state === "fly" && v.delay <= 0) ys.push(v.y);
-  for (const b of bombs) if (b.delay <= 0) ys.push(b.y);
-  let target = 0;
-  if (ys.length) { ys.sort((a, b) => a - b); target = Math.max(0, H * .42 - ys[Math.floor(ys.length * .3)]); }
-  camY += (target - camY) * Math.min(1, dt * 4);
-  if (camY < .5 && !target) camY = 0;
+  // ride with one thing thrown out (camLead), up into the sky and back down, once. A critically damped spring
+  // follows it, so the camera eases in and out instead of snapping, and never bobs between different objects.
+  const L = camLead;
+  const flying = L && !L.gone && (L.spr ? bombs.includes(L) : L.state === "fly" && L.alpha > 0);
+  if (L && !flying) camLead = null;
+  const target = flying && !(L.delay > 0) ? Math.max(0, H * .42 - L.y) : 0;
+  // it also matches the lead's speed, so it never trails behind it, on the way up or on the fall
+  const tv = flying && camPrev != null && dt > 0 ? (target - camPrev) / dt : 0;
+  camPrev = flying ? target : null;
+  const k = 7;                                  // stiffness: how closely it keeps up
+  camV += (k * (target - camY) + 2 * Math.sqrt(k) * (tv - camV)) * dt;
+  camY += camV * dt;
+  if (camY < 0) { camY = 0; camV = 0; }
+  if (camY < .5 && !target && Math.abs(camV) < 1) { camY = 0; camV = 0; }
 }
 function drawSky() {
   // the sky darkens with height; stars appear above the usual view, so the climb can be felt
