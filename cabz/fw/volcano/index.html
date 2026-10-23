@@ -33,6 +33,7 @@ button, input, select { font: inherit; color: inherit; }
    whole volcano, the field. Everything comes out of the soup, so nothing is ever in front of the rim. */
 #back, #front { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 #back { z-index: 0; }
+#stars { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #scroller { z-index: 1; }
 #marks { pointer-events: none; z-index: 2; }
 #front { z-index: 3; }
@@ -159,6 +160,7 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
 <div id="view">
   <canvas id="field" aria-hidden="true"></canvas>
   <div id="back" aria-hidden="true">
+    <canvas id="stars"></canvas>
     <!-- seen from far away: the whole volcano on its plain (drawn in camera() from the size of the view) -->
     <!-- across the crater its far side, lit red from below, its foot fading into the lava; its ends slope down a little
          past the edges of the view, behind the near rim's, which make the volcano's outline once you pull back -->
@@ -166,6 +168,8 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
       <defs><linearGradient id="farLit" gradientUnits="userSpaceOnUse" x1="0" y1="88" x2="0" y2="420"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset=".8" stop-color="#5c1a12"/><stop offset="1" stop-color="#5c1a12" stop-opacity="0"/></linearGradient></defs>
       <path fill="url(#farLit)" d="M-210 420 L-195 407 L-180 393 L-165 378 L-150 364 L-135 348 L-120 333 L-105 316 L-90 299 L-75 282 L-60 262 L-45 242 L-30 219 L-15 193 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1615 133 L1630 160 L1645 184 L1660 205 L1675 225 L1690 244 L1705 262 L1720 279 L1735 295 L1750 311 L1765 327 L1780 341 L1795 356 L1810 370 L1825 384 L1840 398 L1855 411 L1870 420
         L1600 420 L1600 414 C1420 422 1260 410 1080 418 C900 426 760 414 600 422 C420 430 220 416 0 420 L-210 420 Z"/>
+      <!-- the crater's lip, black, all round: along the far crest and down its shoulders into the ends of the front -->
+      <path id="lip" fill="none" stroke="#040404" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" d="M-165 378 L-150 364 L-135 348 L-120 333 L-105 316 L-90 299 L-75 282 L-60 262 L-45 242 L-30 219 L-15 193 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1615 133 L1630 160 L1645 184 L1660 205 L1675 225 L1690 244 L1705 262 L1720 279 L1735 295 L1750 311 L1765 327 L1780 341"/>
     </svg>
   </div>
   <div id="scroller" tabindex="-1">
@@ -178,6 +182,7 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
          down as the front of the volcano to the plain, seen once you pull back -->
     <svg id="near" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice">
       <path fill="#040404" d="M-8000 4000 L-8000 1549 L-2200 1549 L-2180 1540 L-2120 1513 L-2060 1486 L-2000 1459 L-1940 1431 L-1880 1403 L-1820 1375 L-1760 1347 L-1700 1318 L-1640 1289 L-1580 1259 L-1520 1230 L-1460 1200 L-1400 1169 L-1340 1138 L-1280 1107 L-1220 1076 L-1160 1043 L-1100 1011 L-1040 978 L-980 944 L-920 909 L-860 874 L-800 839 L-740 802 L-680 764 L-620 726 L-560 686 L-500 645 L-440 603 L-380 559 L-320 512 L-300 495 L-280 475 L-260 455 L-240 434 L-220 415 L-200 398 L-180 384 L-160 372 L-140 364 L-120 359 L-100 358 L-80 359 L-60 362 L-40 366 L-20 370 L0 372 C70 360 150 332 250 328 C330 325 395 342 455 366 C520 392 590 422 690 430 C790 438 880 422 960 406 C1030 392 1080 360 1130 310 C1170 270 1215 224 1290 206 C1360 190 1440 198 1500 222 C1550 242 1580 260 1600 272 L1600 272 L1620 271 L1640 268 L1660 266 L1680 266 L1700 268 L1720 274 L1740 283 L1760 296 L1780 313 L1800 332 L1820 354 L1840 377 L1860 402 L1880 425 L1900 447 L1920 466 L1980 515 L2040 561 L2100 605 L2160 648 L2220 689 L2280 730 L2340 769 L2400 807 L2460 845 L2520 881 L2580 917 L2640 952 L2700 987 L2760 1021 L2820 1055 L2880 1088 L2940 1120 L3000 1152 L3060 1184 L3120 1216 L3180 1247 L3240 1277 L3300 1308 L3360 1338 L3420 1367 L3480 1397 L3540 1426 L3600 1455 L3660 1483 L3720 1512 L3780 1540 L3800 1549 L9600 1549 L9600 4000 Z"/>
+      <path id="hair" fill="none" stroke="#1b1a1a" stroke-width="1" vector-effect="non-scaling-stroke" d="M0 372 L-30 452 L-70 510 L-110 557 L-150 599 L-190 636 L-230 671 L-270 704 L-310 735 L-350 765 L-390 794 L-430 821 L-470 848 L-510 874 L-550 899 L-590 924 L-630 948 L-670 971 L-710 994 L-750 1017 L-790 1039 L-830 1061 L-870 1082 L-910 1103 L-950 1124 L-990 1144 L-1030 1165 L-1070 1184 L-1110 1204 L-1150 1223 L-1190 1243 L-1230 1261 L-1270 1280 L-1310 1299 L-1350 1317 L-1390 1335 L-1430 1353 L-1470 1371 L-1510 1388 L-1550 1406 L-1590 1423 L-1630 1440 L-1670 1457 L-1710 1474 L-1750 1491 L-1790 1507 L-1830 1524 L-1870 1540 M1600 272 L1630 358 L1670 422 L1710 473 L1750 518 L1790 559 L1830 596 L1870 632 L1910 666 L1950 698 L1990 729 L2030 759 L2070 788 L2110 816 L2150 844 L2190 871 L2230 897 L2270 922 L2310 947 L2350 972 L2390 996 L2430 1019 L2470 1042 L2510 1065 L2550 1088 L2590 1110 L2630 1132 L2670 1153 L2710 1175 L2750 1196 L2790 1216 L2830 1237 L2870 1257 L2910 1277 L2950 1297 L2990 1317 L3030 1336 L3070 1355 L3110 1374 L3150 1393 L3190 1412 L3230 1431 L3270 1449 L3310 1467 L3350 1485 L3390 1503 L3430 1521 L3470 1539"/>
       <rect x="757" y="421" width="5" height="13" fill="#fff"/>
     </svg>
   </div>
@@ -253,12 +258,12 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
-const view = $("view"), scroller = $("scroller"), soup = $("soup"), far = $("far"), near = $("near");
-let W = 0, H = 0, D = 0, Z = 0, sized = "", moved = false;     // Z: the way up (zooming out); D: how far the dive scrolls before you are in the lava
+const view = $("view"), scroller = $("scroller"), soup = $("soup"), far = $("far"), near = $("near"), lip = $("lip");
+let W = 0, H = 0, D = 0, Z = 0, ZOOM = 0, SKY = 0, sized = "", moved = false;   // the way up: ZOOM (pulling back) then SKY (looking up); Z = both. D: the dive
 function resize() {
   const box = document.body.getBoundingClientRect();
   W = Math.round(box.width) || innerWidth; H = Math.round(box.height) || innerHeight; sized = W + "x" + H;
-  D = Math.round(H * .9); Z = Math.round(H * 1.1);
+  D = Math.round(H * .9); ZOOM = Math.round(H * .55); SKY = Math.round(H * .75); Z = ZOOM + SKY;
   const st = document.documentElement.style;
   st.setProperty("--H", H + "px"); st.setProperty("--D", D + "px"); st.setProperty("--Z", Z + "px");
   sizeField(); sizeMarks(); layoutSoup(); camKey = "";
@@ -423,7 +428,7 @@ let gl = null, uni = {}, ctx2 = null, inflTex = null;
 const infl = document.createElement("canvas"); infl.width = infl.height = 64;
 const ictx = infl.getContext("2d");
 const FRAG = `precision mediump float;
-uniform vec2 uRes; uniform float uTime, uDepth, uHeat, uFlare, uRed, uHorizon, uGround; uniform vec3 uCrater; uniform sampler2D uInfl;
+uniform vec2 uRes; uniform float uTime, uDepth, uHeat, uFlare, uRed, uHorizon, uGround, uNight, uTilt; uniform vec3 uCrater; uniform sampler2D uInfl;
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
   return mix(mix(hash(i), hash(i + vec2(1., 0.)), f.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), f.x), f.y); }
@@ -447,6 +452,9 @@ void main() {
   col = mix(col, vec3(.05, .045, .045) * (1.2 - .4 * (uHorizon - uv.y) / max(uHorizon, .01)), uGround * outside);   // far away: the plain round the crater
   // the sky: plain deep blue, a little lighter towards the horizon, and a clear line where it ends
   vec3 sky = mix(vec3(.33, .45, .62), vec3(.09, .19, .38), smoothstep(uHorizon, 1., uv.y));
+  // looking up: a darker sky, nearly black at the top (the stars are drawn sharp in #stars)
+  sky = mix(sky, mix(vec3(.05, .08, .17), vec3(.008, .012, .03), smoothstep(uHorizon, 1., uv.y)), uNight);
+
   float m = max(1. - smoothstep(uHorizon - .002, uHorizon + .002, uv.y), (1. - outside) * smoothstep(0., .2, uGround));
   gl_FragColor = vec4(mix(sky, col, m), 1.);
 }`;
@@ -463,7 +471,7 @@ function initField() {
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
       const a = gl.getAttribLocation(prog, "a"); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-      for (const n of ["uRes", "uTime", "uDepth", "uHeat", "uFlare", "uRed", "uHorizon", "uGround", "uCrater", "uInfl"]) uni[n] = gl.getUniformLocation(prog, n);
+      for (const n of ["uRes", "uTime", "uDepth", "uHeat", "uFlare", "uRed", "uHorizon", "uGround", "uNight", "uTilt", "uCrater", "uInfl"]) uni[n] = gl.getUniformLocation(prog, n);
       inflTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, inflTex);
       for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
       gl.uniform1i(uni.uInfl, 0);
@@ -476,9 +484,10 @@ function sizeField() {
   if (gl) gl.viewport(0, 0, field.width, field.height);
 }
 const BLOBS = Array.from({ length: 7 }, (_, k) => ({ x: rand(0, 1), y: rand(0, 1), r: rand(.35, .7), ph: rand(0, 6.28), dark: k > 4 }));
-function drawField(t, depth, heat, flare, redness, horizon, ground, crater) {
+function drawField(t, depth, heat, flare, redness, horizon, ground, crater, night = 0, tilt = 0) {
   const w = field.width, h = field.height;
   if (gl) {
+    gl.uniform1f(uni.uNight, night); gl.uniform1f(uni.uTilt, tilt * FIELD_SCALE);
     gl.uniform3f(uni.uCrater, crater[0] * FIELD_SCALE, (H - crater[1]) * FIELD_SCALE, crater[2] * FIELD_SCALE);
     gl.uniform2f(uni.uRes, w, h); gl.uniform1f(uni.uTime, t); gl.uniform1f(uni.uDepth, depth); gl.uniform1f(uni.uHorizon, horizon); gl.uniform1f(uni.uGround, ground);
     gl.uniform1f(uni.uHeat, heat); gl.uniform1f(uni.uFlare, flare); gl.uniform1f(uni.uRed, redness);
@@ -506,7 +515,8 @@ function drawField(t, depth, heat, flare, redness, horizon, ground, crater) {
 }
 
 // The camera follows the scroll; nothing moves the scroll.
-//   0 … Z    the way up: the camera pulls back. The same rim and far side get smaller round the crater (the far one a
+//   0 … SKY  further up: the camera looks up, the volcano sinks out of the view, the sky darkens to night and has stars
+//   … Z      the way up: the camera pulls back. The same rim and far side get smaller round the crater (the far one a
 //            little sooner: the view's perspective shifts), and what was past the edges of the view comes in: the
 //            near rim goes on down as the front of the volcano, the far side as its back, down to the plain; the sky grows
 //   Z        the rim, where you arrive
@@ -532,10 +542,11 @@ function nearSlope(ux) {                       // the front's outline at ux, out
   return side.near + (back - side.near) * u * u * (3 - 2 * u);
 }
 function camera() {
-  const sc = scroller.scrollTop, q = clamp((Z - sc) / Math.max(1, Z), 0, 1), p = clamp((sc - Z) / Math.max(1, D), 0, 1);
-  const en = smooth(0, 1, q), ef = smooth(0, .8, q), k = lerp(1, KF, en);
+  const sc = scroller.scrollTop, up = Z - sc, p = clamp((sc - Z) / Math.max(1, D), 0, 1);
+  const q = clamp(up / Math.max(1, ZOOM), 0, 1), night = smooth(0, 1, clamp((up - ZOOM) / Math.max(1, SKY), 0, 1));
+  const en = smooth(0, 1, q), ef = smooth(0, .8, q), k = lerp(1, KF, en), tilt = night * H * .9;   // looking up: everything goes down
   const C0 = { x: W / 2, y: D }, C1 = { x: W / 2, y: H * .45 };   // the crater, seen from the rim and from far away
-  cam = { sc, q, p, e: en, k, C0, C1, cx: lerp(C0.x, C1.x, en), cy: lerp(C0.y, C1.y, en) };
+  cam = { sc, q, p, e: en, k, C0, C1, night, tilt, cx: lerp(C0.x, C1.x, en), cy: lerp(C0.y, C1.y, en) + tilt };
   const key = sc + ":" + W + "x" + H;
   if (key !== camKey) {
     camKey = key;
@@ -544,7 +555,7 @@ function camera() {
       const kf = lerp(1, KF, ef), fy = lerp(C0.y, C1.y, ef);
       near.style.transformOrigin = far.style.transformOrigin = `${C0.x}px ${C0.y - top}px`;
       near.style.transform = `translate(${(cam.cx - C0.x).toFixed(1)}px, ${(cam.cy - C0.y).toFixed(1)}px) scale(${k.toFixed(4)})`;
-      far.style.transform = `translate(0px, ${(fy - C0.y).toFixed(1)}px) scale(${kf.toFixed(4)})`;
+      far.style.transform = `translate(0px, ${(fy + tilt - C0.y).toFixed(1)}px) scale(${kf.toFixed(4)})`;
       near.style.opacity = far.style.opacity = "1";
     } else {                                   // diving
       const pn = smooth(0, .5, p), pf = smooth(.1, .85, p);
@@ -554,6 +565,7 @@ function camera() {
       near.style.opacity = (1 - smooth(.35, .55, p)).toFixed(3);
       far.style.opacity = (1 - smooth(.62, .92, p)).toFixed(3);
     }
+    lip.style.strokeWidth = lerp(2.5, 12, en).toFixed(2);   // the lip, a thin crest from the rim, a thick black ring from far away
     soupVis = smooth(.55, .9, p);
     soup.style.opacity = soupVis.toFixed(3); soup.style.pointerEvents = soupVis < .5 ? "none" : "";
   }
@@ -563,6 +575,21 @@ function camera() {
   cam.ground = smooth(0, .2, q);
   cam.crater = [cam.cx, cam.cy, W * .62 * k];  // outside this, under the horizon, it is the plain, not lava
   return cam;
+}
+// the stars: only when you look up, above the horizon, small and round; they go down with the view
+const starsEl = $("stars"), sctx = starsEl.getContext("2d");
+const STARS = Array.from({ length: 320 }, () => ({ x: Math.random(), y: Math.random() * 2 - 1, r: Math.random() < .08 ? rand(1, 1.5) : rand(.4, .9), ph: rand(0, 6.28), sp: rand(.6, 1.8) }));
+function drawStars(t) {
+  const a = smooth(.1, .8, cam.night);
+  if (starsEl.width !== Math.round(W * MDPR)) { starsEl.width = Math.round(W * MDPR); starsEl.height = Math.round(H * MDPR); }
+  sctx.setTransform(MDPR, 0, 0, MDPR, 0, 0); sctx.clearRect(0, 0, W, H);
+  if (a <= 0) return;
+  const horizonY = (1 - cam.horizon) * H;
+  for (const s of STARS) {
+    const y = s.y * H + cam.tilt; if (y < -4 || y > horizonY - 6 || y > H) continue;
+    sctx.fillStyle = `rgba(225,232,255,${(a * (.55 + .45 * Math.sin(t * s.sp + s.ph))).toFixed(3)})`;
+    sctx.beginPath(); sctx.arc(s.x * W, y, s.r, 0, 6.2832); sctx.fill();
+  }
 }
 // the canvas transform that draws world coordinates where the camera sees them
 function worldMatrix(x) {
@@ -1261,8 +1288,9 @@ function frame(now) {
   const c = camera();
   updateBadges(dt, t);
   drawInfluence(t);
-  drawField(fieldT, c.p, heat, Math.min(1, flare), redness(t), c.horizon, c.ground, c.crater);
+  drawField(fieldT, c.p, heat, Math.min(1, flare), redness(t), c.horizon, c.ground, c.crater, c.night, c.tilt);
   drawMarks(t, dt, c.p);
+  drawStars(t);
   tremor(t);
   if (dev) showDev(dt);
   requestAnimationFrame(frame);
