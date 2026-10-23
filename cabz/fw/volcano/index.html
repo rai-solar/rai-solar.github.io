@@ -557,21 +557,22 @@ function camera() {
       near.style.transformOrigin = far.style.transformOrigin = `${C0.x}px ${C0.y - top}px`;
       near.style.transform = far.style.transform = `translate(${(cam.cx - C0.x).toFixed(1)}px, ${(cam.cy - C0.y).toFixed(1)}px) scale(${k.toFixed(4)})`;
       near.style.opacity = far.style.opacity = "1";
-    } else {                                   // diving
-      const pn = smooth(0, .5, p), pf = smooth(.1, .85, p);
-      near.style.transformOrigin = "50% 100%"; far.style.transformOrigin = "50% 70%";
+    } else {                                   // diving: the lava rises; the far side stands on it and goes up and out with it
+      const pn = smooth(0, .5, p), surface = Z + D - sc, foot = unitToRim(800, 430)[1];
+      near.style.transformOrigin = "50% 100%"; far.style.transformOrigin = `50% ${(foot - top).toFixed(1)}px`;
       near.style.transform = `translateY(${(pn * 150).toFixed(2)}%) scale(${(1 + pn * 1.4).toFixed(3)})`;
-      far.style.transform = `translateY(${(-pf * 30).toFixed(2)}%) scale(${(1 + pf * 2.2).toFixed(3)})`;
+      far.style.transform = `translateY(${(surface - D).toFixed(1)}px) scale(${(1 + smooth(0, 1, p) * .5).toFixed(3)})`;
       near.style.opacity = (1 - smooth(.35, .55, p)).toFixed(3);
-      far.style.opacity = (1 - smooth(.62, .92, p)).toFixed(3);
+      far.style.opacity = "1";
     }
     lip.style.strokeWidth = (lerp(6, 14, en) / (unit() * (q > 0 ? k : 1))).toFixed(2);   // in px on screen: a crest from the rim, a thick black ring from far away
-    soupVis = smooth(.55, .9, p);
-    soup.style.opacity = soupVis.toFixed(3); soup.style.pointerEvents = soupVis < .5 ? "none" : "";
+    soupVis = 1;                               // no fade: the badges come up with the lava
   }
   // the plain's horizon, where the volcano's foot is when far away; the sky ends on it
   const footY = cam.cy + (unitToRim(0, PLAIN)[1] - C0.y) * k;
-  cam.horizon = q > 0 ? lerp(.42, clamp(1 - footY / H + .004, .05, .6), en) : .42 + .8 * smooth(.1, .85, p);
+  // the lava's surface: the top of the soup (somewhat above, hidden under the far side's curved foot); far away, the plain's horizon
+  const lavaTop = 1 - (Z + D - sc - 160) / H;
+  cam.horizon = q > 0 ? lerp(1 - (D - 160) / H, clamp(1 - footY / H + .004, .05, .6), en) : clamp(lavaTop, -1, 2);
   cam.ground = smooth(0, .2, q);
   cam.crater = [cam.cx, cam.cy, W * .62 * k];  // outside this, under the horizon, it is the plain, not lava
   return cam;
@@ -871,12 +872,12 @@ function drawSign(x, b, sx, sy, t) {
 // a few specks drifting up through the lava, slowly: it is thick, and deep
 const SNOW = Array.from({ length: 36 }, () => ({ x: Math.random(), y: Math.random(), v: rand(5, 13), s: rand(.8, 1.8), ph: rand(0, 6.28) }));
 function drawSnow(x, dt, t, depth) {
-  const a = soupVis;
-  if (a < .02) return;
+  const a = soupVis, surface = soup.offsetTop - scroller.scrollTop;   // only in the lava, under its surface
+  if (surface > H) return;
   for (const p of SNOW) {
     p.y -= p.v * dt / Math.max(1, H); if (p.y < -.02) { p.y = 1.02; p.x = Math.random(); }
     x.fillStyle = `rgba(255,205,190,${(.13 * a).toFixed(3)})`;
-    x.fillRect(p.x * W + Math.sin(t * .4 + p.ph) * 8, p.y * H, p.s, p.s);
+    if (p.y * H > surface) x.fillRect(p.x * W + Math.sin(t * .4 + p.ph) * 8, p.y * H, p.s, p.s);
   }
 }
 
