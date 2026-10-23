@@ -162,14 +162,14 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
   <div id="back" aria-hidden="true">
     <canvas id="stars"></canvas>
     <!-- seen from far away: the whole volcano on its plain (drawn in camera() from the size of the view) -->
-    <!-- across the crater its far side, lit red from below, its foot fading into the lava; its ends slope down a little
+    <!-- across the crater its far side, lit red from below; its foot cuts cleanly into the lava, the same curve as its crest;
+         its ends slope down a little
          past the edges of the view, behind the near rim's, which make the volcano's outline once you pull back -->
     <svg id="far" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice">
-      <defs><linearGradient id="farLit" gradientUnits="userSpaceOnUse" x1="0" y1="88" x2="0" y2="420"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset=".8" stop-color="#5c1a12"/><stop offset="1" stop-color="#5c1a12" stop-opacity="0"/></linearGradient></defs>
-      <path fill="url(#farLit)" d="M-210 420 L-195 407 L-180 393 L-165 378 L-150 364 L-135 348 L-120 333 L-105 316 L-90 299 L-75 282 L-60 262 L-45 242 L-30 219 L-15 193 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1615 133 L1630 160 L1645 184 L1660 205 L1675 225 L1690 244 L1705 262 L1720 279 L1735 295 L1750 311 L1765 327 L1780 341 L1795 356 L1810 370 L1825 384 L1840 398 L1855 411 L1870 420
-        L1600 420 L1600 414 C1420 422 1260 410 1080 418 C900 426 760 414 600 422 C420 430 220 416 0 420 L-210 420 Z"/>
+      <defs><linearGradient id="farLit" gradientUnits="userSpaceOnUse" x1="0" y1="88" x2="0" y2="450"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset="1" stop-color="#5c1a12"/></linearGradient></defs>
+      <path fill="url(#farLit)" d="M-255 450 L-240 447 L-225 434 L-210 420 L-195 407 L-180 393 L-165 378 L-150 364 L-135 348 L-120 333 L-105 316 L-90 299 L-75 282 L-60 262 L-45 242 L-30 219 L-15 193 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1615 133 L1630 160 L1645 184 L1660 205 L1675 225 L1690 244 L1705 262 L1720 279 L1735 295 L1750 311 L1765 327 L1780 341 L1795 356 L1810 370 L1825 384 L1840 388 L1600 388 C1380 370 1240 399 1100 406 C980 412 860 386 720 396 C600 404 520 436 400 428 C260 418 120 430 0 450 L-255 450 Z"/>
       <!-- the crater's lip, black, all round: along the far crest and down its shoulders into the ends of the front -->
-      <path id="lip" fill="none" stroke="#040404" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" d="M-165 378 L-150 364 L-135 348 L-120 333 L-105 316 L-90 299 L-75 282 L-60 262 L-45 242 L-30 219 L-15 193 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1615 133 L1630 160 L1645 184 L1660 205 L1675 225 L1690 244 L1705 262 L1720 279 L1735 295 L1750 311 L1765 327 L1780 341"/>
+      <path id="lip" fill="none" stroke="#040404" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" d="M-165 378 L-150 364 L-135 348 L-120 333 L-105 316 L-90 299 L-75 282 L-60 262 L-45 242 L-30 219 L-15 193 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1615 133 L1630 160 L1645 184 L1660 205 L1675 225 L1690 244 L1705 262 L1720 279 L1735 295 L1750 311 L1765 327 L1780 341"/>
     </svg>
   </div>
   <div id="scroller" tabindex="-1">
@@ -227,6 +227,7 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
   <span><span class="k">notes </span><span id="count"></span></span>
   <span><span class="k">memory </span><span id="mem"></span></span>
   <span><span class="k">fps </span><span id="fps"></span></span>
+  <span class="full"><span class="k">scroll </span><span id="scrollPos"></span></span>
   <span class="full"><span class="k">name </span><button class="t" id="devWho" type="button"></button></span>
   <span class="full"><button class="t" id="devUnread" type="button">reset seen / unseen</button></span>
   <div class="full seg" role="group" aria-label="Voice input">
@@ -516,8 +517,8 @@ function drawField(t, depth, heat, flare, redness, horizon, ground, crater, nigh
 
 // The camera follows the scroll; nothing moves the scroll.
 //   0 … SKY  further up: the camera looks up, the volcano sinks out of the view, the sky darkens to night and has stars
-//   … Z      the way up: the camera pulls back. The same rim and far side get smaller round the crater (the far one a
-//            little sooner: the view's perspective shifts), and what was past the edges of the view comes in: the
+//   … Z      the way up: the camera pulls back. The crater, front and back together, gets smaller round its middle,
+//            and what was past the edges of the view comes in: the
 //            near rim goes on down as the front of the volcano, the far side as its back, down to the plain; the sky grows
 //   Z        the rim, where you arrive
 //   Z … Z+D  the dive: over the near rim (it drops away below), the camera tips down into the crater, until only lava
@@ -544,18 +545,16 @@ function nearSlope(ux) {                       // the front's outline at ux, out
 function camera() {
   const sc = scroller.scrollTop, up = Z - sc, p = clamp((sc - Z) / Math.max(1, D), 0, 1);
   const q = clamp(up / Math.max(1, ZOOM), 0, 1), night = smooth(0, 1, clamp((up - ZOOM) / Math.max(1, SKY), 0, 1));
-  const en = smooth(0, 1, q), ef = smooth(0, .8, q), k = lerp(1, KF, en), tilt = night * H * .9;   // looking up: everything goes down
+  const en = smooth(0, 1, q), k = lerp(1, KF, en), tilt = night * H * .9;   // looking up: everything goes down
   const C0 = { x: W / 2, y: D }, C1 = { x: W / 2, y: H * .45 };   // the crater, seen from the rim and from far away
   cam = { sc, q, p, e: en, k, C0, C1, night, tilt, cx: lerp(C0.x, C1.x, en), cy: lerp(C0.y, C1.y, en) + tilt };
   const key = sc + ":" + W + "x" + H;
   if (key !== camKey) {
     camKey = key;
     const top = H * .38;                       // where the layers' boxes begin (they are the bottom 62%)
-    if (q > 0) {                               // pulling back: both shrink round the crater, the far side a little sooner
-      const kf = lerp(1, KF, ef), fy = lerp(C0.y, C1.y, ef);
+    if (q > 0) {                               // pulling back: the crater, front and back together, shrinks round its middle
       near.style.transformOrigin = far.style.transformOrigin = `${C0.x}px ${C0.y - top}px`;
-      near.style.transform = `translate(${(cam.cx - C0.x).toFixed(1)}px, ${(cam.cy - C0.y).toFixed(1)}px) scale(${k.toFixed(4)})`;
-      far.style.transform = `translate(0px, ${(fy + tilt - C0.y).toFixed(1)}px) scale(${kf.toFixed(4)})`;
+      near.style.transform = far.style.transform = `translate(${(cam.cx - C0.x).toFixed(1)}px, ${(cam.cy - C0.y).toFixed(1)}px) scale(${k.toFixed(4)})`;
       near.style.opacity = far.style.opacity = "1";
     } else {                                   // diving
       const pn = smooth(0, .5, p), pf = smooth(.1, .85, p);
@@ -565,7 +564,7 @@ function camera() {
       near.style.opacity = (1 - smooth(.35, .55, p)).toFixed(3);
       far.style.opacity = (1 - smooth(.62, .92, p)).toFixed(3);
     }
-    lip.style.strokeWidth = lerp(2.5, 12, en).toFixed(2);   // the lip, a thin crest from the rim, a thick black ring from far away
+    lip.style.strokeWidth = (lerp(6, 14, en) / (unit() * (q > 0 ? k : 1))).toFixed(2);   // in px on screen: a crest from the rim, a thick black ring from far away
     soupVis = smooth(.55, .9, p);
     soup.style.opacity = soupVis.toFixed(3); soup.style.pointerEvents = soupVis < .5 ? "none" : "";
   }
@@ -688,20 +687,21 @@ function markRead(b) { readMap[b.s.id] = countOf(b.s); store.set("volcano-read",
 // an eruption: each badge rises (buoyant, through the lava), and at the surface becomes its words, thrown out of the
 // crater along a slow arc. Back into the crater, it is a badge again; outside it, the words land on the volcano's
 // slopes and run down them (seen from far away), and the badge is back in the soup. Nothing scrolls: scroll up to follow.
-const AIR_G = 520;                             // px/s²: slow, so the words can be read
+const AIR_G = 760;                             // px/s²: still slow enough to read the words
 let flows = [];                                // words running down the outside of the volcano
 function launch(b) {                           // at the surface: the badge becomes its sentence, coming out of the crater
   const text = (b.s.s ? sentenceLines(b.s.s)[0] : "") || shortNote(b.s.s);
   b.x = W / 2 + (b.x - W / 2) * .25;           // out of the middle of the crater
   b.fly = { stage: "air", text, fp: [{ x: b.x, y: 0, l: 0 }], heat: 1.2 };
-  b.vy = -Math.sqrt(2 * AIR_G * H * rand(.45, 1.2)); b.vx = (Math.random() < .5 ? -1 : 1) * rand(.35, 1) * Math.max(W, 700) * .38;   // arcs: the words lean and can be read, most land outside
+  b.vy = -Math.sqrt(2 * AIR_G * H * rand(1.2, 2.8));   // far up into the sky, as in v04
+  b.vx = (Math.random() < .5 ? -1 : 1) * rand(.35, 1) * Math.max(W, 700) * .38;   // arcs: the words lean and can be read, most land outside
   b.el.classList.add("out");
 }
 function updateFlight(b, dt) {
   const f = b.fly;
   if (f.stage === "wait") { if ((f.delay -= dt) <= 0) f.stage = "rise"; return false; }
   if (f.stage === "rise") {
-    b.vy += (-640 - b.vy) * 2.2 * dt; b.vx *= 1 - dt;
+    b.vy += (-1150 - b.vy) * 3.2 * dt; b.vx *= 1 - dt;   // propelled up through the lava
     b.x += b.vx * dt; b.y += b.vy * dt;
     if (b.y <= 0) launch(b);
     return true;
@@ -719,11 +719,14 @@ function updateFlight(b, dt) {
       }
     } else if (uy >= edge) {                   // on the volcano's side: the words run down it, as in v04; the badge is back in the soup
       const dir = ux < 0 ? -1 : 1, path = f.fp.slice(), s0 = path[path.length - 1].l;
+      // then down across the front of the volcano to its foot, like v04's lava tongues: along a ray from the summit,
+      // spreading a little, with a slow wobble
       let last = path[path.length - 1];
-      for (let u = ux + dir * 20; Math.abs(u - 800) < 800 + SLOPE.L + 300; u += dir * 20) {
-        const [rx, ry] = unitToRim(u, nearSlope(u));
-        const wx = rx, wy = ry - D, l = last.l + Math.hypot(wx - last.x, wy - last.y);
-        last = { x: wx, y: wy, l }; path.push(last);
+      const x0 = last.x, y0 = last.y, foot = unitToRim(0, PLAIN)[1] - D, spread = (x0 - W / 2) * rand(.25, .55), ph = rand(0, 6.28);
+      for (let y = y0 + 20; y < foot; y += 20) {
+        const f = (y - y0) / Math.max(1, foot - y0), wx = x0 + spread * f + Math.sin(f * 7 + ph) * 26 * (1 - f * .5);
+        const l = last.l + Math.hypot(wx - last.x, y - last.y);
+        last = { x: wx, y, l }; path.push(last);
       }
       flows.push({ fp: path, text: f.text, heat: f.heat, s: s0, s0, age: 0, alpha: 1 });
       home(b, b.hx);
@@ -1005,13 +1008,14 @@ function updatePressure(dt) {
     if (phaseT > 2) { phase = "build"; phaseT = 0; pressure = 0; }
   }
 }
-const WORDS_OUT = 14;                          // how many notes leave the lava as words in one eruption: the newest
+// how many notes leave the lava as words in one eruption: most of them (at least 22), the newest first
+const wordsOut = () => Math.max(22, Math.ceil(badges.size * .6));
 function erupt() {
-  shake = 14; flare = 1;
-  const newest = [...badges.values()].filter(b => !b.fly).sort((a, c) => c.s.t - a.s.t);
+  shake = 20; flare = 1;
+  const newest = [...badges.values()].filter(b => !b.fly).sort((a, c) => c.s.t - a.s.t), n = wordsOut();
   newest.forEach((b, k) => {
-    if (k < WORDS_OUT) b.fly = { stage: "wait", delay: rand(0, 2.2) };   // a stream, not all at once
-    else { b.vy -= rand(70, 190) * (reduce.matches ? .4 : 1); b.vx += rand(-30, 30); }
+    if (k < n) b.fly = { stage: "wait", delay: rand(0, 1.4) };   // a stream, not all at once
+    else { b.vy -= rand(350, 700) * (reduce.matches ? .4 : 1); b.vx += rand(-60, 60); }
   });
 }
 function tremor(t) {
@@ -1274,6 +1278,8 @@ function showDev(dt) {
   tube.setAttribute("aria-valuenow", String(Math.round(pressure * 100)));
   pBoom.disabled = phase !== "build";
   $("fps").textContent = Math.round(fpsAvg);
+  const c = cam, where = c.night > 0 ? `night ${Math.round(c.night * 100)}%` : c.q > 0 ? `pulling back ${Math.round(c.q * 100)}%` : c.p > 0 && c.p < 1 ? `dive ${Math.round(c.p * 100)}%` : c.p >= 1 ? "in the lava" : "at the rim";
+  $("scrollPos").textContent = `${Math.round(c.sc)} px · ${where} (rim at ${Z}, lava at ${Z + D})`;
 }
 
 // ================= the loop =================
