@@ -160,13 +160,12 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
   <canvas id="field" aria-hidden="true"></canvas>
   <div id="back" aria-hidden="true">
     <!-- seen from far away: the whole volcano on its plain (drawn in camera() from the size of the view) -->
-    <!-- across the crater its far side, lit red from below, its foot fading into the lava; past the edges of the view it
-         goes on as the back of the volcano, seen once you pull back -->
+    <!-- across the crater its far side, lit red from below, its foot fading into the lava; its ends slope down a little
+         past the edges of the view, behind the near rim's, which make the volcano's outline once you pull back -->
     <svg id="far" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice">
       <defs><linearGradient id="farLit" gradientUnits="userSpaceOnUse" x1="0" y1="88" x2="0" y2="420"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset=".8" stop-color="#5c1a12"/><stop offset="1" stop-color="#5c1a12" stop-opacity="0"/></linearGradient></defs>
-      <path fill="#2b2725" d="M0 150 L0 150 L-60 236 L-120 290 L-180 335 L-240 377 L-300 415 L-360 451 L-420 485 L-480 518 L-540 550 L-600 581 L-660 610 L-720 639 L-780 667 L-840 695 L-900 722 L-960 748 L-1020 774 L-1080 800 L-1140 825 L-1200 849 L-1260 874 L-1320 898 L-1380 921 L-1440 945 L-1500 968 L-1560 990 L-1620 1013 L-1680 1035 L-1740 1057 L-1800 1079 L-1860 1100 L-1920 1122 L-1980 1143 L-2000 1150 L-8000 1150 L-8000 4000 L0 4000 Z M1600 88 L1600 88 L1660 179 L1720 236 L1780 284 L1840 328 L1900 369 L1960 407 L2020 444 L2080 478 L2140 512 L2200 544 L2260 576 L2320 606 L2380 636 L2440 666 L2500 694 L2560 722 L2620 750 L2680 777 L2740 803 L2800 829 L2860 855 L2920 880 L2980 906 L3040 930 L3100 955 L3160 979 L3220 1003 L3280 1026 L3340 1050 L3400 1073 L3460 1095 L3520 1118 L3580 1141 L3600 1148 L9600 1148 L9600 4000 L1600 4000 Z"/>
-      <path fill="url(#farLit)" d="M0 420 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88
-        L1600 414 C1420 422 1260 410 1080 418 C900 426 760 414 600 422 C420 430 220 416 0 420 Z"/>
+      <path fill="url(#farLit)" d="M-210 420 L-195 407 L-180 393 L-165 378 L-150 364 L-135 348 L-120 333 L-105 316 L-90 299 L-75 282 L-60 262 L-45 242 L-30 219 L-15 193 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1615 133 L1630 160 L1645 184 L1660 205 L1675 225 L1690 244 L1705 262 L1720 279 L1735 295 L1750 311 L1765 327 L1780 341 L1795 356 L1810 370 L1825 384 L1840 398 L1855 411 L1870 420
+        L1600 420 L1600 414 C1420 422 1260 410 1080 418 C900 426 760 414 600 422 C420 430 220 416 0 420 L-210 420 Z"/>
     </svg>
   </div>
   <div id="scroller" tabindex="-1">
@@ -178,7 +177,7 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
     <!-- the near rim, black, closest to you, with someone very small standing on it; past the edges of the view it goes
          down as the front of the volcano to the plain, seen once you pull back -->
     <svg id="near" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice">
-      <path fill="#040404" d="M-8000 4000 L-8000 1552 L-1900 1552 L-1860 1536 L-1800 1511 L-1740 1486 L-1680 1461 L-1620 1436 L-1560 1410 L-1500 1384 L-1440 1357 L-1380 1331 L-1320 1303 L-1260 1276 L-1200 1247 L-1140 1219 L-1080 1189 L-1020 1160 L-960 1129 L-900 1098 L-840 1066 L-780 1034 L-720 1000 L-660 965 L-600 930 L-540 893 L-480 855 L-420 814 L-360 772 L-300 727 L-240 679 L-180 627 L-120 568 L-60 497 L0 372 C70 360 150 332 250 328 C330 325 395 342 455 366 C520 392 590 422 690 430 C790 438 880 422 960 406 C1030 392 1080 360 1130 310 C1170 270 1215 224 1290 206 C1360 190 1440 198 1500 222 C1550 242 1580 260 1600 272 L1600 272 L1660 407 L1720 485 L1780 549 L1840 606 L1900 658 L1960 706 L2020 752 L2080 795 L2140 837 L2200 877 L2260 916 L2320 953 L2380 990 L2440 1025 L2500 1060 L2560 1093 L2620 1126 L2680 1159 L2740 1190 L2800 1221 L2860 1252 L2920 1282 L2980 1312 L3040 1341 L3100 1370 L3160 1398 L3220 1426 L3280 1454 L3340 1481 L3400 1508 L3460 1534 L3500 1552 L9600 1552 L9600 4000 Z"/>
+      <path fill="#040404" d="M-8000 4000 L-8000 1549 L-2200 1549 L-2180 1540 L-2120 1513 L-2060 1486 L-2000 1459 L-1940 1431 L-1880 1403 L-1820 1375 L-1760 1347 L-1700 1318 L-1640 1289 L-1580 1259 L-1520 1230 L-1460 1200 L-1400 1169 L-1340 1138 L-1280 1107 L-1220 1076 L-1160 1043 L-1100 1011 L-1040 978 L-980 944 L-920 909 L-860 874 L-800 839 L-740 802 L-680 764 L-620 726 L-560 686 L-500 645 L-440 603 L-380 559 L-320 512 L-300 495 L-280 475 L-260 455 L-240 434 L-220 415 L-200 398 L-180 384 L-160 372 L-140 364 L-120 359 L-100 358 L-80 359 L-60 362 L-40 366 L-20 370 L0 372 C70 360 150 332 250 328 C330 325 395 342 455 366 C520 392 590 422 690 430 C790 438 880 422 960 406 C1030 392 1080 360 1130 310 C1170 270 1215 224 1290 206 C1360 190 1440 198 1500 222 C1550 242 1580 260 1600 272 L1600 272 L1620 271 L1640 268 L1660 266 L1680 266 L1700 268 L1720 274 L1740 283 L1760 296 L1780 313 L1800 332 L1820 354 L1840 377 L1860 402 L1880 425 L1900 447 L1920 466 L1980 515 L2040 561 L2100 605 L2160 648 L2220 689 L2280 730 L2340 769 L2400 807 L2460 845 L2520 881 L2580 917 L2640 952 L2700 987 L2760 1021 L2820 1055 L2880 1088 L2940 1120 L3000 1152 L3060 1184 L3120 1216 L3180 1247 L3240 1277 L3300 1308 L3360 1338 L3420 1367 L3480 1397 L3540 1426 L3600 1455 L3660 1483 L3720 1512 L3780 1540 L3800 1549 L9600 1549 L9600 4000 Z"/>
       <rect x="757" y="421" width="5" height="13" fill="#fff"/>
     </svg>
   </div>
@@ -444,7 +443,7 @@ void main() {
   col *= .82 + uHeat * .45 + uFlare * .9;
   col *= 1. - .25 * pow(abs(uv.x - .5) * 2., 2.);                   // a little darker at the sides
   col *= .55 + .45 * uDepth;                                          // darker seen from above, lit once you are in it
-  float outside = smoothstep(uCrater.z * .85, uCrater.z * 1.15, length((gl_FragCoord.xy - uCrater.xy) * vec2(1., 2.2)));
+  float outside = smoothstep(uCrater.z * .85, uCrater.z * 1.15, length((gl_FragCoord.xy - uCrater.xy) * vec2(1., 4.)));
   col = mix(col, vec3(.05, .045, .045) * (1.2 - .4 * (uHorizon - uv.y) / max(uHorizon, .01)), uGround * outside);   // far away: the plain round the crater
   // the sky: plain deep blue, a little lighter towards the horizon, and a clear line where it ends
   vec3 sky = mix(vec3(.33, .45, .62), vec3(.09, .19, .38), smoothstep(uHorizon, 1., uv.y));
@@ -520,11 +519,17 @@ let camKey = "", soupVis = 1, cam = null;
 const unit = () => Math.max(W / 1600, H * .62 / 560);
 const unitToRim = (ux, uy) => [W / 2 + (ux - 800) * unit(), H - (560 - uy) * unit()];
 const rimToUnit = (x, y) => [800 + (x - W / 2) / unit(), 560 - (H - y) / unit()];
-// past the edges, the near rim goes down as the volcano's front (the same curve as in its SVG path)
-function nearSlope(ux) {                       // the volcano's outline at ux, outside the crater; null inside it
+// The volcano's outline past the edges of the view (the same curves as the SVG paths): the far side goes on as the
+// back lip's slopes; the near rim's ends rise to meet that lip (the crater is one ring), then follow it down to the plain.
+const SLOPE = { L: 2200, p: .7, meet: 320, left: { far: 150, drop: 1400, near: 372 }, right: { far: 88, drop: 1462, near: 272 } };
+const PLAIN = 1550;                            // the plain, in viewBox units
+function nearSlope(ux) {                       // the front's outline at ux, outside the crater; null inside it
   if (ux >= 0 && ux <= 1600) return null;
-  const left = ux < 0, d = left ? -ux : ux - 1600;
-  return (left ? 372 : 272) + (left ? 1180 : 1280) * Math.pow(Math.min(d, 1900) / 1900, .65);
+  const side = ux < 0 ? SLOPE.left : SLOPE.right, d = ux < 0 ? -ux : ux - 1600;
+  const back = side.far + side.drop * Math.pow(Math.min(d, SLOPE.L) / SLOPE.L, SLOPE.p) - 1;
+  if (d >= SLOPE.meet) return back;
+  const u = d / SLOPE.meet;
+  return side.near + (back - side.near) * u * u * (3 - 2 * u);
 }
 function camera() {
   const sc = scroller.scrollTop, q = clamp((Z - sc) / Math.max(1, Z), 0, 1), p = clamp((sc - Z) / Math.max(1, D), 0, 1);
@@ -553,10 +558,10 @@ function camera() {
     soup.style.opacity = soupVis.toFixed(3); soup.style.pointerEvents = soupVis < .5 ? "none" : "";
   }
   // the plain's horizon, where the volcano's foot is when far away; the sky ends on it
-  const footY = cam.cy + (unitToRim(0, 1552)[1] - C0.y) * k;
+  const footY = cam.cy + (unitToRim(0, PLAIN)[1] - C0.y) * k;
   cam.horizon = q > 0 ? lerp(.42, clamp(1 - footY / H + .004, .05, .6), en) : .42 + .8 * smooth(.1, .85, p);
   cam.ground = smooth(0, .2, q);
-  cam.crater = [cam.cx, cam.cy, W * .5 * k];   // outside this, under the horizon, it is the plain, not lava
+  cam.crater = [cam.cx, cam.cy, W * .62 * k];  // outside this, under the horizon, it is the plain, not lava
   return cam;
 }
 // the canvas transform that draws world coordinates where the camera sees them
@@ -688,7 +693,7 @@ function updateFlight(b, dt) {
     } else if (uy >= edge) {                   // on the volcano's side: the words run down it, as in v04; the badge is back in the soup
       const dir = ux < 0 ? -1 : 1, path = f.fp.slice(), s0 = path[path.length - 1].l;
       let last = path[path.length - 1];
-      for (let u = ux + dir * 20; Math.abs(u - 800) < 800 + 2300; u += dir * 20) {
+      for (let u = ux + dir * 20; Math.abs(u - 800) < 800 + SLOPE.L + 300; u += dir * 20) {
         const [rx, ry] = unitToRim(u, nearSlope(u));
         const wx = rx, wy = ry - D, l = last.l + Math.hypot(wx - last.x, wy - last.y);
         last = { x: wx, y: wy, l }; path.push(last);
