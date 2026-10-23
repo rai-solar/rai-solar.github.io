@@ -51,6 +51,9 @@
             "v03": "langues",
             "v04": "voie-du-volcan"
           },
+          "dev": {
+            "v04": ["#gauge"]
+          },
           "snapshots": [
             {
               "file": "26-10-03_word-volcano.html",

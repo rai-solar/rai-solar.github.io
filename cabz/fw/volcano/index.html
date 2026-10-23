@@ -28,16 +28,22 @@ button, input, select { font: inherit; color: inherit; }
 /* the scene: the red field behind, the page that scrolls over it. The tremor moves both, never the controls */
 #view { position: absolute; inset: 0; overflow: hidden; }
 #field, #marks { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-#marks { pointer-events: none; z-index: 1; }   /* the signs round the badges, and the words of an eruption: above everything in the scene */
+#field { z-index: 0; }
+/* front to back: the near rim (always closest), the words and signs, the badges (in the scroll), the far side and the
+   whole volcano, the field. Everything comes out of the soup, so nothing is ever in front of the rim. */
+#back, #front { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+#back { z-index: 0; }
+#scroller { z-index: 1; }
+#marks { pointer-events: none; z-index: 2; }
+#front { z-index: 3; }
+#over { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; z-index: 4; }   /* words running down the outside of the volcano, in front of it */
+
 #scroller { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; outline: none; }
-/* the dive: the rims stay on screen (sticky) while the scroll flies the camera over the near one and down into the crater */
-#dive { position: relative; height: calc(var(--H, 100vh) + var(--D, 90vh)); }
-#scene { position: sticky; top: 0; height: var(--H, 100vh); overflow: hidden; }
-.layer { position: absolute; left: 0; bottom: -1px; width: 100%; height: 62%; display: block; will-change: transform, opacity; }
-#far { transform-origin: 50% 70%; }
-#near { transform-origin: 50% 100%; }
-/* the lava: it begins where the dive ends, and lies over the end of it */
-#soup { position: relative; z-index: 1; margin-top: calc(-1 * var(--H, 100vh)); height: 120%; overflow-x: clip; }
+/* the scroll: a way up (the camera pulls back to see the whole volcano), the rim where you arrive, the dive, the lava.
+   The layers don't scroll: they follow the scroll (see camera()) */
+#space { height: calc(var(--Z, 110vh) + var(--D, 90vh)); }
+.layer { position: absolute; left: 0; bottom: -1px; width: 100%; height: 62%; display: block; overflow: visible; will-change: transform, opacity; }   /* the ridges go on past the edges, so a shrinking layer has no corners */
+#soup { position: relative; height: 120%; overflow-x: clip; }
 
 h1 { position: fixed; z-index: 4; top: 10px; left: 16px; margin: 0; font: 400 17px/30px var(--old); letter-spacing: .02em; color: rgba(242, 242, 242, .82); pointer-events: none; }
 
@@ -130,11 +136,8 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
   body.chatting #idPanel { left: calc(8px + env(safe-area-inset-left, 0px)); right: auto; }
 }
 
-/* DEV: the noisy tools */
-#devBtn { position: fixed; z-index: 9; top: 8px; right: calc(10px + env(safe-area-inset-right, 0px)); padding: 6px; border: 0; background: none;
-  font: 400 13px/1 var(--old); letter-spacing: .06em; color: #B026FF; cursor: pointer; }
-#devBtn[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 3px; }
-#dev { position: fixed; z-index: 9; top: 36px; right: calc(10px + env(safe-area-inset-right, 0px)); width: min(260px, calc(100% - 20px)); box-sizing: border-box;
+/* DEV: the noisy tools, shown with the "dev" square in the site bar */
+#dev { position: fixed; z-index: 9; top: 12px; right: calc(10px + env(safe-area-inset-right, 0px)); width: min(260px, calc(100% - 20px)); box-sizing: border-box;
   max-height: calc(100% - 50px); overflow: auto; padding: 14px; border: 1px solid rgba(176, 38, 255, .55); border-radius: 14px; background: rgba(10, 10, 12, .9);
   font-size: 12px; display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: start; }
 #dev .full { grid-column: 1 / -1; }
@@ -155,25 +158,31 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
 
 <div id="view">
   <canvas id="field" aria-hidden="true"></canvas>
+  <div id="back" aria-hidden="true">
+    <!-- seen from far away: the whole volcano on its plain (drawn in camera() from the size of the view) -->
+    <!-- across the crater its far side, lit red from below, its foot fading into the lava; past the edges of the view it
+         goes on as the back of the volcano, seen once you pull back -->
+    <svg id="far" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice">
+      <defs><linearGradient id="farLit" gradientUnits="userSpaceOnUse" x1="0" y1="88" x2="0" y2="420"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset=".8" stop-color="#5c1a12"/><stop offset="1" stop-color="#5c1a12" stop-opacity="0"/></linearGradient></defs>
+      <path fill="#2b2725" d="M0 150 L0 150 L-60 236 L-120 290 L-180 335 L-240 377 L-300 415 L-360 451 L-420 485 L-480 518 L-540 550 L-600 581 L-660 610 L-720 639 L-780 667 L-840 695 L-900 722 L-960 748 L-1020 774 L-1080 800 L-1140 825 L-1200 849 L-1260 874 L-1320 898 L-1380 921 L-1440 945 L-1500 968 L-1560 990 L-1620 1013 L-1680 1035 L-1740 1057 L-1800 1079 L-1860 1100 L-1920 1122 L-1980 1143 L-2000 1150 L-8000 1150 L-8000 4000 L0 4000 Z M1600 88 L1600 88 L1660 179 L1720 236 L1780 284 L1840 328 L1900 369 L1960 407 L2020 444 L2080 478 L2140 512 L2200 544 L2260 576 L2320 606 L2380 636 L2440 666 L2500 694 L2560 722 L2620 750 L2680 777 L2740 803 L2800 829 L2860 855 L2920 880 L2980 906 L3040 930 L3100 955 L3160 979 L3220 1003 L3280 1026 L3340 1050 L3400 1073 L3460 1095 L3520 1118 L3580 1141 L3600 1148 L9600 1148 L9600 4000 L1600 4000 Z"/>
+      <path fill="url(#farLit)" d="M0 420 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88
+        L1600 414 C1420 422 1260 410 1080 418 C900 426 760 414 600 422 C420 430 220 416 0 420 Z"/>
+    </svg>
+  </div>
   <div id="scroller" tabindex="-1">
-    <section id="dive" aria-label="the rim of the crater">
-      <div id="scene">
-        <!-- a blue sky; across the crater its far side, lit red from below; the near rim black in front, with someone very small -->
-        <svg id="far" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-          <defs><linearGradient id="farLit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset="1" stop-color="#5c1a12"/></linearGradient></defs>
-          <path fill="url(#farLit)" d="M0 404 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88
-            L1600 398 C1420 406 1260 394 1080 402 C900 410 760 398 600 406 C420 414 220 400 0 404 Z"/>
-        </svg>
-        <svg id="near" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-          <path fill="#040404" d="M0 560 L0 372 C70 360 150 332 250 328 C330 325 395 342 455 366 C520 392 590 422 690 430 C790 438 880 422 960 406
-            C1030 392 1080 360 1130 310 C1170 270 1215 224 1290 206 C1360 190 1440 198 1500 222 C1550 242 1580 260 1600 272 L1600 560 Z"/>
-          <rect x="757" y="421" width="5" height="13" fill="#fff"/>
-        </svg>
-      </div>
-    </section>
+    <section id="space" aria-label="the volcano, its rim, and the way down"></section>
     <section id="soup" aria-label="the notes, inside"></section>
   </div>
   <canvas id="marks" aria-hidden="true"></canvas>
+  <div id="front" aria-hidden="true">
+    <!-- the near rim, black, closest to you, with someone very small standing on it; past the edges of the view it goes
+         down as the front of the volcano to the plain, seen once you pull back -->
+    <svg id="near" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice">
+      <path fill="#040404" d="M-8000 4000 L-8000 1552 L-1900 1552 L-1860 1536 L-1800 1511 L-1740 1486 L-1680 1461 L-1620 1436 L-1560 1410 L-1500 1384 L-1440 1357 L-1380 1331 L-1320 1303 L-1260 1276 L-1200 1247 L-1140 1219 L-1080 1189 L-1020 1160 L-960 1129 L-900 1098 L-840 1066 L-780 1034 L-720 1000 L-660 965 L-600 930 L-540 893 L-480 855 L-420 814 L-360 772 L-300 727 L-240 679 L-180 627 L-120 568 L-60 497 L0 372 C70 360 150 332 250 328 C330 325 395 342 455 366 C520 392 590 422 690 430 C790 438 880 422 960 406 C1030 392 1080 360 1130 310 C1170 270 1215 224 1290 206 C1360 190 1440 198 1500 222 C1550 242 1580 260 1600 272 L1600 272 L1660 407 L1720 485 L1780 549 L1840 606 L1900 658 L1960 706 L2020 752 L2080 795 L2140 837 L2200 877 L2260 916 L2320 953 L2380 990 L2440 1025 L2500 1060 L2560 1093 L2620 1126 L2680 1159 L2740 1190 L2800 1221 L2860 1252 L2920 1282 L2980 1312 L3040 1341 L3100 1370 L3160 1398 L3220 1426 L3280 1454 L3340 1481 L3400 1508 L3460 1534 L3500 1552 L9600 1552 L9600 4000 Z"/>
+      <rect x="757" y="421" width="5" height="13" fill="#fff"/>
+    </svg>
+  </div>
+  <canvas id="over" aria-hidden="true"></canvas>
 </div>
 
 <h1>les voies du volcan</h1>
@@ -206,8 +215,7 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
   </select></label>
 </div>
 
-<button id="devBtn" type="button" aria-pressed="false" aria-controls="dev">DEV</button>
-<aside id="dev" aria-label="DEV" hidden>
+<aside id="dev" aria-label="DEV" data-dev hidden>
   <div id="tube" role="slider" tabindex="0" aria-label="Pressure: drag to set it" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="pFill"></span></div>
   <button id="pBoom" type="button">erupt</button>
   <span><span class="k">pressure </span><span id="pVal">0%</span></span>
@@ -247,13 +255,15 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 const view = $("view"), scroller = $("scroller"), soup = $("soup"), far = $("far"), near = $("near");
-let W = 0, H = 0, D = 0, sized = "";            // D: how far the dive scrolls before you are in the lava
+let W = 0, H = 0, D = 0, Z = 0, sized = "", moved = false;     // Z: the way up (zooming out); D: how far the dive scrolls before you are in the lava
 function resize() {
   const box = document.body.getBoundingClientRect();
   W = Math.round(box.width) || innerWidth; H = Math.round(box.height) || innerHeight; sized = W + "x" + H;
-  D = Math.round(H * .9);
-  document.documentElement.style.setProperty("--H", H + "px"); document.documentElement.style.setProperty("--D", D + "px");
-  sizeField(); sizeMarks(); layoutSoup();
+  D = Math.round(H * .9); Z = Math.round(H * 1.1);
+  const st = document.documentElement.style;
+  st.setProperty("--H", H + "px"); st.setProperty("--D", D + "px"); st.setProperty("--Z", Z + "px");
+  sizeField(); sizeMarks(); layoutSoup(); camKey = "";
+  if (!moved) scroller.scrollTop = Z;            // not scrolled yet: stay at the rim
 }
 
 // ================= who is here =================
@@ -414,7 +424,7 @@ let gl = null, uni = {}, ctx2 = null, inflTex = null;
 const infl = document.createElement("canvas"); infl.width = infl.height = 64;
 const ictx = infl.getContext("2d");
 const FRAG = `precision mediump float;
-uniform vec2 uRes; uniform float uTime, uDepth, uHeat, uFlare, uRed, uHorizon; uniform sampler2D uInfl;
+uniform vec2 uRes; uniform float uTime, uDepth, uHeat, uFlare, uRed, uHorizon, uGround; uniform vec3 uCrater; uniform sampler2D uInfl;
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
   return mix(mix(hash(i), hash(i + vec2(1., 0.)), f.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), f.x), f.y); }
@@ -434,9 +444,11 @@ void main() {
   col *= .82 + uHeat * .45 + uFlare * .9;
   col *= 1. - .25 * pow(abs(uv.x - .5) * 2., 2.);                   // a little darker at the sides
   col *= .55 + .45 * uDepth;                                          // darker seen from above, lit once you are in it
-  // the sky: plain blue, lighter towards the horizon, and a clear line where it ends
-  vec3 sky = mix(vec3(.612, .753, .894), vec3(.184, .388, .659), smoothstep(uHorizon, 1., uv.y));
-  float m = 1. - smoothstep(uHorizon - .002, uHorizon + .002, uv.y);
+  float outside = smoothstep(uCrater.z * .85, uCrater.z * 1.15, length((gl_FragCoord.xy - uCrater.xy) * vec2(1., 2.2)));
+  col = mix(col, vec3(.05, .045, .045) * (1.2 - .4 * (uHorizon - uv.y) / max(uHorizon, .01)), uGround * outside);   // far away: the plain round the crater
+  // the sky: plain deep blue, a little lighter towards the horizon, and a clear line where it ends
+  vec3 sky = mix(vec3(.33, .45, .62), vec3(.09, .19, .38), smoothstep(uHorizon, 1., uv.y));
+  float m = max(1. - smoothstep(uHorizon - .002, uHorizon + .002, uv.y), (1. - outside) * smoothstep(0., .2, uGround));
   gl_FragColor = vec4(mix(sky, col, m), 1.);
 }`;
 function initField() {
@@ -452,7 +464,7 @@ function initField() {
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
       const a = gl.getAttribLocation(prog, "a"); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-      for (const n of ["uRes", "uTime", "uDepth", "uHeat", "uFlare", "uRed", "uHorizon", "uInfl"]) uni[n] = gl.getUniformLocation(prog, n);
+      for (const n of ["uRes", "uTime", "uDepth", "uHeat", "uFlare", "uRed", "uHorizon", "uGround", "uCrater", "uInfl"]) uni[n] = gl.getUniformLocation(prog, n);
       inflTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, inflTex);
       for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
       gl.uniform1i(uni.uInfl, 0);
@@ -465,10 +477,11 @@ function sizeField() {
   if (gl) gl.viewport(0, 0, field.width, field.height);
 }
 const BLOBS = Array.from({ length: 7 }, (_, k) => ({ x: rand(0, 1), y: rand(0, 1), r: rand(.35, .7), ph: rand(0, 6.28), dark: k > 4 }));
-function drawField(t, depth, heat, flare, redness, horizon) {
+function drawField(t, depth, heat, flare, redness, horizon, ground, crater) {
   const w = field.width, h = field.height;
   if (gl) {
-    gl.uniform2f(uni.uRes, w, h); gl.uniform1f(uni.uTime, t); gl.uniform1f(uni.uDepth, depth); gl.uniform1f(uni.uHorizon, horizon);
+    gl.uniform3f(uni.uCrater, crater[0] * FIELD_SCALE, (H - crater[1]) * FIELD_SCALE, crater[2] * FIELD_SCALE);
+    gl.uniform2f(uni.uRes, w, h); gl.uniform1f(uni.uTime, t); gl.uniform1f(uni.uDepth, depth); gl.uniform1f(uni.uHorizon, horizon); gl.uniform1f(uni.uGround, ground);
     gl.uniform1f(uni.uHeat, heat); gl.uniform1f(uni.uFlare, flare); gl.uniform1f(uni.uRed, redness);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, inflTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, infl);
@@ -476,8 +489,8 @@ function drawField(t, depth, heat, flare, redness, horizon) {
     return;
   }
   const c = ctx2, rise = clamp(depth * 1.6 - .3, -.3, 1.3), hy = Math.round((1 - horizon) * h);
-  c.fillStyle = "#1a0000"; c.fillRect(0, 0, w, h);
-  const sky = c.createLinearGradient(0, 0, 0, hy); sky.addColorStop(0, "#2f63a8"); sky.addColorStop(1, "#9cc0e4");
+  c.fillStyle = ground > .5 ? "#0c0b0b" : "#1a0000"; c.fillRect(0, 0, w, h);
+  const sky = c.createLinearGradient(0, 0, 0, hy); sky.addColorStop(0, "#173061"); sky.addColorStop(1, "#54739e");
   c.fillStyle = sky; c.fillRect(0, 0, w, Math.max(0, hy));
   const g = c.createLinearGradient(0, h, 0, 0);
   g.addColorStop(0, `rgba(168,34,26,${(.25 + depth * .5 + flare * .5) * (.4 + .6 * redness)})`); g.addColorStop(clamp(rise + .15, .05, 1), "rgba(26,0,0,0)");
@@ -493,23 +506,63 @@ function drawField(t, depth, heat, flare, redness, horizon) {
   c.globalAlpha = 1; c.restore();
 }
 
-// the dive, from the scroll: over the near rim (it drops away below), then the camera tips down into the crater,
-// the far side rising and growing until there is only lava
+// The camera follows the scroll; nothing moves the scroll.
+//   0 … Z    the way up: the camera pulls back. The same rim and far side get smaller round the crater (the far one a
+//            little sooner: the view's perspective shifts), and what was past the edges of the view comes in: the
+//            near rim goes on down as the front of the volcano, the far side as its back, down to the plain; the sky grows
+//   Z        the rim, where you arrive
+//   Z … Z+D  the dive: over the near rim (it drops away below), the camera tips down into the crater, until only lava
+// World coordinates: those of the view at the rim, with y = 0 on the surface of the lava (the top of the soup).
 const smooth = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
-let diveP = -1, soupVis = 1;
-function dive() {
-  const p = clamp(scroller.scrollTop / Math.max(1, D), 0, 1);
-  if (p !== diveP) {
-    diveP = p;
-    const pn = smooth(0, .5, p), pf = smooth(.1, .85, p);
-    near.style.transform = `translateY(${(pn * 150).toFixed(2)}%) scale(${(1 + pn * 1.4).toFixed(3)})`;
-    near.style.opacity = (1 - smooth(.35, .55, p)).toFixed(3);
-    far.style.transform = `translateY(${(-pf * 30).toFixed(2)}%) scale(${(1 + pf * 2.2).toFixed(3)})`;
-    far.style.opacity = (1 - smooth(.62, .92, p)).toFixed(3);
+const KF = .25;                                // how much smaller everything is, pulled all the way back
+let camKey = "", soupVis = 1, cam = null;
+// the rims' viewBox units (1600 × 560, "xMidYMax slice" in the bottom 62% of the view) ↔ the view at the rim
+const unit = () => Math.max(W / 1600, H * .62 / 560);
+const unitToRim = (ux, uy) => [W / 2 + (ux - 800) * unit(), H - (560 - uy) * unit()];
+const rimToUnit = (x, y) => [800 + (x - W / 2) / unit(), 560 - (H - y) / unit()];
+// past the edges, the near rim goes down as the volcano's front (the same curve as in its SVG path)
+function nearSlope(ux) {                       // the volcano's outline at ux, outside the crater; null inside it
+  if (ux >= 0 && ux <= 1600) return null;
+  const left = ux < 0, d = left ? -ux : ux - 1600;
+  return (left ? 372 : 272) + (left ? 1180 : 1280) * Math.pow(Math.min(d, 1900) / 1900, .65);
+}
+function camera() {
+  const sc = scroller.scrollTop, q = clamp((Z - sc) / Math.max(1, Z), 0, 1), p = clamp((sc - Z) / Math.max(1, D), 0, 1);
+  const en = smooth(0, 1, q), ef = smooth(0, .8, q), k = lerp(1, KF, en);
+  const C0 = { x: W / 2, y: D }, C1 = { x: W / 2, y: H * .45 };   // the crater, seen from the rim and from far away
+  cam = { sc, q, p, e: en, k, C0, C1, cx: lerp(C0.x, C1.x, en), cy: lerp(C0.y, C1.y, en) };
+  const key = sc + ":" + W + "x" + H;
+  if (key !== camKey) {
+    camKey = key;
+    const top = H * .38;                       // where the layers' boxes begin (they are the bottom 62%)
+    if (q > 0) {                               // pulling back: both shrink round the crater, the far side a little sooner
+      const kf = lerp(1, KF, ef), fy = lerp(C0.y, C1.y, ef);
+      near.style.transformOrigin = far.style.transformOrigin = `${C0.x}px ${C0.y - top}px`;
+      near.style.transform = `translate(${(cam.cx - C0.x).toFixed(1)}px, ${(cam.cy - C0.y).toFixed(1)}px) scale(${k.toFixed(4)})`;
+      far.style.transform = `translate(0px, ${(fy - C0.y).toFixed(1)}px) scale(${kf.toFixed(4)})`;
+      near.style.opacity = far.style.opacity = "1";
+    } else {                                   // diving
+      const pn = smooth(0, .5, p), pf = smooth(.1, .85, p);
+      near.style.transformOrigin = "50% 100%"; far.style.transformOrigin = "50% 70%";
+      near.style.transform = `translateY(${(pn * 150).toFixed(2)}%) scale(${(1 + pn * 1.4).toFixed(3)})`;
+      far.style.transform = `translateY(${(-pf * 30).toFixed(2)}%) scale(${(1 + pf * 2.2).toFixed(3)})`;
+      near.style.opacity = (1 - smooth(.35, .55, p)).toFixed(3);
+      far.style.opacity = (1 - smooth(.62, .92, p)).toFixed(3);
+    }
     soupVis = smooth(.55, .9, p);
     soup.style.opacity = soupVis.toFixed(3); soup.style.pointerEvents = soupVis < .5 ? "none" : "";
   }
-  return { p, horizon: .42 + .8 * smooth(.1, .85, p) };
+  // the plain's horizon, where the volcano's foot is when far away; the sky ends on it
+  const footY = cam.cy + (unitToRim(0, 1552)[1] - C0.y) * k;
+  cam.horizon = q > 0 ? lerp(.42, clamp(1 - footY / H + .004, .05, .6), en) : .42 + .8 * smooth(.1, .85, p);
+  cam.ground = smooth(0, .2, q);
+  cam.crater = [cam.cx, cam.cy, W * .5 * k];   // outside this, under the horizon, it is the plain, not lava
+  return cam;
+}
+// the canvas transform that draws world coordinates where the camera sees them
+function worldMatrix(x) {
+  if (cam.q > 0) x.setTransform(MDPR * cam.k, 0, 0, MDPR * cam.k, MDPR * (cam.cx - cam.C0.x * cam.k), MDPR * (cam.cy - (cam.C0.y - D) * cam.k));
+  else x.setTransform(MDPR, 0, 0, MDPR, 0, MDPR * (Z + D - cam.sc));
 }
 
 // ================= the badges =================
@@ -558,6 +611,9 @@ function makeBadge(s) {
   el.append(num, peek);
   const b = { s, el, num, peek, x: 0, y: 0, vx: 0, vy: 0, hx: null, hy: null, r: 11, n: 0, shown: false, ph: rand(0, 6.28), sp: rand(.6, 1.25) };
   el.addEventListener("click", () => openChat(b));
+  // under the pointer (or focused) it holds still, so it can be read and clicked
+  el.addEventListener("pointerenter", () => { b.hold = true; }); el.addEventListener("pointerleave", () => { b.hold = false; });
+  el.addEventListener("focus", () => { b.hold = true; }); el.addEventListener("blur", () => { b.hold = false; });
   soup.append(el);
   return b;
 }
@@ -597,13 +653,16 @@ function syncBadges(freshId) {
   if (picked && !badges.has(picked.s.id)) closeChat();
 }
 function markRead(b) { readMap[b.s.id] = countOf(b.s); store.set("volcano-read", readMap); setCount(b); }
-// an eruption: each badge rises (buoyant, through the lava), and at the surface becomes its words, thrown up into the
-// sky along a slow arc; falling back in, it is a badge again and sinks home. Nothing scrolls: scroll up to follow them.
+// an eruption: each badge rises (buoyant, through the lava), and at the surface becomes its words, thrown out of the
+// crater along a slow arc. Back into the crater, it is a badge again; outside it, the words land on the volcano's
+// slopes and run down them (seen from far away), and the badge is back in the soup. Nothing scrolls: scroll up to follow.
 const AIR_G = 520;                             // px/s²: slow, so the words can be read
-function launch(b) {                           // at the surface: the badge becomes its sentence
+let flows = [];                                // words running down the outside of the volcano
+function launch(b) {                           // at the surface: the badge becomes its sentence, coming out of the crater
   const text = (b.s.s ? sentenceLines(b.s.s)[0] : "") || shortNote(b.s.s);
+  b.x = W / 2 + (b.x - W / 2) * .25;           // out of the middle of the crater
   b.fly = { stage: "air", text, fp: [{ x: b.x, y: 0, l: 0 }], heat: 1.2 };
-  b.vy = -Math.sqrt(2 * AIR_G * H * rand(.45, 1.2)); b.vx = (Math.random() < .5 ? -1 : 1) * rand(.3, .7) * Math.min(W, 900) * .45;   // arcs, so the words lean and can be read
+  b.vy = -Math.sqrt(2 * AIR_G * H * rand(.45, 1.2)); b.vx = (Math.random() < .5 ? -1 : 1) * rand(.35, 1) * Math.max(W, 700) * .38;   // arcs: the words lean and can be read, most land outside
   b.el.classList.add("out");
 }
 function updateFlight(b, dt) {
@@ -618,13 +677,29 @@ function updateFlight(b, dt) {
   b.vy += AIR_G * dt; b.vx *= 1 - .05 * dt; b.x += b.vx * dt; b.y += b.vy * dt;
   f.heat = Math.max(.25, f.heat - dt * .12);
   const last = f.fp[f.fp.length - 1], dd = Math.hypot(b.x - last.x, b.y - last.y);
-  if (dd > 2) f.fp.push({ x: b.x, y: Math.min(b.y, 0), l: last.l + dd });
-  if (b.vy > 0 && b.y >= 0) {                  // back in the lava: a badge again, slowed by it
-    ghosts.push({ fp: f.fp, text: f.text, heat: f.heat, alpha: 1 });
-    b.fly = null; b.vy *= .2; b.vx *= .3; b.el.classList.remove("out");
+  if (dd > 2) f.fp.push({ x: b.x, y: b.y, l: last.l + dd });
+  if (b.vy > 0) {
+    const [ux, uy] = rimToUnit(b.x, b.y + D), edge = nearSlope(ux);
+    if (edge == null) {
+      if (b.y >= 0) {                          // back into the crater: a badge again, slowed by the lava
+        ghosts.push({ fp: f.fp, text: f.text, heat: f.heat, alpha: 1 });
+        home(b, b.x);
+      }
+    } else if (uy >= edge) {                   // on the volcano's side: the words run down it, as in v04; the badge is back in the soup
+      const dir = ux < 0 ? -1 : 1, path = f.fp.slice(), s0 = path[path.length - 1].l;
+      let last = path[path.length - 1];
+      for (let u = ux + dir * 20; Math.abs(u - 800) < 800 + 2300; u += dir * 20) {
+        const [rx, ry] = unitToRim(u, nearSlope(u));
+        const wx = rx, wy = ry - D, l = last.l + Math.hypot(wx - last.x, wy - last.y);
+        last = { x: wx, y: wy, l }; path.push(last);
+      }
+      flows.push({ fp: path, text: f.text, heat: f.heat, s: s0, s0, age: 0, alpha: 1 });
+      home(b, b.hx);
+    }
   }
   return true;
 }
+function home(b, x) { b.fly = null; b.x = clamp(x, b.r + 4, soupW - b.r - 4); b.y = clamp(b.y, 4, 60); b.vy *= .2; b.vx *= .3; b.el.classList.remove("out"); }
 let ghosts = [];                               // the words of badges just gone back in, fading
 function updateBadges(dt, t) {
   const list = [...badges.values()], cell = 110, grid = new Map(), calm = reduce.matches ? .5 : 1;
@@ -632,6 +707,7 @@ function updateBadges(dt, t) {
   for (const b of list) {
     if (b.hx == null) continue;
     if (b.fly && updateFlight(b, dt)) { b.el.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`; continue; }
+    if (b.hold) { b.vx *= Math.exp(-dt * 8); b.vy *= Math.exp(-dt * 8); b.x += b.vx * dt; b.y += b.vy * dt; b.el.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`; continue; }
     // slow, wide drift round its home and a gentle bob, as if suspended in something thick
     const tx = b.hx + (Math.sin(t * .035 * b.sp + b.ph) * 62 + Math.sin(t * .011 + b.ph * 2) * 24) * calm;
     const ty = b.hy + (Math.cos(t * .028 * b.sp + b.ph * 1.3) * 48 + Math.sin(t * .9 * b.sp + b.ph) * 6) * calm;
@@ -652,18 +728,18 @@ function updateBadges(dt, t) {
 // voice: shockwaves leave it. text: its first letters in Morse, appearing round it and fading.
 // image: the picture → hue/saturation (no colour) → curves (contrast) → mosaic → black and white cells; a radar scans
 // out from the badge and the black cells answer as it passes them.
-const marks = $("marks"), mctx = marks.getContext("2d");
+const marks = $("marks"), mctx = marks.getContext("2d"), over = $("over"), octx = over.getContext("2d");
 let MDPR = 1;
-function sizeMarks() { MDPR = Math.min(2, devicePixelRatio || 1); marks.width = Math.round(W * MDPR); marks.height = Math.round(H * MDPR); }
+function sizeMarks() { MDPR = Math.min(2, devicePixelRatio || 1); for (const c of [marks, over]) { c.width = Math.round(W * MDPR); c.height = Math.round(H * MDPR); } }
 
-const MOS = 25, mosaics = new Map();           // by image URL: { ready, black: Uint8Array(MOS*MOS), wait: [] }
+const MOS = 25, mosaics = new Map();           // by image URL: { ready, level: Float32Array(MOS*MOS) of 0 (dark) … 1 (light), wait: [] }
 function mosaicOf(src, then) {
   if (!src) return null;
   let m = mosaics.get(src);
   if (!m) {
     m = { ready: false, wait: [] }; mosaics.set(src, m);
     const img = new Image();
-    img.onload = () => { try { m.black = makeMosaic(img); m.ready = true; } catch { m.failed = true; } m.wait.splice(0).forEach(f => f(m)); };
+    img.onload = () => { try { m.level = makeMosaic(img); m.ready = true; } catch { m.failed = true; } m.wait.splice(0).forEach(f => f(m)); };
     img.onerror = () => { m.failed = true; };
     img.src = src;
   }
@@ -681,22 +757,21 @@ function makeMosaic(img) {
     const u = clamp((L - .25) / .5, 0, 1);
     v[k] = lerp(L, u * u * (3 - 2 * u), .8);                                       // curves: an S, for contrast
   }
-  const med = Float32Array.from(v).sort()[v.length >> 1];
-  // black or white, about half and half; cells equal to the middle value (large flat areas) go with what they look like
-  return Uint8Array.from(v, x => x < med || (x === med && med < .5) ? 1 : 0);
+  // stretched to the picture's own darkest and lightest, then six tones, so the darks and lights can be felt
+  const sorted = Float32Array.from(v).sort(), lo = sorted[Math.floor(v.length * .03)], hi = sorted[Math.floor(v.length * .97)];
+  return Float32Array.from(v, x => Math.round(clamp((x - lo) / Math.max(.05, hi - lo), 0, 1) * 5) / 5);
 }
-function blipsOf(b) {                          // the badge's black cells round it, nearest first
+function blipsOf(b) {                          // the picture's cells round the badge, in a disc, nearest first
   const m = mosaicOf(b.s.img);
   if (!m || !m.ready) return null;
   if (b.blips && b.blipsR === b.r) return b.blips;
-  const cs = 4, mid = (MOS - 1) / 2, out = [];
-  m.black.forEach((v, k) => {
-    if (!v) return;
+  const cs = 4, mid = (MOS - 1) / 2, R = mid * cs, out = [];
+  m.level.forEach((lv, k) => {
     const dx = (k % MOS - mid) * cs, dy = (Math.floor(k / MOS) - mid) * cs, dist = Math.hypot(dx, dy);
-    if (dist > b.r + 3) out.push({ dx, dy, dist });
+    if (dist > b.r + 3 && dist <= R) out.push({ dx, dy, dist, ink: `${Math.round(255 * lv)},${Math.round(84 * lv * lv)},${Math.round(66 * lv * lv)}` });   // black → red
   });
   out.sort((a, c) => a.dist - c.dist);
-  b.blips = out; b.blipsR = b.r; b.reach = Math.hypot(mid * cs, mid * cs);
+  b.blips = out; b.blipsR = b.r; b.reach = R;
   return out;
 }
 
@@ -740,19 +815,19 @@ function drawSign(x, b, sx, sy, t) {
       if (e.len === 1) { x.beginPath(); x.arc(sx + Math.cos(ang) * R, sy + Math.sin(ang) * R, 1.1, 0, 6.2832); x.fill(); }
       else { x.beginPath(); x.arc(sx, sy, R, a0 + e.u * per, a0 + (e.u + e.len) * per); x.stroke(); }
     }
-  } else if (me === "image") {                 // one slow sweep; the picture's black cells answer as it passes, like sonar
+  } else if (me === "image") {                 // one slow sweep; the picture answers as it passes, like sonar, dark to red
     const bl = blipsOf(b); if (!bl) return;
     const sweep = calm ? 7 : 4.8, span = b.reach - b.r;
-    if (tau > sweep + 2.6) return;
+    if (tau > sweep + 5) return;
     if (tau < sweep && !calm) {
       x.lineWidth = 1; x.strokeStyle = `rgba(255,226,218,${(.16 * (1 - tau / sweep)).toFixed(3)})`;
       x.beginPath(); x.arc(sx, sy, b.r + tau / sweep * span, 0, 6.2832); x.stroke();
     }
     for (const c of bl) {
       const hit = (c.dist - b.r) / span * sweep; if (tau < hit) break;
-      const a = Math.max(0, 1 - (tau - hit) / 2.6); if (a <= 0) continue;
-      x.fillStyle = `rgba(255,226,218,${(a * .5).toFixed(3)})`;
-      x.fillRect(sx + c.dx - 1.2, sy + c.dy - 1.2, 2.4, 2.4);
+      const a = Math.min(1, (tau - hit) / .3) * Math.max(0, 1 - Math.max(0, tau - sweep - 1.2) / 3.8); if (a <= 0) continue;   // it builds up, holds, then fades together
+      x.fillStyle = `rgba(${c.ink},${(a * .9).toFixed(3)})`;
+      x.beginPath(); x.arc(sx + c.dx, sy + c.dy, 1.9, 0, 6.2832); x.fill();
     }
   }
 }
@@ -792,12 +867,12 @@ function arcAt(pts, s) {
 }
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const mix = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(",")})`; };
-function drawWords(x, v, alpha) {
+function drawWords(x, v, alpha, ls = 1) {      // ls: letters drawn larger than the world, so they stay readable from far away
   const pts = v.fp; if (!pts || pts.length < 2) return;
   x.globalAlpha = alpha; x.font = SFONT; x.textAlign = "center"; x.textBaseline = "middle";
   const text = v.text, n = text.length, w = []; let total = 0;
-  for (let i = 0; i < n; i++) { w[i] = x.measureText(text[i]).width; total += w[i]; }
-  const L = pts[pts.length - 1].l, head = L - .01;
+  for (let i = 0; i < n; i++) { w[i] = x.measureText(text[i]).width * ls; total += w[i]; }
+  const L = pts[pts.length - 1].l, head = Math.min(L, v.s ?? L) - .01;
   const tp = arcAt(pts, Math.max(.01, head - total)), hp = arcAt(pts, head);
   const right = !tp || !hp || hp.x >= tp.x;    // which way it is going decides which end the sentence starts at
   let c = 0;
@@ -810,7 +885,7 @@ function drawWords(x, v, alpha) {
     x.fillStyle = mix("#ff7a22", "#fff3d1", clamp(v.heat * 1.15 - cool * .3, 0, 1));
     let a = p.ang; if (Math.cos(a) < 0) a += Math.PI;
     a = clamp(Math.atan2(Math.sin(a), Math.cos(a)), -1.05, 1.05);
-    x.save(); x.translate(p.x, p.y); x.rotate(a);
+    x.save(); x.translate(p.x, p.y); x.rotate(a); if (ls !== 1) x.scale(ls, ls);
     x.lineWidth = 3.5; x.lineJoin = "round"; x.strokeStyle = "rgba(5, 8, 20, .85)";
     x.strokeText(text[i], 0, 0); x.fillText(text[i], 0, 0);
     x.restore();
@@ -831,12 +906,25 @@ function drawMarks(t, dt, depth) {
     drawSign(x, b, b.x, sy, t);
   }
   x.globalAlpha = 1;
-  // the words of an eruption, in the page: they are where they are, scroll up to see them in the sky
-  x.save(); x.translate(0, off);
-  for (const b of badges.values()) if (b.fly && b.fly.stage === "air") drawWords(x, b.fly, 1);
-  for (const g of ghosts) { g.alpha -= dt / .9; if (g.alpha > 0) drawWords(x, g, g.alpha); }
+  // the words of an eruption, where the camera sees them; seen from the lava, only what is above its surface
+  x.save(); worldMatrix(x);
+  const ls = Math.max(1, .7 / cam.k);
+  if (cam.q === 0) { x.beginPath(); x.rect(-W, -1e5, 3 * W, 1e5); x.clip(); }
+  for (const b of badges.values()) if (b.fly && b.fly.stage === "air") drawWords(x, b.fly, 1, ls);
+  for (const g of ghosts) { g.alpha -= dt / .9; if (g.alpha > 0) drawWords(x, g, g.alpha, ls); }
   ghosts = ghosts.filter(g => g.alpha > 0);
   x.restore();
+  // the words that landed on the outside run down it, in front of the volcano
+  const o = octx;
+  o.setTransform(1, 0, 0, 1, 0, 0); o.clearRect(0, 0, over.width, over.height);
+  o.save(); worldMatrix(o);
+  for (const f of flows) {                     // running down the slope, cooling, then gone
+    f.age += dt; f.s = Math.min(f.fp[f.fp.length - 1].l, f.s + dt * 110); f.heat = Math.max(.15, f.heat - dt * .08);
+    f.alpha = f.age < 8 ? 1 : 1 - (f.age - 8) / 3;
+    if (f.alpha > 0) drawWords(o, f, f.alpha, ls);
+  }
+  flows = flows.filter(f => f.alpha > 0);
+  o.restore();
 }
 
 // how red the inside is: the share of unread badges, never quite none, breathing with a little error; and every visible
@@ -1060,7 +1148,7 @@ addEventListener("keydown", e => {
 });
 document.addEventListener("pointerdown", e => {
   const t = e.target, inside = el => !el.hidden && el.contains(t);
-  if (inside($("dev")) || t === $("devBtn")) return;
+  if (inside($("dev"))) return;
   if (!idPanel.hidden && !inside(idPanel) && !t.closest(".you")) closeId();
   if (!composerEl.hidden && !inside(composerEl) && !inside(idPanel) && t !== $("plus")) closeComposer();
   if (!chatEl.hidden && !inside(chatEl) && !inside(idPanel) && !t.closest(".badge")) closeChat();
@@ -1121,10 +1209,10 @@ function readLevel() {
 }
 
 // ================= DEV =================
-const devEl = $("dev"), devBtn = $("devBtn"), tube = $("tube"), pFill = $("pFill"), pVal = $("pVal"), pBoom = $("pBoom");
-let dev = store.get("volcano-dev", false) === true, voiceMode = "real";
-function setDev(on) { dev = on; devEl.hidden = !on; devBtn.setAttribute("aria-pressed", String(on)); store.set("volcano-dev", on); }
-devBtn.addEventListener("click", () => setDev(!dev));
+const devEl = $("dev"), tube = $("tube"), pFill = $("pFill"), pVal = $("pVal"), pBoom = $("pBoom");
+let dev = false, voiceMode = "real";
+function setDev(on) { dev = on; devEl.hidden = !on; }
+addEventListener("cabz:dev", e => setDev(!!e.detail.on));   // the "dev" square in the site bar (nav.js)
 $("devWho").addEventListener("click", e => idPanel.hidden ? openId(e.currentTarget) : closeId());
 $("devUnread").addEventListener("click", () => {   // every badge unread again, red with its number
   readMap = {}; store.set("volcano-read", readMap);
@@ -1165,11 +1253,11 @@ function frame(now) {
   shake *= Math.exp(-dt * 3); flare *= Math.exp(-dt * 1.3);
   const heat = phase === "build" ? pressure : 1;
   fieldT += dt * lerp(.55, 1.8, heat) * (reduce.matches ? .5 : 1);   // slow, thick; faster as the pressure builds
-  const dv = dive();
+  const c = camera();
   updateBadges(dt, t);
   drawInfluence(t);
-  drawField(fieldT, dv.p, heat, Math.min(1, flare), redness(t), dv.horizon);
-  drawMarks(t, dt, dv.p);
+  drawField(fieldT, c.p, heat, Math.min(1, flare), redness(t), c.horizon, c.ground, c.crater);
+  drawMarks(t, dt, c.p);
   tremor(t);
   if (dev) showDev(dt);
   requestAnimationFrame(frame);
@@ -1184,7 +1272,9 @@ if (window.ResizeObserver) {
 }
 if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 resize();
-scroller.scrollTop = 0;                         // always arrive at the rim
+camera();
+scroller.scrollTop = Z;                         // always arrive at the rim; the whole volcano is a scroll up
+for (const ev of ["wheel", "touchstart", "keydown", "pointerdown"]) addEventListener(ev, () => { moved = true; }, { once: true, passive: true });
 loadSentences();
 setInterval(loadSentences, 90 * 1000);         // people elsewhere keep venting
 requestAnimationFrame(frame);

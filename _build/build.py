@@ -192,6 +192,8 @@ def main():
                     entry["versions"].append({"id": vid, "date": c["date"], "msg": msg, "pages": pages, "live": is_live})
                     if p.get("headers", {}).get(f"v{n:02d}"):
                         entry["versions"][-1]["header"] = p["headers"][f"v{n:02d}"]
+                    if p.get("dev", {}).get(f"v{n:02d}"):
+                        entry["versions"][-1]["dev"] = p["dev"][f"v{n:02d}"]  # parts of that version only shown with the bar's dev
                     if is_live:
                         continue
                     for path, blob in files.items():
