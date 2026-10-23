@@ -3,11 +3,15 @@
 <meta charset="utf-8">
 <title>les voies du volcan</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;1,400&display=swap">
 <style>
-/* v05, les voies du volcan: minimal. One tall scene scrolled freely: at the top the rim of the crater at night, a faint
-   red glow coming up from below; further down, inside, a deep red that moves slowly (the word soup). Every note floats
-   in it as an unread badge: the number is how many messages its conversation has. One + opens a composer.
-   The pressure isn't shown: it is felt as tremors, and it erupts. Everything noisy is behind DEV. */
+/* v05, les voies du volcan: minimal, slow, under the surface. At the top, the rim of a crater under a blue sky; scrolling
+   down dives into it like a drone, into a deep red that moves slowly (the word soup). Every note floats in it as an
+   unread badge: the number is how many messages its conversation has, and around it, now and then, a sign of what it is
+   (voice, text, image). One + opens a composer. The pressure is felt as tremors; when it erupts the badges rise and
+   leave the lava as words. Everything noisy is behind DEV. */
 :root {
   --red: #ff3b30;
   --line: #f2f2f2;
@@ -24,12 +28,16 @@ button, input, select { font: inherit; color: inherit; }
 /* the scene: the red field behind, the page that scrolls over it. The tremor moves both, never the controls */
 #view { position: absolute; inset: 0; overflow: hidden; }
 #field, #marks { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-#marks { pointer-events: none; }   /* shockwaves, morse and radar around the badges */
+#marks { pointer-events: none; z-index: 1; }   /* the signs round the badges, and the words of an eruption: above everything in the scene */
 #scroller { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; outline: none; }
-#outside { position: relative; height: 100%; }
-#rim { position: absolute; left: 0; bottom: -1px; width: 100%; height: 62%; display: block; }
-#descent { height: 35%; }
-#soup { position: relative; height: 120%; overflow-x: clip; }   /* nothing sticks out sideways; thrown badges can still fly up */
+/* the dive: the rims stay on screen (sticky) while the scroll flies the camera over the near one and down into the crater */
+#dive { position: relative; height: calc(var(--H, 100vh) + var(--D, 90vh)); }
+#scene { position: sticky; top: 0; height: var(--H, 100vh); overflow: hidden; }
+.layer { position: absolute; left: 0; bottom: -1px; width: 100%; height: 62%; display: block; will-change: transform, opacity; }
+#far { transform-origin: 50% 70%; }
+#near { transform-origin: 50% 100%; }
+/* the lava: it begins where the dive ends, and lies over the end of it */
+#soup { position: relative; z-index: 1; margin-top: calc(-1 * var(--H, 100vh)); height: 120%; overflow-x: clip; }
 
 h1 { position: fixed; z-index: 4; top: 10px; left: 16px; margin: 0; font: 400 17px/30px var(--old); letter-spacing: .02em; color: rgba(242, 242, 242, .82); pointer-events: none; }
 
@@ -40,6 +48,7 @@ h1 { position: fixed; z-index: 4; top: 10px; left: 16px; margin: 0; font: 400 17
 .badge[data-digits="2"] { font-size: calc(var(--d) * .46); }
 .badge[data-digits="3"] { font-size: calc(var(--d) * .36); }
 .badge.read { background: #000; color: transparent; transition: background-color 2s ease, color 2s ease; }   /* read: only the black disc */
+.badge.out { visibility: hidden; }             /* above the lava, during an eruption, it is its words */
 .badge:hover, .badge:focus-visible { z-index: 2; }
 .badge:focus-visible { outline: 1.5px solid #fff; outline-offset: 3px; }
 .badge .peek { position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); font: 400 12px/1.3 var(--sys); letter-spacing: 0;
@@ -75,11 +84,11 @@ body.composing #plus, body.chatting #plus { display: none; }
 .clip svg { width: 22px; height: 22px; }
 .clip:hover, .clip:focus-visible { color: #fff; }
 .clip:focus-visible { outline: 1.5px solid rgba(255, 255, 255, .7); }
-/* a picture about to be sent, already as it will be seen: black and white cells */
+/* a picture about to be sent */
 .att { position: relative; align-self: flex-start; margin: 0 0 8px 52px; padding: 6px; border-radius: 14px; background: #1c1c1d; border: 1px solid rgba(255, 255, 255, .09); }
-.att canvas, .msg .mosaic { display: block; width: 72px; height: 72px; image-rendering: pixelated; border-radius: 8px; }
+.att img, .msg .photo { display: block; width: 72px; height: 72px; object-fit: cover; border-radius: 8px; }
 .att button { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 12px; background: #2c2c2e; color: #fff; font: 600 14px/24px var(--sys); cursor: pointer; }
-.msg .mosaic { width: 156px; height: 156px; margin-bottom: 6px; border-radius: 12px; }
+.msg .photo { width: auto; height: auto; max-width: 220px; max-height: 260px; margin-bottom: 6px; border-radius: 14px; }
 #composer { position: fixed; z-index: 6; left: calc(8px + env(safe-area-inset-left, 0px)); right: calc(8px + env(safe-area-inset-right, 0px));
   bottom: calc(10px + env(safe-area-inset-bottom, 0px)); max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; }
 
@@ -146,21 +155,25 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
 
 <div id="view">
   <canvas id="field" aria-hidden="true"></canvas>
-  <canvas id="marks" aria-hidden="true"></canvas>
   <div id="scroller" tabindex="-1">
-    <section id="outside" aria-label="the rim of the crater">
-      <!-- a blue sky; across the crater its far side, lit red from below; the near rim black in front, with someone very small -->
-      <svg id="rim" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-        <defs><linearGradient id="farLit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset="1" stop-color="#5c1a12"/></linearGradient></defs>
-        <path fill="url(#farLit)" d="M0 560 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 L1600 560 Z"/>
-        <path fill="#040404" d="M0 560 L0 372 C70 360 150 332 250 328 C330 325 395 342 455 366 C520 392 590 422 690 430 C790 438 880 422 960 406
-          C1030 392 1080 360 1130 310 C1170 270 1215 224 1290 206 C1360 190 1440 198 1500 222 C1550 242 1580 260 1600 272 L1600 560 Z"/>
-        <rect x="757" y="421" width="5" height="13" fill="#fff"/>
-      </svg>
+    <section id="dive" aria-label="the rim of the crater">
+      <div id="scene">
+        <!-- a blue sky; across the crater its far side, lit red from below; the near rim black in front, with someone very small -->
+        <svg id="far" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <defs><linearGradient id="farLit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2725"/><stop offset=".55" stop-color="#3a1f1a"/><stop offset="1" stop-color="#5c1a12"/></linearGradient></defs>
+          <path fill="url(#farLit)" d="M0 404 L0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88
+            L1600 398 C1420 406 1260 394 1080 402 C900 410 760 398 600 406 C420 414 220 400 0 404 Z"/>
+        </svg>
+        <svg id="near" class="layer" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <path fill="#040404" d="M0 560 L0 372 C70 360 150 332 250 328 C330 325 395 342 455 366 C520 392 590 422 690 430 C790 438 880 422 960 406
+            C1030 392 1080 360 1130 310 C1170 270 1215 224 1290 206 C1360 190 1440 198 1500 222 C1550 242 1580 260 1600 272 L1600 560 Z"/>
+          <rect x="757" y="421" width="5" height="13" fill="#fff"/>
+        </svg>
+      </div>
     </section>
-    <section id="descent" aria-hidden="true"></section>
     <section id="soup" aria-label="the notes, inside"></section>
   </div>
+  <canvas id="marks" aria-hidden="true"></canvas>
 </div>
 
 <h1>les voies du volcan</h1>
@@ -203,6 +216,7 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
   <span><span class="k">memory </span><span id="mem"></span></span>
   <span><span class="k">fps </span><span id="fps"></span></span>
   <span class="full"><span class="k">name </span><button class="t" id="devWho" type="button"></button></span>
+  <span class="full"><button class="t" id="devUnread" type="button">reset seen / unseen</button></span>
   <div class="full seg" role="group" aria-label="Voice input">
     <button class="t" type="button" data-vm="real" aria-pressed="true">real</button>
     <button class="t" type="button" data-vm="debug" aria-pressed="false">debug</button>
@@ -232,11 +246,13 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
-const view = $("view"), scroller = $("scroller"), soup = $("soup");
-let W = 0, H = 0;
+const view = $("view"), scroller = $("scroller"), soup = $("soup"), far = $("far"), near = $("near");
+let W = 0, H = 0, D = 0, sized = "";            // D: how far the dive scrolls before you are in the lava
 function resize() {
   const box = document.body.getBoundingClientRect();
-  W = Math.round(box.width) || innerWidth; H = Math.round(box.height) || innerHeight;
+  W = Math.round(box.width) || innerWidth; H = Math.round(box.height) || innerHeight; sized = W + "x" + H;
+  D = Math.round(H * .9);
+  document.documentElement.style.setProperty("--H", H + "px"); document.documentElement.style.setProperty("--D", D + "px");
   sizeField(); sizeMarks(); layoutSoup();
 }
 
@@ -398,7 +414,7 @@ let gl = null, uni = {}, ctx2 = null, inflTex = null;
 const infl = document.createElement("canvas"); infl.width = infl.height = 64;
 const ictx = infl.getContext("2d");
 const FRAG = `precision mediump float;
-uniform vec2 uRes; uniform float uTime, uDepth, uHeat, uFlare, uRed; uniform sampler2D uInfl;
+uniform vec2 uRes; uniform float uTime, uDepth, uHeat, uFlare, uRed, uHorizon; uniform sampler2D uInfl;
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
   return mix(mix(hash(i), hash(i + vec2(1., 0.)), f.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), f.x), f.y); }
@@ -417,11 +433,10 @@ void main() {
   col *= 1. - (.45 + .35 * (1. - red)) * smoothstep(.5, .72, d);
   col *= .82 + uHeat * .45 + uFlare * .9;
   col *= 1. - .25 * pow(abs(uv.x - .5) * 2., 2.);                   // a little darker at the sides
-  vec3 sky = mix(vec3(.612, .753, .894), vec3(.184, .388, .659), smoothstep(.05, 1., uv.y));   // a blue sky, lighter at the horizon
-  float glow = exp(-max(uv.y - .12, 0.) * 9.) * (.12 + uDepth * .5 + uHeat * .12 + uFlare * .6);
-  sky = mix(sky, vec3(.75, .32, .24), clamp(glow, 0., 1.) * (.75 + .25 * f));
-  float edge = uDepth * 1.6 - .3;                                     // where the red has risen to
-  float m = smoothstep(edge + .3, edge - .3, uv.y + (f - .5) * .3);
+  col *= .55 + .45 * uDepth;                                          // darker seen from above, lit once you are in it
+  // the sky: plain blue, lighter towards the horizon, and a clear line where it ends
+  vec3 sky = mix(vec3(.612, .753, .894), vec3(.184, .388, .659), smoothstep(uHorizon, 1., uv.y));
+  float m = 1. - smoothstep(uHorizon - .002, uHorizon + .002, uv.y);
   gl_FragColor = vec4(mix(sky, col, m), 1.);
 }`;
 function initField() {
@@ -437,7 +452,7 @@ function initField() {
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
       const a = gl.getAttribLocation(prog, "a"); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-      for (const n of ["uRes", "uTime", "uDepth", "uHeat", "uFlare", "uRed", "uInfl"]) uni[n] = gl.getUniformLocation(prog, n);
+      for (const n of ["uRes", "uTime", "uDepth", "uHeat", "uFlare", "uRed", "uHorizon", "uInfl"]) uni[n] = gl.getUniformLocation(prog, n);
       inflTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, inflTex);
       for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
       gl.uniform1i(uni.uInfl, 0);
@@ -450,22 +465,24 @@ function sizeField() {
   if (gl) gl.viewport(0, 0, field.width, field.height);
 }
 const BLOBS = Array.from({ length: 7 }, (_, k) => ({ x: rand(0, 1), y: rand(0, 1), r: rand(.35, .7), ph: rand(0, 6.28), dark: k > 4 }));
-function drawField(t, depth, heat, flare, redness) {
+function drawField(t, depth, heat, flare, redness, horizon) {
   const w = field.width, h = field.height;
   if (gl) {
-    gl.uniform2f(uni.uRes, w, h); gl.uniform1f(uni.uTime, t); gl.uniform1f(uni.uDepth, depth);
+    gl.uniform2f(uni.uRes, w, h); gl.uniform1f(uni.uTime, t); gl.uniform1f(uni.uDepth, depth); gl.uniform1f(uni.uHorizon, horizon);
     gl.uniform1f(uni.uHeat, heat); gl.uniform1f(uni.uFlare, flare); gl.uniform1f(uni.uRed, redness);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, inflTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, infl);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     return;
   }
-  const c = ctx2, rise = clamp(depth * 1.6 - .3, -.3, 1.3);
-  const sky = c.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, "#2f63a8"); sky.addColorStop(1, "#9cc0e4");
-  c.fillStyle = sky; c.fillRect(0, 0, w, h);
+  const c = ctx2, rise = clamp(depth * 1.6 - .3, -.3, 1.3), hy = Math.round((1 - horizon) * h);
+  c.fillStyle = "#1a0000"; c.fillRect(0, 0, w, h);
+  const sky = c.createLinearGradient(0, 0, 0, hy); sky.addColorStop(0, "#2f63a8"); sky.addColorStop(1, "#9cc0e4");
+  c.fillStyle = sky; c.fillRect(0, 0, w, Math.max(0, hy));
   const g = c.createLinearGradient(0, h, 0, 0);
   g.addColorStop(0, `rgba(168,34,26,${(.25 + depth * .5 + flare * .5) * (.4 + .6 * redness)})`); g.addColorStop(clamp(rise + .15, .05, 1), "rgba(26,0,0,0)");
   c.fillStyle = g; c.fillRect(0, 0, w, h);
+  c.save(); c.beginPath(); c.rect(0, hy, w, h); c.clip();
   c.globalAlpha = clamp(rise + .3, 0, 1);
   for (const b of BLOBS) {
     const x = (b.x + .08 * Math.sin(t * .05 + b.ph)) * w, y = (b.y + .08 * Math.cos(t * .04 + b.ph)) * h, r = b.r * Math.max(w, h);
@@ -473,7 +490,26 @@ function drawField(t, depth, heat, flare, redness) {
     rg.addColorStop(0, b.dark ? "rgba(26,0,0,.8)" : `rgba(168,34,26,${(.55 + heat * .3) * redness})`); rg.addColorStop(1, "rgba(26,0,0,0)");
     c.fillStyle = rg; c.fillRect(0, 0, w, h);
   }
-  c.globalAlpha = 1;
+  c.globalAlpha = 1; c.restore();
+}
+
+// the dive, from the scroll: over the near rim (it drops away below), then the camera tips down into the crater,
+// the far side rising and growing until there is only lava
+const smooth = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
+let diveP = -1, soupVis = 1;
+function dive() {
+  const p = clamp(scroller.scrollTop / Math.max(1, D), 0, 1);
+  if (p !== diveP) {
+    diveP = p;
+    const pn = smooth(0, .5, p), pf = smooth(.1, .85, p);
+    near.style.transform = `translateY(${(pn * 150).toFixed(2)}%) scale(${(1 + pn * 1.4).toFixed(3)})`;
+    near.style.opacity = (1 - smooth(.35, .55, p)).toFixed(3);
+    far.style.transform = `translateY(${(-pf * 30).toFixed(2)}%) scale(${(1 + pf * 2.2).toFixed(3)})`;
+    far.style.opacity = (1 - smooth(.62, .92, p)).toFixed(3);
+    soupVis = smooth(.55, .9, p);
+    soup.style.opacity = soupVis.toFixed(3); soup.style.pointerEvents = soupVis < .5 ? "none" : "";
+  }
+  return { p, horizon: .42 + .8 * smooth(.1, .85, p) };
 }
 
 // ================= the badges =================
@@ -561,18 +597,50 @@ function syncBadges(freshId) {
   if (picked && !badges.has(picked.s.id)) closeChat();
 }
 function markRead(b) { readMap[b.s.id] = countOf(b.s); store.set("volcano-read", readMap); setCount(b); }
+// an eruption: each badge rises (buoyant, through the lava), and at the surface becomes its words, thrown up into the
+// sky along a slow arc; falling back in, it is a badge again and sinks home. Nothing scrolls: scroll up to follow them.
+const AIR_G = 520;                             // px/s²: slow, so the words can be read
+function launch(b) {                           // at the surface: the badge becomes its sentence
+  const text = (b.s.s ? sentenceLines(b.s.s)[0] : "") || shortNote(b.s.s);
+  b.fly = { stage: "air", text, fp: [{ x: b.x, y: 0, l: 0 }], heat: 1.2 };
+  b.vy = -Math.sqrt(2 * AIR_G * H * rand(.45, 1.2)); b.vx = (Math.random() < .5 ? -1 : 1) * rand(.3, .7) * Math.min(W, 900) * .45;   // arcs, so the words lean and can be read
+  b.el.classList.add("out");
+}
+function updateFlight(b, dt) {
+  const f = b.fly;
+  if (f.stage === "wait") { if ((f.delay -= dt) <= 0) f.stage = "rise"; return false; }
+  if (f.stage === "rise") {
+    b.vy += (-640 - b.vy) * 2.2 * dt; b.vx *= 1 - dt;
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.y <= 0) launch(b);
+    return true;
+  }
+  b.vy += AIR_G * dt; b.vx *= 1 - .05 * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+  f.heat = Math.max(.25, f.heat - dt * .12);
+  const last = f.fp[f.fp.length - 1], dd = Math.hypot(b.x - last.x, b.y - last.y);
+  if (dd > 2) f.fp.push({ x: b.x, y: Math.min(b.y, 0), l: last.l + dd });
+  if (b.vy > 0 && b.y >= 0) {                  // back in the lava: a badge again, slowed by it
+    ghosts.push({ fp: f.fp, text: f.text, heat: f.heat, alpha: 1 });
+    b.fly = null; b.vy *= .2; b.vx *= .3; b.el.classList.remove("out");
+  }
+  return true;
+}
+let ghosts = [];                               // the words of badges just gone back in, fading
 function updateBadges(dt, t) {
-  const list = [...badges.values()], cell = 96, grid = new Map(), calm = reduce.matches ? .5 : 1;
+  const list = [...badges.values()], cell = 110, grid = new Map(), calm = reduce.matches ? .5 : 1;
   for (const b of list) { const k = Math.floor(b.x / cell) + "," + Math.floor(b.y / cell); (grid.get(k) || grid.set(k, []).get(k)).push(b); }
   for (const b of list) {
     if (b.hx == null) continue;
-    const tx = b.hx + Math.sin(t * .07 * b.sp + b.ph) * 28 * calm, ty = b.hy + Math.cos(t * .05 * b.sp + b.ph * 1.3) * 22 * calm;
-    let ax = (tx - b.x) * 1.4 - b.vx * 1.9, ay = (ty - b.y) * 1.4 - b.vy * 1.9;
+    if (b.fly && updateFlight(b, dt)) { b.el.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`; continue; }
+    // slow, wide drift round its home and a gentle bob, as if suspended in something thick
+    const tx = b.hx + (Math.sin(t * .035 * b.sp + b.ph) * 62 + Math.sin(t * .011 + b.ph * 2) * 24) * calm;
+    const ty = b.hy + (Math.cos(t * .028 * b.sp + b.ph * 1.3) * 48 + Math.sin(t * .9 * b.sp + b.ph) * 6) * calm;
+    let ax = (tx - b.x) * .55 - b.vx * 1.3, ay = (ty - b.y) * .55 - b.vy * 1.3;
     const gx = Math.floor(b.x / cell), gy = Math.floor(b.y / cell);
     for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const o of grid.get((gx + i) + "," + (gy + j)) || []) {
       if (o === b) continue;
       const dx = b.x - o.x, dy = b.y - o.y, dist = Math.hypot(dx, dy) || .01, min = b.r + o.r + 16;
-      if (dist < min) { const push = (min - dist) / min * 260; ax += dx / dist * push; ay += dy / dist * push; }
+      if (dist < min) { const push = (min - dist) / min * 170; ax += dx / dist * push; ay += dy / dist * push; }
     }
     b.vx += ax * dt; b.vy += ay * dt; b.x += b.vx * dt; b.y += b.vy * dt;
     b.x = clamp(b.x, b.r + 4, soupW - b.r - 4);
@@ -617,12 +685,6 @@ function makeMosaic(img) {
   // black or white, about half and half; cells equal to the middle value (large flat areas) go with what they look like
   return Uint8Array.from(v, x => x < med || (x === med && med < .5) ? 1 : 0);
 }
-function drawMosaic(canvas, m) {
-  canvas.width = canvas.height = MOS;
-  const x = canvas.getContext("2d");
-  x.fillStyle = "#fff"; x.fillRect(0, 0, MOS, MOS); x.fillStyle = "#000";
-  m.black.forEach((b, k) => { if (b) x.fillRect(k % MOS, Math.floor(k / MOS), 1, 1); });
-}
 function blipsOf(b) {                          // the badge's black cells round it, nearest first
   const m = mosaicOf(b.s.img);
   if (!m || !m.ready) return null;
@@ -641,9 +703,9 @@ function blipsOf(b) {                          // the badge's black cells round 
 const MORSE = { a: ".-", b: "-...", c: "-.-.", d: "-..", e: ".", f: "..-.", g: "--.", h: "....", i: "..", j: ".---", k: "-.-", l: ".-..", m: "--",
   n: "-.", o: "---", p: ".--.", q: "--.-", r: ".-.", s: "...", t: "-", u: "..-", v: "...-", w: ".--", x: "-..-", y: "-.--", z: "--..",
   0: "-----", 1: ".----", 2: "..---", 3: "...--", 4: "....-", 5: ".....", 6: "-....", 7: "--...", 8: "---..", 9: "----." };
-function morseOf(b) {                          // the first letters as timed marks: a dot is 1 unit, a dash 3; gaps 1, 3 between letters, 7 between words
+function morseOf(b) {                          // the first four letters as timed marks: a dot is 1 unit, a dash 3; gaps 1, 3 between letters, 7 between words
   if (b.morse) return b.morse;
-  const letters = b.s.s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim().slice(0, 10);
+  const letters = b.s.s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim().slice(0, 4);
   const els = []; let u = 0;
   for (const ch of letters) {
     if (ch === " ") { u += 4; continue; }
@@ -653,53 +715,128 @@ function morseOf(b) {                          // the first letters as timed mar
   return (b.morse = { els, units: Math.max(1, u) });
 }
 
-function drawMarks(t) {
-  const x = mctx, calm = reduce.matches;
-  x.setTransform(MDPR, 0, 0, MDPR, 0, 0); x.clearRect(0, 0, W, H);
-  const off = soup.offsetTop - scroller.scrollTop, left = soup.getBoundingClientRect().left - view.getBoundingClientRect().left;
-  for (const b of badges.values()) {
-    const sx = b.x + left, sy = b.y + off;
-    if (sy < -140 || sy > H + 140) continue;
-    const ink = b.el.classList.contains("read") ? "0,0,0" : "255,226,218", me = b.s.medium;
-    if (me === "voice") {
-      const i = b.s.i ?? .5, per = 2.6 - 1.1 * i, reach = 46 + 40 * i;
-      x.lineWidth = 1.2;
-      for (let k = 0; k < 3; k++) {
-        const ph = calm ? .2 + k * .25 : ((t / per + b.ph / 6.283 + k / 3) % 1);
-        const a = calm ? .22 - k * .06 : .55 * Math.pow(1 - ph, 1.6);
-        x.strokeStyle = `rgba(${ink},${a.toFixed(3)})`;
-        x.beginPath(); x.arc(sx, sy, b.r + 2 + ph * reach, 0, 6.2832); x.stroke();
-      }
-    } else if (me === "text") {
-      const m = morseOf(b), unit = calm ? .14 : .085, R = b.r + 12;
-      const write = m.units * unit, cycle = write + 4.2, tau = (t + b.ph * 3) % cycle;
-      const fade = tau > write + 1.6 ? 1 - (tau - write - 1.6) / .9 : 1;
-      if (fade <= 0) continue;
-      const span = Math.min(6.283 * .9, m.units * .11), per = span / m.units, a0 = -Math.PI / 2 - span / 2 + Math.sin(b.ph) * .6;
-      x.lineCap = "round"; x.lineWidth = 2.4;
-      for (const e of m.els) {
-        const born = e.u * unit; if (tau < born) break;
-        const a = Math.min(1, (tau - born) / .12) * fade * .9;
-        x.strokeStyle = x.fillStyle = `rgba(${ink},${a.toFixed(3)})`;
-        const ang = a0 + (e.u + e.len / 2) * per;
-        if (e.len === 1) { x.beginPath(); x.arc(sx + Math.cos(ang) * R, sy + Math.sin(ang) * R, 1.3, 0, 6.2832); x.fill(); }
-        else { x.beginPath(); x.arc(sx, sy, R, a0 + e.u * per, a0 + (e.u + e.len) * per); x.stroke(); }
-      }
-    } else if (me === "image") {
-      const bl = blipsOf(b); if (!bl) continue;
-      const per = calm ? 6 : 3.4, sweep = 2.2, tau = (t + b.ph) % per, span = b.reach - b.r;
-      if (tau < sweep && !calm) {
-        x.lineWidth = 1; x.strokeStyle = `rgba(${ink},${(.35 * (1 - tau / sweep)).toFixed(3)})`;
-        x.beginPath(); x.arc(sx, sy, b.r + tau / sweep * span, 0, 6.2832); x.stroke();
-      }
-      for (const c of bl) {
-        const hit = (c.dist - b.r) / span * sweep; if (tau < hit) break;
-        const a = Math.max(0, 1 - (tau - hit) / 1.2); if (a <= 0) continue;
-        x.fillStyle = `rgba(${ink},${(a * .9).toFixed(3)})`;
-        x.fillRect(sx + c.dx - 1.6, sy + c.dy - 1.6, 3.2, 3.2);
-      }
+// Each unread badge shows its sign now and then, once, slowly, like something heard under water; read ones are quiet.
+const SIGN_EVERY = b => 24 + 16 * ((b.sp - .6) / .65);  // seconds between two signs of the same badge: most are quiet at any moment
+function drawSign(x, b, sx, sy, t) {
+  const calm = reduce.matches, every = SIGN_EVERY(b), tau = (t + b.ph * 7) % every, me = b.s.medium;
+  if (me === "voice") {                        // two slow rings, louder notes reach further
+    const i = b.s.i ?? .5, life = calm ? 7 : 4.6, reach = 34 + 30 * i;
+    x.lineWidth = 1;
+    for (let k = 0; k < 2; k++) {
+      const u = (tau - k * 1.3) / life; if (u < 0 || u > 1) continue;
+      x.strokeStyle = `rgba(255,226,218,${(.3 * Math.sin(Math.PI * Math.min(1, u * 1.6)) * (1 - u)).toFixed(3)})`;
+      x.beginPath(); x.arc(sx, sy, b.r + 3 + u * reach, 0, 6.2832); x.stroke();
+    }
+  } else if (me === "text") {                  // its first letters in Morse, appearing round it, then sinking away
+    const m = morseOf(b), unit = calm ? .22 : .15, R = b.r + 11, write = m.units * unit;
+    if (tau > write + 3.2) return;
+    const fade = tau > write + 1.4 ? 1 - (tau - write - 1.4) / 1.8 : 1;
+    const span = Math.min(6.283 * .85, m.units * .1), per = span / m.units, a0 = -Math.PI / 2 - span / 2 + Math.sin(b.ph) * .6;
+    x.lineCap = "round"; x.lineWidth = 2;
+    for (const e of m.els) {
+      const born = e.u * unit; if (tau < born) break;
+      x.strokeStyle = x.fillStyle = `rgba(255,226,218,${(Math.min(1, (tau - born) / .4) * fade * .55).toFixed(3)})`;
+      const ang = a0 + (e.u + e.len / 2) * per;
+      if (e.len === 1) { x.beginPath(); x.arc(sx + Math.cos(ang) * R, sy + Math.sin(ang) * R, 1.1, 0, 6.2832); x.fill(); }
+      else { x.beginPath(); x.arc(sx, sy, R, a0 + e.u * per, a0 + (e.u + e.len) * per); x.stroke(); }
+    }
+  } else if (me === "image") {                 // one slow sweep; the picture's black cells answer as it passes, like sonar
+    const bl = blipsOf(b); if (!bl) return;
+    const sweep = calm ? 7 : 4.8, span = b.reach - b.r;
+    if (tau > sweep + 2.6) return;
+    if (tau < sweep && !calm) {
+      x.lineWidth = 1; x.strokeStyle = `rgba(255,226,218,${(.16 * (1 - tau / sweep)).toFixed(3)})`;
+      x.beginPath(); x.arc(sx, sy, b.r + tau / sweep * span, 0, 6.2832); x.stroke();
+    }
+    for (const c of bl) {
+      const hit = (c.dist - b.r) / span * sweep; if (tau < hit) break;
+      const a = Math.max(0, 1 - (tau - hit) / 2.6); if (a <= 0) continue;
+      x.fillStyle = `rgba(255,226,218,${(a * .5).toFixed(3)})`;
+      x.fillRect(sx + c.dx - 1.2, sy + c.dy - 1.2, 2.4, 2.4);
     }
   }
+}
+
+// a few specks drifting up through the lava, slowly: it is thick, and deep
+const SNOW = Array.from({ length: 36 }, () => ({ x: Math.random(), y: Math.random(), v: rand(5, 13), s: rand(.8, 1.8), ph: rand(0, 6.28) }));
+function drawSnow(x, dt, t, depth) {
+  const a = soupVis;
+  if (a < .02) return;
+  for (const p of SNOW) {
+    p.y -= p.v * dt / Math.max(1, H); if (p.y < -.02) { p.y = 1.02; p.x = Math.random(); }
+    x.fillStyle = `rgba(255,205,190,${(.13 * a).toFixed(3)})`;
+    x.fillRect(p.x * W + Math.sin(t * .4 + p.ph) * 8, p.y * H, p.s, p.s);
+  }
+}
+
+// an eruption's words, as in v04: every letter sits on the flight path and turns with it, never upside down
+const SFONT = "italic 400 20px Spectral, Georgia, 'Times New Roman', serif";
+const letterWidth = t => { mctx.font = SFONT; return Math.ceil(mctx.measureText(t).width) + 6; };
+function sentenceLines(text) {
+  const maxW = Math.max(240, Math.min(W * .78, 640));
+  const list = text.trim().split(/\s+/).filter(Boolean).slice(0, 60).map(t => t.slice(0, 30));
+  const lines = []; let cur = "";
+  for (const w of list) {
+    const next = cur ? cur + " " + w : w;
+    if (cur && letterWidth(next) > maxW) { lines.push(cur); cur = w; } else cur = next;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+function arcAt(pts, s) {
+  if (!pts || pts.length < 2 || s >= pts[pts.length - 1].l) return null;
+  let lo = 0, hi = pts.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (pts[m].l < s) lo = m; else hi = m; }
+  const a = pts[lo], b = pts[hi], f = (s - a.l) / ((b.l - a.l) || 1);
+  return { x: lerp(a.x, b.x, f), y: lerp(a.y, b.y, f), ang: Math.atan2(b.y - a.y, b.x - a.x) };
+}
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(",")})`; };
+function drawWords(x, v, alpha) {
+  const pts = v.fp; if (!pts || pts.length < 2) return;
+  x.globalAlpha = alpha; x.font = SFONT; x.textAlign = "center"; x.textBaseline = "middle";
+  const text = v.text, n = text.length, w = []; let total = 0;
+  for (let i = 0; i < n; i++) { w[i] = x.measureText(text[i]).width; total += w[i]; }
+  const L = pts[pts.length - 1].l, head = L - .01;
+  const tp = arcAt(pts, Math.max(.01, head - total)), hp = arcAt(pts, head);
+  const right = !tp || !hp || hp.x >= tp.x;    // which way it is going decides which end the sentence starts at
+  let c = 0;
+  for (let i = 0; i < n; i++) {
+    const mid = c + w[i] / 2; c += w[i];
+    const pos = right ? head - total + mid : head - mid;
+    if (pos < 0 || text[i] === " ") continue;  // letters still under the surface aren't out yet
+    const p = arcAt(pts, pos); if (!p) continue;
+    const f = n > 1 ? i / (n - 1) : 0, cool = right ? 1 - f : f;
+    x.fillStyle = mix("#ff7a22", "#fff3d1", clamp(v.heat * 1.15 - cool * .3, 0, 1));
+    let a = p.ang; if (Math.cos(a) < 0) a += Math.PI;
+    a = clamp(Math.atan2(Math.sin(a), Math.cos(a)), -1.05, 1.05);
+    x.save(); x.translate(p.x, p.y); x.rotate(a);
+    x.lineWidth = 3.5; x.lineJoin = "round"; x.strokeStyle = "rgba(5, 8, 20, .85)";
+    x.strokeText(text[i], 0, 0); x.fillText(text[i], 0, 0);
+    x.restore();
+  }
+  x.globalAlpha = 1;
+}
+
+function drawMarks(t, dt, depth) {
+  const x = mctx;
+  x.setTransform(MDPR, 0, 0, MDPR, 0, 0); x.clearRect(0, 0, W, H);
+  drawSnow(x, dt, t, depth);
+  const off = soup.offsetTop - scroller.scrollTop;
+  x.globalAlpha = soupVis;
+  if (soupVis > .02) for (const b of badges.values()) {
+    if (b.fly || b.el.classList.contains("read")) continue;
+    const sy = b.y + off;
+    if (sy < -140 || sy > H + 140) continue;
+    drawSign(x, b, b.x, sy, t);
+  }
+  x.globalAlpha = 1;
+  // the words of an eruption, in the page: they are where they are, scroll up to see them in the sky
+  x.save(); x.translate(0, off);
+  for (const b of badges.values()) if (b.fly && b.fly.stage === "air") drawWords(x, b.fly, 1);
+  for (const g of ghosts) { g.alpha -= dt / .9; if (g.alpha > 0) drawWords(x, g, g.alpha); }
+  ghosts = ghosts.filter(g => g.alpha > 0);
+  x.restore();
 }
 
 // how red the inside is: the share of unread badges, never quite none, breathing with a little error; and every visible
@@ -748,10 +885,14 @@ function updatePressure(dt) {
     if (phaseT > 2) { phase = "build"; phaseT = 0; pressure = 0; }
   }
 }
+const WORDS_OUT = 14;                          // how many notes leave the lava as words in one eruption: the newest
 function erupt() {
   shake = 14; flare = 1;
-  const k = reduce.matches ? .3 : 1;
-  for (const b of badges.values()) { b.vy -= rand(260, 620) * k; b.vx += rand(-70, 70) * k; }
+  const newest = [...badges.values()].filter(b => !b.fly).sort((a, c) => c.s.t - a.s.t);
+  newest.forEach((b, k) => {
+    if (k < WORDS_OUT) b.fly = { stage: "wait", delay: rand(0, 2.2) };   // a stream, not all at once
+    else { b.vy -= rand(70, 190) * (reduce.matches ? .4 : 1); b.vx += rand(-30, 30); }
+  });
 }
 function tremor(t) {
   const amp = reduce.matches ? 0 : pressure * pressure * 2.5 + (phase === "seal" ? 1.5 + phaseT * 4 : 0) + shake;
@@ -778,7 +919,7 @@ function makeComposer(host, placeholder, onSend, attach = false) {
   if (attach) {
     const file = form.querySelector("input[type=file]"), att = document.createElement("div");
     att.className = "att"; att.hidden = true;
-    att.innerHTML = '<canvas aria-label="the picture, as it will be seen"></canvas><button type="button" aria-label="remove the picture">×</button>';
+    att.innerHTML = '<img alt="the picture you are sending"><button type="button" aria-label="remove the picture">×</button>';
     host.insertBefore(att, form);
     c.att = att;
     form.querySelector(".clip").addEventListener("click", () => file.click());
@@ -821,7 +962,7 @@ function setPicture(c, data) {
   c.img = data;
   if (c.att) {
     c.att.hidden = !data;
-    if (data) mosaicOf(data, m => { if (c.img === data && m.ready) drawMosaic(c.att.querySelector("canvas"), m); });
+    if (data) c.att.querySelector("img").src = data;
   }
   updateSend(c);
 }
@@ -860,11 +1001,7 @@ const chatComp = makeComposer(chatEl, "Reply", async (text, I) => {
 const when = t => { const d = new Date(t), z = n => String(n).padStart(2, "0"); return `${z(d.getDate())}/${z(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}, ${z(d.getHours())}:${z(d.getMinutes())}`; };
 function msgEl(s, kind) {
   const li = document.createElement("li"); li.className = "msg " + kind;
-  if (s.img) {                                 // a picture is only ever seen as its black and white cells
-    const cv = document.createElement("canvas"); cv.className = "mosaic"; cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "a picture, in black and white cells");
-    mosaicOf(s.img, m => { if (m.ready) drawMosaic(cv, m); });
-    li.append(cv);
-  }
+  if (s.img) { const im = document.createElement("img"); im.className = "photo"; im.alt = s.s || "a picture"; im.src = s.img; li.append(im); }
   const body = document.createElement("p"); body.className = "body"; body.textContent = s.s;
   if (!s.s) body.hidden = true;
   const meta = document.createElement("p"); meta.className = "meta";
@@ -989,6 +1126,10 @@ let dev = store.get("volcano-dev", false) === true, voiceMode = "real";
 function setDev(on) { dev = on; devEl.hidden = !on; devBtn.setAttribute("aria-pressed", String(on)); store.set("volcano-dev", on); }
 devBtn.addEventListener("click", () => setDev(!dev));
 $("devWho").addEventListener("click", e => idPanel.hidden ? openId(e.currentTarget) : closeId());
+$("devUnread").addEventListener("click", () => {   // every badge unread again, red with its number
+  readMap = {}; store.set("volcano-read", readMap);
+  for (const b of badges.values()) setCount(b);
+});
 document.querySelectorAll("[data-vm]").forEach(b => b.addEventListener("click", () => {
   voiceMode = b.dataset.vm;
   document.querySelectorAll("[data-vm]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
@@ -1023,11 +1164,12 @@ function frame(now) {
   updatePressure(dt);
   shake *= Math.exp(-dt * 3); flare *= Math.exp(-dt * 1.3);
   const heat = phase === "build" ? pressure : 1;
-  fieldT += dt * lerp(1, 2.6, heat) * (reduce.matches ? .5 : 1);   // the red moves faster as the pressure builds
+  fieldT += dt * lerp(.55, 1.8, heat) * (reduce.matches ? .5 : 1);   // slow, thick; faster as the pressure builds
+  const dv = dive();
   updateBadges(dt, t);
   drawInfluence(t);
-  drawField(fieldT, clamp(scroller.scrollTop / Math.max(1, soup.offsetTop), 0, 1), heat, Math.min(1, flare), redness(t));
-  drawMarks(t);
+  drawField(fieldT, dv.p, heat, Math.min(1, flare), redness(t), dv.horizon);
+  drawMarks(t, dt, dv.p);
   tremor(t);
   if (dev) showDev(dt);
   requestAnimationFrame(frame);
@@ -1038,8 +1180,7 @@ showWho(); setDev(dev);
 addEventListener("resize", resize);
 // the site bar can push the page down after it loads (it adds a padding to <html>): follow the body's size
 if (window.ResizeObserver) {
-  let lastBox = "";
-  new ResizeObserver(() => { const b = document.body.getBoundingClientRect(), k = Math.round(b.width) + "x" + Math.round(b.height); if (k !== lastBox && lastBox) resize(); lastBox = k; }).observe(document.body);
+  new ResizeObserver(() => { const b = document.body.getBoundingClientRect(); if (Math.round(b.width) + "x" + Math.round(b.height) !== sized) resize(); }).observe(document.body);
 }
 if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 resize();
