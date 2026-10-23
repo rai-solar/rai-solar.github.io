@@ -171,7 +171,8 @@ body.chatting #idPanel { left: auto; right: calc(16px + env(safe-area-inset-righ
       <!-- the crater's lip, black, all round: from the front's end up round the crater's end, along the far crest, and
            down round the other end into the front; past the ends, the shoulders are the same black: one volcano -->
       <path fill="#040404" d="M0 150 L-15 193 L-30 219 L-45 242 L-60 262 L-75 282 L-90 299 L-105 316 L-120 333 L-135 348 L-150 364 L-165 378 L-180 393 L-195 407 L-210 420 L-225 434 L-240 447 L-255 450 L0 450 Z M1600 88 L1615 133 L1630 160 L1645 184 L1660 205 L1675 225 L1690 244 L1705 262 L1720 279 L1735 295 L1750 311 L1765 327 L1780 341 L1795 356 L1810 370 L1825 384 L1840 388 L1600 388 Z"/>
-      <path id="lip" fill="none" stroke="#040404" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" d="M0 404 C-3 330 -3 230 0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 C1603 160 1603 220 1600 290"/>
+      <path id="lipInk" fill="#040404"/><circle id="lipEndA" fill="#040404" r="0"/><circle id="lipEndB" fill="#040404" r="0"/>
+      <path id="lip" fill="none" stroke="none" d="M0 404 C-3 330 -3 230 0 150 C120 130 260 118 400 128 C520 136 600 104 720 96 C860 86 980 112 1100 106 C1240 99 1380 70 1600 88 C1603 160 1603 220 1600 290"/>
     </svg>
   </div>
   <div id="scroller" tabindex="-1">
@@ -261,6 +262,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 const view = $("view"), scroller = $("scroller"), soup = $("soup"), far = $("far"), near = $("near"), lip = $("lip");
+const lipInk = $("lipInk"), lipEndA = $("lipEndA"), lipEndB = $("lipEndB");
 let W = 0, H = 0, D = 0, Z = 0, ZOOM = 0, SKY = 0, sized = "", moved = false;   // the way up: ZOOM (pulling back) then SKY (looking up); Z = both. D: the dive
 function resize() {
   const box = document.body.getBoundingClientRect();
@@ -565,7 +567,7 @@ function camera() {
       near.style.opacity = (1 - smooth(.35, .55, p)).toFixed(3);
       far.style.opacity = "1";
     }
-    lip.style.strokeWidth = (lerp(6, 14, en) / (unit() * (q > 0 ? k : 1))).toFixed(2);   // in px on screen: a crest from the rim, a thick black ring from far away
+    inkLip(lerp(6, 16, en) / (unit() * (q > 0 ? k : 1)));   // in px on screen: a crest from the rim, a thick black ring from far away
     soupVis = 1;                               // no fade: the badges come up with the lava
   }
   // the plain's horizon, where the volcano's foot is when far away; the sky ends on it
@@ -576,6 +578,32 @@ function camera() {
   cam.ground = smooth(0, .2, q);
   cam.crater = [cam.cx, cam.cy, W * .62 * k];  // outside this, under the horizon, it is the plain, not lava
   return cam;
+}
+// The crater's lip, drawn by hand as in the reference: a black ribbon along its line (the hidden #lip path), uneven in
+// width and a little wobbly, heavier where it curls round the crater's ends. w: its usual width, in viewBox units.
+let LIP = null;
+function inkLip(w) {
+  if (!LIP) {
+    const len = lip.getTotalLength(), n = 180;
+    LIP = Array.from({ length: n + 1 }, (_, i) => {
+      const s = len * i / n, a = lip.getPointAtLength(Math.max(0, s - 1)), b = lip.getPointAtLength(Math.min(len, s + 1)), p = lip.getPointAtLength(s);
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, u = i / n;
+      const end = Math.max(Math.exp(-u * u / .008), Math.exp(-(1 - u) * (1 - u) / .008));   // heavier at both ends
+      // slow swells, like one brush stroke: the width breathes along it, the middle strays a little
+      return { x: p.x, y: p.y, nx: -dy / d, ny: dx / d, k: (1 + .22 * Math.sin(u * 9.4 + 1.3) + .12 * Math.sin(u * 23 + .4)) * (1 + .75 * end),
+        wob: .12 * Math.sin(u * 7.1 + 2.1) + .05 * Math.sin(u * 17) };
+    });
+  }
+  const out = [], inn = [];
+  for (const q of LIP) {
+    const h = w * q.k / 2, c = w * q.wob;      // half its width, and how far its middle strays from the line
+    out.push(`${(q.x + q.nx * (h + c)).toFixed(1)} ${(q.y + q.ny * (h + c)).toFixed(1)}`);
+    inn.push(`${(q.x - q.nx * (h - c)).toFixed(1)} ${(q.y - q.ny * (h - c)).toFixed(1)}`);
+  }
+  lipInk.setAttribute("d", "M" + out.join(" L") + " L" + inn.reverse().join(" L") + " Z");
+  for (const [el, q] of [[lipEndA, LIP[0]], [lipEndB, LIP[LIP.length - 1]]]) {   // round, blobby ends
+    el.setAttribute("cx", (q.x + q.nx * w * q.wob).toFixed(1)); el.setAttribute("cy", (q.y + q.ny * w * q.wob).toFixed(1)); el.setAttribute("r", (w * q.k / 2).toFixed(1));
+  }
 }
 // the stars: only when you look up, above the horizon, small and round; they go down with the view
 const starsEl = $("stars"), sctx = starsEl.getContext("2d");
