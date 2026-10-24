@@ -1,0 +1,187 @@
+/* CABeZa · shared by the home page, cabz/, cabz/fw/ and cabz/pp/
+   Built on tokens.css: the grid (8 columns, 8px gaps, 24px side margins, the same grid nav.js draws
+   and overlays), the type and the palette. */
+@import url("tokens.css");
+:root {
+  color-scheme: light;
+  /* A muted peach-coral field, between blush pink and orange; sun.js blends it into night during an eclipse. */
+  --bg: var(--ui-paper);
+  --sky: var(--bg);
+  --project-dot: 8px;
+  --fg: var(--ui-ink);
+  --dim: color-mix(in srgb, var(--fg) 45%, transparent);
+  --serif: var(--type-font);
+  --cursor-day: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2228%22%20viewBox%3D%220%200%2024%2028%22%3E%3Cpath%20d%3D%22M3%202V22L8%2017L12%2026L16%2024L12%2015L21%2014Z%22%20fill%3D%22%23FF4500%22%20stroke%3D%22%23222222%22%20stroke-width%3D%221%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E") 3 2, auto;
+  --cursor-night: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2228%22%20viewBox%3D%220%200%2024%2028%22%3E%3Cpath%20d%3D%22M3%202V22L8%2017L12%2026L16%2024L12%2015L21%2014Z%22%20fill%3D%22%23B026FF%22%20stroke%3D%22%23222222%22%20stroke-width%3D%221%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E") 3 2, auto;
+  --cols: var(--grid-cols);
+  --gap: var(--grid-gap);
+  --margin: var(--grid-margin);
+  --bar: 32px;
+  --col: calc((100vw - 2 * var(--margin) - (var(--cols) - 1) * var(--gap)) / var(--cols));
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--sky); color: var(--fg); }
+
+
+body { margin: 0; color: var(--fg); }
+
+body {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: grid;
+  align-content: start;
+  row-gap: 48px;
+  padding: calc(var(--bar) + 24px) var(--margin) 64px;
+  font: 400 var(--type-m)/1.4 var(--serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gap);
+}
+
+/* ---------- the index: project names with adjacent versions ----------
+   the project's dot at the far left, a small space, its short name (hover: the real name,
+   descending shear) · its versions follow the name. Only the visible links are clickable. */
+.list { list-style: none; margin: 0; padding: 0; font: 400 var(--type-m)/1.35 var(--serif); }
+.list > li {
+  grid-column: 1 / -1; display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); align-items: center; column-gap: 16px;
+  position: relative; padding: 8px 0 10px;
+}
+
+.list a.name { grid-column: 1; justify-self: start; display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 10px; margin: -8px -10px;
+  color: var(--fg); text-decoration: none; white-space: nowrap; }
+.list .meta { grid-column: 2; position: relative; z-index: 1; }    /* version dots have their own links */
+
+/* PP versions precede the names and stay still while the names morph. */
+.pp-index .list .meta { grid-column: 1; grid-row: 1; }
+.pp-index .list a.name { grid-column: 2; grid-row: 1; }
+
+/* the project: a big dot · its versions: small dots, each one a link */
+.big { display: block; width: var(--project-dot); height: var(--project-dot); border-radius: 50%; background: var(--fg); flex: none; }
+.meta { display: flex; align-items: center; gap: 16px; font-size: var(--type-s); letter-spacing: .06em; color: var(--dim); }
+.vers { display: inline-flex; align-items: center; }
+.vers a { position: relative; display: grid; place-items: center; width: 14px; height: 14px; }   /* easy to hit */
+.vers i { position: relative; display: block; width: 7px; height: 7px; border: 1px solid var(--fg); border-radius: 50%; }
+.vers a + a { margin-left: 4px; }
+.vers a + a::before { content: ""; position: absolute; right: calc(50% + 3.5px); top: calc(50% - .5px); width: 11px; height: 1px; background: var(--fg); pointer-events: none; }
+.vers i { pointer-events: none; }
+.vers a:last-child i { background: var(--fg); }
+/* hovering a version: the current one's fill fades, its outline stays (the cursor's round is on the hovered one) */
+.vers:has(a:hover) a:last-child i { background: color-mix(in srgb, var(--fg) 35%, transparent); }
+.vers a:focus-visible i { background: var(--fg); }
+
+/* the descending shear (shear.js): the real text plus hidden copies stacked on it */
+.shear { position: relative; display: inline-block; white-space: nowrap; }
+.shear .t { display: inline-block; }
+.shear .in, .shear .strip {
+  position: absolute; left: 0; top: 0; display: inline-block; white-space: nowrap;
+  visibility: hidden; user-select: none; -webkit-user-select: none; pointer-events: none; }
+
+/* ---------- home: a small signature at bottom left, sun in column 8 ---------- */
+.identity { position: fixed; left: var(--margin); bottom: calc(var(--margin) + env(safe-area-inset-bottom, 0px)); z-index: 1; }
+.name-line {
+  display: flex; align-items: baseline; column-gap: .42em;
+  margin: 0; font: 400 var(--type-m)/1 var(--serif); letter-spacing: 0;
+  color: var(--fg); white-space: nowrap;
+}
+.name-line > span { flex-shrink: 0; }
+.name-line .slot {
+  display: inline-block; white-space: nowrap; vertical-align: baseline;
+  position: relative; margin-right: -3px;
+}
+
+.sun {
+  position: absolute;
+  top: calc(var(--bar) + var(--margin));
+  right: var(--margin);
+  width: var(--col);
+  aspect-ratio: 1;
+}
+.sun img, .sun canvas { display: block; width: 100%; height: auto; }
+.sun.live img { display: none; }   /* sun.js draws it live, rippling */
+.sun:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
+/* the moon: a disc the colour of the background, always under the mouse (sun.js) */
+.sun-ball { position: fixed; left: 0; top: 0; border-radius: 50%; background: var(--sky);   /* the same sky, so it hides what's under it */
+  pointer-events: none; visibility: hidden; z-index: 10; border: 0; padding: 0; }
+.sun-ball.parked { pointer-events: auto; border: 1px solid color-mix(in srgb, var(--c-violet) 65%, transparent); }
+.sun-ball:focus-visible { outline: 1px solid var(--c-violet); outline-offset: 4px; }
+/* the moon's round is a patch of night, the dark sky with purple type, over raimundo (sun.js) and the index names */
+html:has(.sun-ball.night-name) .cabz-cursor { visibility: hidden !important; }   /* only the round over the name */
+.name-night { z-index: 11; color: var(--c-violet); pointer-events: none; }
+.name-night .name-line { color: inherit; }
+.name-night[hidden] { display: none; }
+body.project-hover:not(.eclipse-locked) .sun-ball { visibility: visible; }
+/* the moon appearing: over a name (or raimundo) a black round grows out of the pointer's tip in a
+   blink, and shrinks back into it on the way out; the purple name inside grows with it (--lens-r) */
+.sun-ball::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--c-ink);
+  transform: scale(0); transition: transform .16s cubic-bezier(.2, .8, .2, 1);
+}
+body.project-hover:not(.eclipse-locked) .sun-ball::after, .sun-ball.night-name::after { transform: scale(1); }
+.sun-ball.moon-only { visibility: visible; background: transparent; }   /* pages without the sun: only the round shows */
+@property --lens-r { syntax: "<length>"; inherits: true; initial-value: 0px; }
+.list a.name .shear { transition: --lens-r .16s cubic-bezier(.2, .8, .2, 1); }
+@media (prefers-reduced-motion: reduce) { .sun-ball::after, .list a.name .shear { transition: none; } }
+body.project-hover > .list { position: relative; z-index: 11; }   /* the names sit on the night patch */
+.project-reveal, .project-reveal .t { color: var(--c-violet); }
+/* on home the sun owns column 8: the index stops at 7 */
+.home .list > li { grid-column: 1 / 8; }
+
+
+@media (max-width: 600px) {
+
+
+  .home .list > li { grid-column: 1 / -1; }
+
+  .sun { width: calc(var(--col) * 2 + var(--gap)); }
+}
+
+/* The animated copy is visible only through the pointer's circular window. */
+.list .shear { isolation: isolate; }
+.project-reveal {
+  position: absolute; left: 0; top: 0; pointer-events: none;
+  clip-path: circle(var(--lens-r, 0px) at var(--lens-x, 0px) var(--lens-y, 0px));
+}
+.project-lens > .t { visibility: hidden; }
+.eclipse-locked .project-lens .project-reveal { clip-path: none; }
+
+/* A real inline strut gives every animation the surrounding text baseline. */
+.name-line .word-baseline { visibility: hidden; }
+.name-line .original-word { position: absolute; left: 0; top: 0; }
+
+/* Future web: black field, one emoji tile per grid column. */
+html:has(body.fw-index) { color-scheme: dark; --bg: var(--c-black); --fg: var(--c-lilac); --dim: color-mix(in srgb, var(--c-lilac) 70%, transparent); }
+.fw-index { --tile-size: var(--col); background: var(--c-black); align-content: center; padding-block: var(--bar); }
+.tiles { list-style: none; margin: 0; padding: 0; row-gap: 48px; }
+.tiles li { grid-column: span 1; display: grid; justify-items: start; }
+.tiles li:first-child { grid-column: 2 / span 1; }
+.tiles a, .tile-placeholder {
+  display: grid; grid-template-rows: var(--tile-size) auto; row-gap: 16px;
+  width: var(--tile-size); color: var(--fg); text-decoration: none;
+}
+.tile-icon {
+  display: grid; place-items: center; width: var(--tile-size); height: var(--tile-size);
+  font-size: calc(var(--tile-size) * .8); line-height: 1;
+  filter: grayscale(.25); transition: transform .25s, filter .25s;
+}
+.tiles a:hover .tile-icon, .tiles a:focus-visible .tile-icon { transform: scale(1.15); filter: none; }
+.tile-label {
+  display: block; width: 100%; min-height: 2.6em;
+  font: var(--type-s)/1.3 var(--serif); letter-spacing: .06em; text-align: center;
+  overflow-wrap: anywhere; color: var(--dim); opacity: 0; transition: opacity .25s;
+}
+.tiles a:hover .tile-label, .tiles a:focus-visible .tile-label { opacity: 1; }
+@media (max-width: 600px) {
+  .fw-index { --tile-size: calc(var(--col) * 2 + var(--gap)); }
+  .tiles li { grid-column: span 2; }
+  .tiles li:first-child, .tiles li:nth-child(4) { grid-column: 2 / span 2; }
+}
+@media (prefers-reduced-motion: reduce) { .tile-icon, .tile-label { transition: none; } }

@@ -1,0 +1,1438 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Joyful Noise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed night sky canvas, tiny instrument readouts pinned to the corners */
+:root {
+  --void: #05060b;
+  --ink: #e9e4d8;
+  --dim: #8a8798;
+  --faint: rgba(233, 228, 216, 0.14);
+  --glow: #ffd27a;
+  --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--void); color: var(--ink); font-family: var(--mono); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+#fog { position: fixed; inset: -10%; pointer-events: none; background-size: cover; background-position: center; animation: drift 90s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: translate(-3%, -2%) scale(1.04); } to { transform: translate(3%, 2%) scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { #fog { animation: none; } }
+.hud h1, .hint, .people, .dials, .legend { text-shadow: 0 0 6px #05060b, 0 0 2px #05060b; }
+.dials { display: grid; grid-template-columns: auto 120px 4ch; gap: 6px 10px; align-items: center; margin-top: 10px; pointer-events: auto; font-variant-numeric: tabular-nums; }
+.dials label { color: var(--dim); text-transform: uppercase; letter-spacing: 0.14em; font-size: 10px; }
+.dials output { text-align: right; color: #fff; font-size: 11px; }
+.dials input[type=range] { -webkit-appearance: none; appearance: none; width: 120px; height: 20px; margin: 0; padding: 0; background: transparent; cursor: pointer; }
+.dials input[type=range]::-webkit-slider-runnable-track { height: 1px; background: rgba(255, 255, 255, 0.7); }
+.dials input[type=range]::-moz-range-track { height: 1px; background: rgba(255, 255, 255, 0.7); }
+.dials input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 2px; height: 16px; margin-top: -8px; background: #fff; border: 0; border-radius: 0; }
+.dials input[type=range]::-moz-range-thumb { width: 2px; height: 16px; background: #fff; border: 0; border-radius: 0; }
+.dials input[type=range]:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
+canvas#sky { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+.hud { position: fixed; pointer-events: none; font-size: 11px; letter-spacing: 0.04em; color: var(--dim); }
+.tl { top: calc(16px + env(safe-area-inset-top, 0px)); left: 52px; }
+.home { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; z-index: 50; padding: 4px 8px; font: 400 22px/1 "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); text-decoration: none; opacity: .75; cursor: pointer; }
+.home:hover { opacity: 1; }
+.tr { top: calc(16px + env(safe-area-inset-top, 0px)); right: 16px; text-align: right; }
+.bl { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 16px; }
+.br { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: 16px; pointer-events: auto; }
+h1 { margin: 0 0 4px; font-family: var(--display); font-weight: 400; font-size: 28px; letter-spacing: 0; color: var(--ink); line-height: 1; }
+h1 em { color: var(--glow); }
+.hint { max-width: 36ch; line-height: 1.5; }
+.people { font-variant-numeric: tabular-nums; }
+.people b { color: var(--ink); font-weight: 500; }
+.legend { display: grid; grid-template-columns: auto auto; gap: 3px 16px; align-items: center; font-variant-numeric: tabular-nums; }
+.legend span:nth-child(odd) { display: flex; gap: 7px; align-items: center; color: var(--ink); }
+.legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.legend .on { color: var(--glow); }
+button { font: inherit; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); background: transparent; border: 1px solid var(--faint); border-radius: 2px; padding: 7px 10px; cursor: pointer; }
+button:hover { border-color: var(--dim); }
+button:focus-visible { outline: 1px solid var(--glow); outline-offset: 2px; }
+.br { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+#cam { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+#camview { width: 200px; height: 150px; border: 1px solid var(--faint); border-radius: 2px; background: #000; }
+#camstate { color: var(--glow); }
+.rocketask { position: fixed; left: 50%; bottom: 10%; transform: translateX(-50%); z-index: 30; width: min(400px, calc(100% - 32px)); box-sizing: border-box; text-align: center; padding: 20px 22px 14px; background: rgba(5, 6, 11, 0.9); border: 1px solid var(--faint); }
+.rocketask p { margin: 0 0 8px; }
+.rocketask .rk { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+.rocketask .rn { font-family: var(--display); font-size: 34px; line-height: 1.1; color: var(--ink); margin-bottom: 10px; }
+.rocketask ul { list-style: none; margin: 0 0 14px; padding: 0; color: var(--ink); line-height: 1.7; }
+.rocketask .rm { font-size: 12px; color: var(--dim); margin: -4px 0 12px; }
+.rocketask .rq { font-family: var(--display); font-size: 21px; margin: 4px 0 12px; }
+.rocketask .row { justify-content: center; margin-bottom: 4px; }
+.rocketask .rs { font-size: 10px; color: var(--dim); margin: 8px 0 0; }
+.camnote { left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: min(44ch, calc(100% - 32px)); padding: 14px 16px; background: rgba(5,6,11,0.92); border: 1px solid var(--faint); color: var(--ink); line-height: 1.6; pointer-events: auto; }
+.enter { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; background: rgba(5,6,11,0.55); padding-inline: 16px; }
+.enter h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 56px; color: var(--ink); }
+.enter p { margin: 0; max-width: 36ch; line-height: 1.6; color: var(--ink); }
+body.exhibit #micBtn, body.exhibit #handsBtn, body.exhibit .legend { display: none; }
+@media (max-width: 520px) { .legend { display: none; } h1 { font-size: 24px; } }
+</style>
+
+<canvas id="sky"></canvas>
+<div id="fog"></div>
+
+<div class="hud tl">
+  <h1>A Joyful Noise</h1>
+  <div class="hint">Hold to grow a body. Drag before you let go to bend its orbit; the line shows where it will go. "Add solar system" places ours. With a camera: open hand grows, fist holds, a flick throws.</div>
+</div>
+<div class="hud tr">
+  <div class="people" id="people">alone in this universe</div>
+  <div class="dials">
+    <label for="opacity">Opacity</label><input id="opacity" type="range" min="0" max="100" value="100"><output id="opacityOut">100</output>
+    <label for="sublime">Sublime</label><input id="sublime" type="range" min="0" max="100" value="0"><output id="sublimeOut">0</output>
+  </div>
+</div>
+<div class="hud bl legend" id="legend"></div>
+<div class="hud br">
+  <div id="cam" hidden>
+    <canvas id="camview" width="200" height="150"></canvas>
+    <div id="camstate">Show your open hand</div>
+  </div>
+  <div class="row">
+    <button id="solarBtn" type="button">Add solar system</button>
+    <button id="earthBtn" type="button">Add Earth</button>
+    <button id="copyBtn" type="button">Copy scene JSON</button>
+    <button id="micBtn" type="button">Sing to planets</button>
+    <button id="handsBtn" type="button">Use my hands</button>
+    <button id="clear" type="button">Clear my bodies</button>
+  </div>
+</div>
+<div class="hud camnote" id="camnote" hidden></div>
+<div class="rocketask" id="rocketask" role="dialog" aria-labelledby="rkTitle" hidden>
+  <p class="rk" id="rkTitle">In a planet of 8.3 billion people</p>
+  <p class="rn">rockets are the business of about 750</p>
+  <p class="rm">the people who have ever been to space</p>
+  <ul>
+    <li>one rocket costs about 70 million dollars</li>
+    <li>about 500 tonnes of propellant</li>
+    <li>about 400 tonnes of CO₂, what 80 people emit in a year</li>
+  </ul>
+  <p class="rq">Do you really want to throw one?</p>
+  <div class="row"><button id="rocketYes" type="button">throw it</button><button id="rocketNo" type="button">keep it here</button></div>
+  <p class="rs" id="rocketTally"></p>
+  <p class="rs">Rough figures for a Falcon 9 class rocket. About 750 people have been to space (October 2026, 52 countries).</p>
+</div>
+<div class="enter" id="enter" hidden>
+  <h2>A Joyful Noise</h2>
+  <p>Move close to a planet to hear it. The closer you get, the louder it sings.</p>
+  <button id="enterBtn" type="button">Enter with sound</button>
+</div>
+
+<script>window.playhtmlReady = new Promise(r => { window.__playhtmlResolve = r; });</script>
+<script type="module">
+  // the shared sky runs on playhtml (https://playhtml.fun): presence is live and ephemeral, it clears when a person leaves
+  try {
+    const { playhtml } = await import("https://unpkg.com/playhtml@2.15.0");
+    await playhtml.init({ room: "a-joyful-noise" });   // a fixed room, so everyone meets whatever form of the address they typed
+    window.__playhtmlResolve(playhtml);
+  } catch (e) { console.warn("playhtml unavailable", e); window.__playhtmlResolve(null); }
+</script>
+<script>
+(() => {
+  // the exhibit: open the page with #exhibit at the end of its link. It loads exhibit.json and plays each body's sound by proximity.
+  const EXHIBIT = location.hash === "#exhibit";
+  if (EXHIBIT) document.body.classList.add("exhibit");
+  if (EXHIBIT) document.querySelector(".hint").textContent = "Move close to a planet to hear it. Lower Opacity to see through the fog, raise Sublime for colour and nebulae.";
+  addEventListener("hashchange", () => location.reload());
+  // ---------- scale (masses in Earth masses) ----------
+  const SUN = 333000, JUP = 318;
+  const TIERS = [
+    { key: "rock",   name: "Rocky planet", max: 10,        col: "#a89a8c" },
+    { key: "gas",    name: "Gas giant",    max: 4000,      col: "#d9a86c" },
+    { key: "brown",  name: "Brown dwarf",  max: 26600,     col: "#9a4f5c" },
+    { key: "red",    name: "Red dwarf",    max: 150000,    col: "#ff6a3d" },
+    { key: "sun",    name: "Yellow sun",   max: 1000000,   col: "#ffd27a" },
+    { key: "blue",   name: "Blue giant",   max: 2.66e6,    col: "#9cc7ff" },
+  ];
+  const NOVA_MASS = 2.66e6;        // 8 suns: dies as a supernova
+  const BH_MASS = 8.3e6;           // 25 suns: leaves a black hole
+  const NEUTRON_MAX = 1e6;         // a neutron star heavier than 3 suns collapses
+  const GROW = 1.0;                // log10(mass) gained per second of holding
+  const MAX_LOG = 8;               // cap at 300 suns
+  const G = 2.4, SOFT = 14, MAX_MINE = 24;
+
+  function tierOf(b) {
+    if (b.type === "ns") return { key: "ns", name: "Neutron star", col: "#e8fbff" };
+    if (b.type === "bh") return { key: "bh", name: "Black hole", col: "#ff9a4a" };
+    for (const t of TIERS) if (b.m < t.max) return t;
+    return TIERS[TIERS.length - 1];
+  }
+  // our solar system, for the "Add solar system" button. Real masses in Earths; distances squeezed (40 + 75 x the square root of the AU) so Pluto still fits
+  const PLANETS = {
+    me: { name: "Mercury", au: 0.39, m: 0.055, size: 2.4, col: "#9d958c" },
+    ve: { name: "Venus",   au: 0.72, m: 0.815, size: 3.5, col: "#e3c48f" },
+    ea: { name: "Earth",   au: 1.0,  m: 1,     size: 3.7, col: "#4f8fd6" },
+    ma: { name: "Mars",    au: 1.52, m: 0.107, size: 2.9, col: "#c8613c" },
+    ju: { name: "Jupiter", au: 5.2,  m: 317.8, size: 9,   col: "#d4a77a" },
+    sa: { name: "Saturn",  au: 9.58, m: 95.2,  size: 8,   col: "#e2cd94", rings: true },
+    ur: { name: "Uranus",  au: 19.2, m: 14.5,  size: 5.4, col: "#9fdde3" },
+    ne: { name: "Neptune", au: 30.1, m: 17.1,  size: 5.2, col: "#4f6fe0" },
+    pl: { name: "Pluto",   au: 39.5, m: 0.0022, size: 1.8, col: "#cdb8a3", e: 0.25 },
+    eb: { name: "Earth",   au: 1.0,  m: 8,     size: 9,   col: "#2f6fc4", big: true },   // the "Add Earth" planet: a bigger Earth, not part of the solar system button
+  };
+  // the names each planet goes by outside Greco-Roman myth; labels drift from one to the next, each on its own clock
+  const NAMES = {
+    me: ["Budha", "Shuixing", "Nabu", "Sebegu", "Utarid", "Suisei"],            // Hindu, Chinese, Babylonian, Egyptian, Arabic, Japanese
+    ve: ["Shukra", "Jinxing", "Ishtar", "Chasca", "Quetzalcoatl", "al-Zuhara"],  // Hindu, Chinese, Babylonian, Inca, Aztec, Arabic
+    ea: ["Prithvi", "Pachamama", "Geb", "Tlaltecuhtli", "Jörð", "Diqiu"],         // Hindu, Inca, Egyptian, Aztec, Norse, Chinese
+    ma: ["Mangala", "Huoxing", "Nergal", "Her Desher", "al-Mirrikh", "Kasei"],   // Hindu, Chinese, Babylonian, Egyptian, Arabic, Japanese
+    ju: ["Brihaspati", "Muxing", "Marduk", "al-Mushtari", "Mokusei"],             // Hindu, Chinese, Babylonian, Arabic, Japanese
+    sa: ["Shani", "Tuxing", "Ninurta", "Zuhal", "Dosei"],                         // Hindu, Chinese, Babylonian, Arabic, Japanese
+    ur: ["Aruna", "Tianwangxing", "Tennōsei"],                                     // Hindi, Chinese, Japanese
+    ne: ["Varuna", "Haiwangxing", "Kaiōsei"],                                      // Hindi, Chinese, Japanese
+    pl: ["Yama", "Mingwangxing", "Meiōsei"],                                       // Hindi, Chinese, Japanese
+    eb: ["Prithvi", "Pachamama", "Geb", "Tlaltecuhtli", "Jörð", "Diqiu"],
+  };
+  // the name showing now, and how far into its fade-in it is (0..1)
+  function nameOf(b, t) {
+    const list = NAMES[b.k]; if (!list) return { text: b.name || "", a: 1 };
+    if (b.nameIx === undefined) { b.nameIx = Math.floor(Math.random() * list.length); b.nameAt = t - 2000; b.nameHold = 4000 + Math.random() * 7000; }
+    if (t - b.nameAt > b.nameHold) { b.nameIx = (b.nameIx + 1) % list.length; b.nameAt = t; b.nameHold = 4000 + Math.random() * 7000; }
+    const age = t - b.nameAt, a = Math.min(1, age / 700, Math.max(0, (b.nameHold - age) / 500));
+    return { text: list[b.nameIx], a };
+  }
+  function radiusOf(b) {
+    if (b.k && PLANETS[b.k]) return PLANETS[b.k].size;
+    const l = Math.log10(Math.max(1, b.m));
+    if (b.type === "ns") return 4;
+    if (b.type === "bh") return Math.max(6, 8 + (l - 5.6) * 3);
+    const k = tierOf(b).key;
+    if (k === "rock") return 3 + l * 2;
+    if (k === "gas") return 6 + (l - 1) * 2;
+    if (k === "brown") return 9;
+    if (k === "red") return 10 + (l - 4.4) * 3;
+    if (k === "sun") return 14 + (l - 5.2) * 5;
+    return 21 + (l - 6) * 8;
+  }
+  function fmtMass(m) {
+    if (m >= 0.08 * SUN) return (m / SUN).toFixed(m >= 10 * SUN ? 0 : 1) + " Suns";
+    if (m >= 13 * JUP) return Math.round(m / JUP) + " Jupiters";
+    return Math.round(m).toLocaleString("en") + " Earths";
+  }
+
+  // ---------- legend ----------
+  const legend = document.getElementById("legend");
+  const LEG = [...TIERS, { key: "ns", name: "Neutron star", col: "#e8fbff" }, { key: "bh", name: "Black hole", col: "#ff9a4a" }];
+  const ranges = ["< 10 Earths", "< 13 Jupiters", "< 0.08 Suns", "< 0.45 Suns", "< 3 Suns", "< 8 Suns", "8 to 25 Suns, then boom", "> 25 Suns, then boom"];
+  LEG.forEach((t, i) => {
+    const a = document.createElement("span"); a.dataset.k = t.key;
+    const dot = document.createElement("i"); dot.style.background = t.col;
+    a.append(dot, document.createTextNode(t.name));
+    const b = document.createElement("span"); b.textContent = ranges[i];
+    legend.append(a, b);
+  });
+  function lightLegend(key) {
+    legend.querySelectorAll("[data-k]").forEach(el => el.classList.toggle("on", el.dataset.k === key));
+  }
+
+  // ---------- canvas & camera ----------
+  const cv = document.getElementById("sky"), cx = cv.getContext("2d");
+  let W = 0, H = 0, DPR = 1, S = 1;
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR;
+    S = Math.min(W, H) / 1400; // the shared world is 1400 units across on everyone's screen
+    stars = makeStars();
+  }
+  const toWorld = (x, y) => ({ x: (x - W / 2) / S, y: (y - H / 2) / S });
+  const toScreen = (x, y) => ({ x: W / 2 + x * S, y: H / 2 + y * S });
+  let stars = [];
+  function makeStars() {
+    const out = [], n = Math.round(W * H / 2600);
+    for (let i = 0; i < n; i++) out.push([Math.random() * W, Math.random() * H, Math.random() * 0.9 + 0.2, Math.random()]);
+    return out;
+  }
+  addEventListener("resize", resize);
+  resize();
+
+  // ---------- state ----------
+  const myHue = Math.floor(Math.random() * 360);
+  let mine = [];            // {id,x,y,vx,vy,m,type,born}
+  let remote = new Map();   // peer -> {hue, bodies:[...], at, gone}
+  const fx = [];            // effects: {x,y,t,kind}
+  const eaten = new Set();  // remote body ids we've absorbed
+  let novaSeen = new Set();
+  let room = null;
+  const uid = () => Math.random().toString(36).slice(2, 8);
+
+  // ---------- input: hold to grow, drag to throw ----------
+  let hold = null; // {x,y,px,py,t0,id}
+  cv.addEventListener("contextmenu", e => e.preventDefault());
+  function solarSystem(x, y) {
+    if (hold && hold.id !== "hand") hold = null;
+    const sun = { id: uid(), x, y, vx: 0, vy: 0, m: SUN, type: "", born: performance.now(), k: "" };
+    const made = [sun];
+    for (const [k, P] of Object.entries(PLANETS)) {
+      if (P.big) continue;
+      const r = 40 + 75 * Math.sqrt(P.au), a = Math.random() * 6.283;
+      const v = Math.sqrt(G * SUN / r) * Math.sqrt(1 + (P.e || 0)); // Pluto starts at its closest point, so it swings out
+      made.push({ id: uid(), x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, vx: -Math.sin(a) * v, vy: Math.cos(a) * v, m: P.m, type: "", born: performance.now(), k });
+    }
+    while (mine.length + made.length > MAX_MINE) mine.sort((a, c) => a.m - c.m).shift();
+    mine.push(...made);
+    fx.push({ x, y, t: performance.now(), kind: "merge", col: "#ffd27a" });
+    lastPredict = 0; share();
+  }
+  // the button drops one in the middle, or beside the last one if the middle is taken
+  document.getElementById("solarBtn").addEventListener("click", () => {
+    const busy = (x, y) => mine.concat(remoteNow(performance.now())).some(b => b.m > 1e4 && Math.hypot(b.x - x, b.y - y) < 500);
+    let x = 0, y = 0;
+    for (let k = 0; k < 12 && busy(x, y); k++) { const a = Math.random() * 6.283; x = Math.cos(a) * 700; y = Math.sin(a) * 450; }
+    solarSystem(x, y);
+  });
+  cv.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || e.ctrlKey) return;
+    cv.setPointerCapture(e.pointerId);
+    const w = toWorld(e.clientX, e.clientY);
+    const earth = earthAt(w);
+    if (earth) { if (!rocket) startRocket(earth); return; }   // a click on the big Earth sends a rocket instead of growing a body
+    if (hold) return;
+    hold = { x: w.x, y: w.y, px: w.x, py: w.y, grown: 0, growing: true, id: e.pointerId };
+    if (mic) mic.start();
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!hold || e.pointerId !== hold.id) return;
+    const w = toWorld(e.clientX, e.clientY); hold.px = w.x; hold.py = w.y;
+  });
+  const holdMass = () => Math.pow(10, Math.min(MAX_LOG, hold.grown * GROW));
+  // the heavier body that pulls hardest on a point: what a new body will orbit
+  function dominant(x, y, m) {
+    let best = null, bestA = 0;
+    const cands = mine.map(b => ({ x: b.x, y: b.y, vx: b.vx, vy: b.vy, m: b.m, mine: true, ref: b })).concat(remoteNow(performance.now()));
+    for (const o of cands) {
+      if (o.m <= m * 1.5) continue;
+      const r = Math.hypot(o.x - x, o.y - y);
+      if (r < radiusOf(o) + 6) continue;
+      const a = o.m / (r * r);
+      if (a > bestA) { bestA = a; best = o; }
+    }
+    return best;
+  }
+  function release(e) {
+    if (!hold || e.pointerId !== hold.id) return;
+    finish();
+  }
+  // the speed a new body leaves with: a circular orbit around the strongest pull, bent by the drag
+  function launch(h, m) {
+    const dx = h.px - h.x, dy = h.py - h.y;
+    const host = dominant(h.x, h.y, m);
+    if (!host) return { vx: dx * 0.6, vy: dy * 0.6, host: null };
+    const rx = h.x - host.x, ry = h.y - host.y, r = Math.hypot(rx, ry) || 1;
+    let dir = 1; // counterclockwise on screen unless the drag points the other way
+    if (Math.hypot(dx, dy) > 8) dir = (rx * dy - ry * dx) >= 0 ? 1 : -1;
+    const v = Math.sqrt(G * (host.m + m) / r);
+    const ux = -ry / r * dir, uy = rx / r * dir;
+    const share_ = host.mine ? host.m / (host.m + m) : 1;
+    const k = m / (host.m + m);
+    return { vx: host.vx + ux * v * share_ + dx * 0.35, vy: host.vy + uy * v * share_ + dy * 0.35, host, kx: -ux * v * k, ky: -uy * v * k };
+  }
+  function finish() {
+    const m = holdMass();
+    const b = { id: uid(), x: hold.x, y: hold.y, vx: 0, vy: 0, m, type: "", born: performance.now() };
+    if (mic) mic.stopInto(b);
+    const L = launch(hold, m);
+    b.vx = L.vx; b.vy = L.vy;
+    if (L.host && L.host.mine) { L.host.ref.vx += L.kx; L.host.ref.vy += L.ky; }
+    hold = null; lastPredict = 0;
+    if (mine.length >= MAX_MINE) mine.sort((a, c) => a.m - c.m).shift(); // the smallest drifts off to make room
+    mine.push(b);
+    if (m >= NOVA_MASS) supernova(b);
+    share();
+  }
+  cv.addEventListener("pointerup", release);
+  cv.addEventListener("pointercancel", release);
+  document.getElementById("clear").addEventListener("click", () => { mine = []; share(); });
+
+  // ---------- supernova ----------
+  function supernova(b) {
+    const big = b.m >= BH_MASS;
+    fx.push({ x: b.x, y: b.y, t: performance.now(), kind: "nova", r: big ? 900 : 650 });
+    shockwave(b.x, b.y, big ? 900 : 650, b.id);
+    b.type = big ? "bh" : "ns";
+    b.m = big ? b.m * 0.3 : 1.4 * SUN;
+    b.vx *= 0.3; b.vy *= 0.3;
+    novaOut = { id: b.id + Date.now().toString(36), x: Math.round(b.x), y: Math.round(b.y), r: big ? 900 : 650 };
+  }
+  let novaOut = null;
+  function shockwave(x, y, reach, skip) {
+    for (const o of mine) {
+      if (o.id === skip) continue;
+      const dx = o.x - x, dy = o.y - y, d = Math.hypot(dx, dy) || 1;
+      if (d > reach) continue;
+      const kick = 260 * (1 - d / reach) / Math.max(1, Math.log10(o.m) / 3);
+      o.vx += dx / d * kick; o.vy += dy / d * kick;
+    }
+  }
+
+  // ---------- sharing through the room ----------
+  function packed() {
+    return mine.map(b => [b.id, Math.round(b.x), Math.round(b.y), Math.round(b.vx), Math.round(b.vy), Math.round(Math.log10(b.m) * 1000), b.type, b.k || ""]);
+  }
+  let lastShare = 0;
+  function share(force = true) {
+    if (!room) return;
+    const now = performance.now();
+    if (!force && now - lastShare < 120) return;
+    lastShare = now;
+    const sky = { hue: myHue, bodies: packed() };
+    if (novaOut) sky.nova = novaOut;
+    room.presence(sky).catch(() => {});
+  }
+  function readPeer(p) {
+    const pr = p.presence || {};
+    const list = Array.isArray(pr.bodies) ? pr.bodies : [];
+    const bodies = [];
+    for (const r of list.slice(0, MAX_MINE)) {
+      if (!Array.isArray(r) || r.length < 6) continue;
+      const [id, x, y, vx, vy, lm, type, k] = r;
+      if (![x, y, vx, vy, lm].every(Number.isFinite)) continue;
+      bodies.push({ id: String(id), x, y, vx, vy, m: Math.pow(10, Math.min(9, lm / 1000)), type: type === "bh" || type === "ns" ? type : "", k: PLANETS[k] ? k : "" });
+    }
+    const n = pr.nova;
+    if (n && typeof n === "object" && Number.isFinite(n.x) && Number.isFinite(n.y) && !novaSeen.has(String(n.id))) {
+      novaSeen.add(String(n.id));
+      const r = Math.min(1000, Math.max(100, Number(n.r) || 650));
+      fx.push({ x: n.x, y: n.y, t: performance.now(), kind: "nova", r });
+      shockwave(n.x, n.y, r, null);
+    }
+    return { hue: Number.isFinite(pr.hue) ? pr.hue : 200, bodies, at: performance.now() };
+  }
+  const peopleEl = document.getElementById("people");
+  function renderPeople() {
+    const others = [...remote.values()].filter(r => !r.gone).length;
+    peopleEl.innerHTML = "";
+    if (!room) { peopleEl.textContent = EXHIBIT ? "" : "can't reach the shared sky"; return; }
+    if (!others) { peopleEl.textContent = "alone in this universe"; return; }
+    const b = document.createElement("b"); b.textContent = others;
+    peopleEl.append("you and ", b, others === 1 ? " other person here" : " other people here");
+  }
+  // playhtml adapter: gives the page the two calls it needs, presence(sky) and onPeers(cb).
+  // Everything goes out as ONE presence channel ("sky"), and a peer is only handed to the page when its data changed.
+  async function joinSky() {
+    const ph = await window.playhtmlReady;
+    const pr = ph && ph.presence;
+    if (!pr) return null;
+    const last = new Map(); // peer -> last data as text
+    return {
+      presence(sky) { pr.setMyPresence("sky", sky); return Promise.resolve(); },
+      onPeers(cb) {
+        const sync = () => {
+          const seen = new Set(), updated = [], left = [];
+          for (const [id, e] of pr.getPresences()) {
+            if (e.isMe) continue;
+            seen.add(id);
+            if (!e.sky) continue;
+            const txt = JSON.stringify(e.sky);
+            if (last.get(id) === txt) continue;
+            last.set(id, txt);
+            updated.push({ peer: id, sameTab: false, presence: e.sky });
+          }
+          for (const id of [...last.keys()]) if (!seen.has(id)) { last.delete(id); left.push({ peer: id }); }
+          if (updated.length || left.length) cb({ joined: [], updated, left });
+        };
+        pr.onPresenceChange("sky", sync);
+        setInterval(sync, 1000); // also notices people who leave
+        sync();
+      }
+    };
+  }
+  (async () => {
+    try { room = EXHIBIT ? null : await joinSky(); } catch (e) { console.warn(e); room = null; }
+    if (!room) { renderPeople(); return; }
+    room.onPeers(ch => {
+      for (const p of [...ch.joined, ...ch.updated]) {
+        if (p.sameTab) continue;
+        remote.set(p.peer, readPeer(p));
+      }
+      for (const p of ch.left) {
+        const r = remote.get(p.peer);
+        if (r) { r.gone = performance.now(); for (const b of r.bodies) fx.push({ x: b.x, y: b.y, t: performance.now(), kind: "fade", b, hue: r.hue }); }
+        remote.delete(p.peer);
+      }
+      renderPeople();
+    });
+    share();
+    renderPeople();
+  })();
+  renderPeople();
+
+
+  // ---------- hands: open hand grows, fist pauses, a flick throws ----------
+  let hands = null;
+  const camEl = document.getElementById("cam"), camState = document.getElementById("camstate");
+  const camView = document.getElementById("camview"), camCx = camView.getContext("2d");
+  const note = document.getElementById("camnote");
+  function showNote(text) { note.textContent = text; note.hidden = false; setTimeout(() => { note.hidden = true; }, 9000); }
+  const MP = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+  const MODEL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+  const BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
+
+  async function startHands() {
+    const btn = document.getElementById("handsBtn");
+    if (hands) { hands.stop(); hands = null; camEl.hidden = true; btn.textContent = "Use my hands"; return; }
+    btn.textContent = "Starting camera…";
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" }, audio: false });
+    } catch (err) {
+      btn.textContent = "Use my hands";
+      showNote("The camera is blocked here. Claude's artifact pages can't use a camera, so open this same file in Chrome on your Mac (or from your own website) to play with your hands. The mouse still works here.");
+      return;
+    }
+    let landmarker;
+    try {
+      const { HandLandmarker, FilesetResolver } = await import(MP + "/vision_bundle.mjs");
+      const fileset = await FilesetResolver.forVisionTasks(MP + "/wasm");
+      landmarker = await HandLandmarker.createFromOptions(fileset, { baseOptions: { modelAssetPath: MODEL, delegate: "GPU" }, runningMode: "VIDEO", numHands: 1 });
+    } catch (err) {
+      stream.getTracks().forEach(t => t.stop());
+      btn.textContent = "Use my hands";
+      showNote("The hand tracker couldn't load (" + (err && err.message || "network error") + "). Check the internet connection and try again.");
+      return;
+    }
+    const video = document.createElement("video");
+    video.playsInline = true; video.muted = true; video.srcObject = stream; await video.play();
+    camEl.hidden = false; btn.textContent = "Stop camera";
+
+    let lastVideoTime = -1, pose = "none", lastSeen = 0, armed = true, cooldown = 0;
+    const track = []; // recent palm positions in world units: [t, x, y]
+    hands = {
+      stop() { stream.getTracks().forEach(t => t.stop()); landmarker.close(); if (hold && hold.id === "hand") finish(); },
+      tick(now) {
+        if (video.readyState < 2 || video.currentTime === lastVideoTime) return;
+        lastVideoTime = video.currentTime;
+        const res = landmarker.detectForVideo(video, now);
+        const lm = res.landmarks && res.landmarks[0];
+        // preview, mirrored like a mirror
+        camCx.save(); camCx.translate(200, 0); camCx.scale(-1, 1); camCx.globalAlpha = 0.55;
+        camCx.drawImage(video, 0, 0, 200, 150); camCx.restore(); camCx.globalAlpha = 1;
+        if (!lm) {
+          if (hold && hold.id === "hand" && now - lastSeen > 500) { finish(); armed = false; }
+          if (now - lastSeen > 500) { pose = "none"; armed = true; }
+          camState.textContent = "Show your open hand";
+          return;
+        }
+        lastSeen = now;
+        camCx.strokeStyle = "#ffd27a"; camCx.lineWidth = 1.5;
+        for (const [a, b] of BONES) { camCx.beginPath(); camCx.moveTo((1 - lm[a].x) * 200, lm[a].y * 150); camCx.lineTo((1 - lm[b].x) * 200, lm[b].y * 150); camCx.stroke(); }
+
+        // open or closed: a finger is extended when its tip is farther from the wrist than its middle joint
+        const d = (i, j) => Math.hypot(lm[i].x - lm[j].x, lm[i].y - lm[j].y);
+        let ext = 0;
+        for (const [tip, pip] of [[8, 6], [12, 10], [16, 14], [20, 18]]) if (d(tip, 0) > d(pip, 0) * 1.1) ext++;
+        const newPose = ext >= 3 ? "open" : ext <= 1 ? "fist" : pose;
+        // palm centre, mirrored, mapped to the screen (the middle 80% of the camera covers the whole screen)
+        const px = (1 - (lm[0].x + lm[9].x) / 2 - 0.1) / 0.8, py = ((lm[0].y + lm[9].y) / 2 - 0.1) / 0.8;
+        const w = toWorld(Math.max(0, Math.min(1, px)) * W, Math.max(0, Math.min(1, py)) * H);
+        track.push([now, w.x, w.y]); while (track.length && now - track[0][0] > 160) track.shift();
+        const span = track.length > 1 ? (track[track.length - 1][0] - track[0][0]) / 1000 : 0;
+        const vx = span ? (track[track.length - 1][1] - track[0][1]) / span : 0;
+        const vy = span ? (track[track.length - 1][2] - track[0][2]) / span : 0;
+        const speed = Math.hypot(vx, vy);
+
+        if (newPose === "open" && pose !== "open" && armed && !hold && now > cooldown) {
+          hold = { x: w.x, y: w.y, px: w.x, py: w.y, grown: 0, growing: true, id: "hand" };
+          if (mic) mic.start();
+          armed = false;
+        }
+        if (newPose !== "open") armed = true;
+        pose = newPose;
+        if (hold && hold.id === "hand") {
+          hold.growing = pose === "open";
+          if (speed > 1100) {
+            // a flick: let go with the hand's speed and direction
+            const k = Math.min(1, 1500 / speed) * 0.6;
+            hold.px = hold.x + vx * k; hold.py = hold.y + vy * k;
+            finish(); cooldown = now + 700; armed = false;
+            camState.textContent = "Thrown! Close and open your hand for a new one";
+            return;
+          }
+          hold.x += (w.x - hold.x) * 0.5; hold.y += (w.y - hold.y) * 0.5;
+          hold.px = hold.x; hold.py = hold.y;
+          camState.textContent = pose === "open" ? "Open hand: growing" : "Fist: holding. Flick to throw";
+        } else {
+          camState.textContent = pose === "open" ? "Close, then open your hand to start" : "Open your hand to make a body";
+        }
+      },
+    };
+  }
+  document.getElementById("handsBtn").addEventListener("click", startHands);
+
+  // ---------- microphone: what you sing while a body grows becomes its voice ----------
+  // Each body sings once per lap, as it crosses the line to the right of what it orbits.
+  // Heavier bodies sing lower; the sound pans to where the body is on screen.
+  let mic = null, actx = null;
+  async function toggleMic() {
+    const btn = document.getElementById("micBtn");
+    if (mic) { mic.stream.getTracks().forEach(t => t.stop()); mic = null; btn.textContent = "Sing to planets"; return; }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false }, video: false }); }
+    catch (err) {
+      showNote("The microphone is blocked here. Claude's artifact pages can't use a microphone, so open this same file in Chrome on your Mac (or from your own website) to give planets your voice.");
+      return;
+    }
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+    let rec = null, chunks = [], timer = 0;
+    mic = {
+      stream,
+      start() {
+        if (rec && rec.state === "recording") return;
+        chunks = []; rec = new MediaRecorder(stream);
+        rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+        rec.start(); timer = setTimeout(() => rec && rec.state === "recording" && rec.stop(), 8000); // 8 seconds at most
+      },
+      stopInto(body) {
+        if (!rec) return;
+        const r = rec; rec = null; clearTimeout(timer);
+        r.onstop = async () => {
+          try {
+            const buf = await actx.decodeAudioData(await new Blob(chunks, { type: r.mimeType }).arrayBuffer());
+            if (buf.duration > 0.15) { body.voice = buf; body.sangAt = performance.now(); sing(body); }
+          } catch {}
+        };
+        if (r.state === "recording") r.stop(); else r.onstop();
+      },
+    };
+    btn.textContent = "Mic on: hold and sing";
+  }
+  document.getElementById("micBtn").addEventListener("click", toggleMic);
+  function sing(b) {
+    if (!actx || !b.voice) return;
+    const src = actx.createBufferSource(); src.buffer = b.voice;
+    src.playbackRate.value = Math.max(0.35, Math.min(1.8, 1.45 - 0.12 * Math.log10(Math.max(0.01, b.m))));
+    const gain = actx.createGain(); gain.gain.value = Math.min(1, 0.35 + 0.08 * Math.log10(Math.max(1, b.m)));
+    const pan = actx.createStereoPanner(); pan.pan.value = Math.max(-1, Math.min(1, toScreen(b.x, b.y).x / W * 2 - 1));
+    src.connect(gain).connect(pan).connect(actx.destination); src.start();
+    b.sangAt = performance.now();
+  }
+  function listenForLaps(now) {
+    if (EXHIBIT) return;
+    const all = mine.concat(remoteNow(now));
+    for (const b of mine) {
+      if (!b.voice) continue;
+      let host = null, best = 0;
+      for (const o of all) { if (o === b || o.m <= b.m) continue; const d2 = (o.x - b.x) ** 2 + (o.y - b.y) ** 2, a = o.m / d2; if (a > best) { best = a; host = o; } }
+      if (!host) { b.side = 0; continue; }
+      const side = Math.sign(b.y - host.y);
+      if (b.side && side !== b.side && b.x > host.x && now - (b.sangAt || 0) > 600) sing(b);
+      b.side = side;
+    }
+  }
+
+  // ---------- physics ----------
+  function remoteNow(now) {
+    const out = [];
+    for (const r of remote.values()) {
+      const dt = Math.min(0.5, (now - r.at) / 1000);
+      for (const b of r.bodies) {
+        if (eaten.has(b.id)) continue;
+        out.push({ ...b, x: b.x + b.vx * dt, y: b.y + b.vy * dt, hue: r.hue });
+      }
+    }
+    return out;
+  }
+  function step(dt, others) {
+    const all = mine.concat(others);
+    for (const a of mine) {
+      let ax = 0, ay = 0;
+      for (const o of all) {
+        if (o === a) continue;
+        const dx = o.x - a.x, dy = o.y - a.y;
+        const d2 = dx * dx + dy * dy + SOFT * SOFT;
+        const f = G * o.m / (d2 * Math.sqrt(d2));
+        ax += dx * f; ay += dy * f;
+      }
+      a.vx += ax * dt; a.vy += ay * dt;
+      const sp = Math.hypot(a.vx, a.vy);
+      if (sp > 1600) { a.vx *= 1600 / sp; a.vy *= 1600 / sp; }
+    }
+    for (const a of mine) { a.x += a.vx * dt; a.y += a.vy * dt; }
+
+    // my bodies merge with each other
+    for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) {
+      const a = mine[i], b = mine[j];
+      if (Math.hypot(a.x - b.x, a.y - b.y) < (radiusOf(a) + radiusOf(b)) * 0.7) {
+        const big = a.m >= b.m ? a : b, small = big === a ? b : a;
+        const m = a.m + b.m;
+        big.vx = (a.vx * a.m + b.vx * b.m) / m; big.vy = (a.vy * a.m + b.vy * b.m) / m;
+        big.x = (a.x * a.m + b.x * b.m) / m; big.y = (a.y * a.m + b.y * b.m) / m;
+        big.m = m;
+        if (big.k && m > PLANETS[big.k].m * 3 + 1) big.k = "";
+        if (small.voice && !big.voice) big.voice = small.voice;
+        if (small.type === "bh") big.type = "bh";
+        if (big.type === "ns" && m > NEUTRON_MAX) big.type = "bh";
+        fx.push({ x: big.x, y: big.y, t: performance.now(), kind: "merge", col: tierOf(big).col });
+        mine.splice(mine.indexOf(small), 1);
+        if (!big.type && big.m >= NOVA_MASS) supernova(big);
+        share();
+        return step(0, others);
+      }
+    }
+    // collisions with other people's bodies: the lighter one is swallowed
+    for (const o of others) {
+      for (const a of mine) {
+        if (Math.hypot(a.x - o.x, a.y - o.y) >= (radiusOf(a) + radiusOf(o)) * 0.7) continue;
+        if (a.m < o.m || (a.m === o.m && a.id < o.id)) {
+          fx.push({ x: a.x, y: a.y, t: performance.now(), kind: "merge", col: tierOf(o).col });
+          mine.splice(mine.indexOf(a), 1); share(); break;
+        } else if (!eaten.has(o.id)) {
+          eaten.add(o.id); a.m += o.m;
+          if (o.type === "bh") a.type = "bh";
+          fx.push({ x: o.x, y: o.y, t: performance.now(), kind: "merge", col: tierOf(a).col });
+          if (!a.type && a.m >= NOVA_MASS) supernova(a);
+          share();
+        }
+      }
+    }
+    // lost to deep space
+    const before = mine.length;
+    mine = mine.filter(b => Math.hypot(b.x, b.y) < 4000);
+    if (mine.length !== before) share();
+  }
+
+  // ---------- sublime & opacity ----------
+  // Sublime 0: black and white, like raw telescope plates. Up to 30: colour comes in.
+  // 30 to 65: colours plus nebula wisps that appear and fade. 65 to 100: nebulae and dust fill the space.
+  let SUB = 0, FOG = 1;
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const smooth = (a, b, v) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const rgbCache = new Map();
+  function hexRgb(h) {
+    let c = rgbCache.get(h); if (c) return c;
+    const n = parseInt(h.slice(1), 16); c = [(n >> 16) & 255, (n >> 8) & 255, n & 255]; rgbCache.set(h, c); return c;
+  }
+  // a colour as rgba, drained toward grey when Sublime is low
+  function C(hex, a = 1) {
+    const [r, g, b] = hexRgb(hex), sat = smooth(0, 0.3, SUB), l = 0.3 * r + 0.59 * g + 0.11 * b;
+    return `rgba(${Math.round(l + (r - l) * sat)},${Math.round(l + (g - l) * sat)},${Math.round(l + (b - l) * sat)},${a})`;
+  }
+  const opIn = document.getElementById("opacity"), subIn = document.getElementById("sublime");
+  const fogEl = document.getElementById("fog");
+  function readDials() {
+    FOG = opIn.value / 100; SUB = subIn.value / 100;
+    document.getElementById("opacityOut").textContent = opIn.value;
+    document.getElementById("sublimeOut").textContent = subIn.value;
+    fogEl.style.opacity = FOG;
+    // the veil is on black now, so the interface stays light at every opacity
+    legend.style.filter = `saturate(${smooth(0, 0.3, SUB)})`;
+  }
+  opIn.addEventListener("input", readDials); subIn.addEventListener("input", readDials);
+
+  // value noise + fbm for fog and nebulae
+  function makeNoise(seed) {
+    const P = new Uint8Array(512); let x = seed;
+    const rnd = () => (x = (x * 1664525 + 1013904223) >>> 0) / 4294967296;
+    const v = new Float32Array(256); for (let i = 0; i < 256; i++) { v[i] = rnd(); P[i] = i; }
+    for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+    for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+    const f = t => t * t * (3 - 2 * t);
+    const n2 = (x, y) => {
+      const xi = Math.floor(x) & 255, yi = Math.floor(y) & 255, xf = x - Math.floor(x), yf = y - Math.floor(y);
+      const a = v[P[xi + P[yi]]], b = v[P[xi + 1 + P[yi]]], c = v[P[xi + P[yi + 1]]], d = v[P[xi + 1 + P[yi + 1]]];
+      const u = f(xf), w = f(yf); return a + (b - a) * u + (c - a) * w + (a - b - c + d) * u * w;
+    };
+    return (x, y, oct = 5) => { let s = 0, amp = 0.5, fr = 1; for (let o = 0; o < oct; o++) { s += amp * n2(x * fr, y * fr); amp *= 0.5; fr *= 2; } return s; };
+  }
+  function paint(w, h, fn) {
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const g = c.getContext("2d"), img = g.createImageData(w, h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const o = (y * w + x) * 4, [r, gg, b, a] = fn(x / w, y / h); img.data[o] = r; img.data[o + 1] = gg; img.data[o + 2] = b; img.data[o + 3] = a; }
+    g.putImageData(img, 0, 0); return c;
+  }
+  // the veil: symbols from many cosmologies piled over each other on black, white lines and coloured glyphs
+  // Mexica/Maya: sun stone rings, Kin (sun glyph), bar-and-dot numbers, Ollin. Andean: Chakana, Inti, spirals.
+  // Inuit: inuksuk, qulliq lamp, aurora curtains (arsarnit), syllabics. Mapuche: kultrun drum, wünelfe morning star.
+  // Also: planets and zodiac, trigrams and yin-yang, ankh and the Aten (Sun Ra's own), Om, Rub el Hizb, Ptolemy, Kepler, Sri Yantra, flower of life.
+  function drawVeil() {
+    const w = 2200, h = 1400, c = document.createElement("canvas"); c.width = w; c.height = h;
+    const g = c.getContext("2d");
+    const GLYPHS = "☉☽☾☿♀♁♂♃♄♅♆♇♈♉♊♋♌♍♎♏♐♑♒♓☰☱☲☳☴☵☶☷☯☥ॐ۞✶✴☄☊☋⊕⊙⚹".split("");
+    const SYLL = ["ᓯᕿᓂᖅ", "ᑕᖅᑭᖅ", "ᐅᓪᓗᕆᐊᖅ", "ᐊᕐᓴᕐᓂᑦ", "ᓯᓚ"]; // siqiniq sun, taqqiq moon, ulluriaq star, arsarnit aurora, sila sky
+    const WORDS = ["Tonatiuh", "Metztli", "Citlalli", "Kin", "Inti", "Killa", "Quyllur", "Antü", "Küyen", "Wangülen", "Siqiniq", "Taqqiq"];
+    const COLS = ["#2ec4b6", "#e4572e", "#f2c14e", "#e0479e", "#3d5afe", "#7bd389", "#ff8c42", "#b388ff"]; // turquoise, ochre red, maize gold, magenta, cobalt, jade, copper, violet
+    const R = Math.random, pick = a => a[Math.floor(R() * a.length)];
+    const ring = (r) => { g.beginPath(); g.arc(0, 0, r, 0, 7); g.stroke(); };
+    const shapes = {
+      spheres(r) { for (let k = 1; k <= 7; k++) ring(r * k / 7); },
+      aten(r) { ring(r * 0.3); for (let k = 0; k < 13; k++) { const a = Math.PI * 0.15 + k * Math.PI * 0.7 / 12; g.beginPath(); g.moveTo(Math.cos(a) * r * 0.32, Math.sin(a) * r * 0.32); g.lineTo(Math.cos(a) * r, Math.sin(a) * r); g.stroke(); g.beginPath(); g.arc(Math.cos(a) * r, Math.sin(a) * r, r * 0.03, 0, 7); g.fill(); } },
+      yantra(r) { for (let k = 0; k < 9; k++) { const up = k % 2 ? 1 : -1, s = r * (1 - k * 0.08), o = up * r * 0.08 * (k % 4); g.beginPath(); g.moveTo(0, -up * s + o); g.lineTo(s * 0.87, up * s * 0.5 + o); g.lineTo(-s * 0.87, up * s * 0.5 + o); g.closePath(); g.stroke(); } ring(r * 1.05); },
+      flower(r) { const q = r / 3; ring(q); for (let rg = 1; rg <= 2; rg++) for (let k = 0; k < 6 * rg; k++) { const a = k * Math.PI * 2 / (6 * rg); g.beginPath(); g.arc(Math.cos(a) * q * rg, Math.sin(a) * q * rg, q, 0, 7); g.stroke(); } },
+      kepler(r) { const poly = (n, s, rot) => { g.beginPath(); for (let k = 0; k <= n; k++) { const a = rot + k * Math.PI * 2 / n; g[k ? "lineTo" : "moveTo"](Math.cos(a) * s, Math.sin(a) * s); } g.stroke(); }; poly(3, r, -Math.PI / 2); ring(r / 2); poly(4, r / 2, Math.PI / 4); ring(r * 0.354); poly(5, r * 0.354, -Math.PI / 2); ring(r * 0.286); },
+      // Mexica sun stone: rings, a band of glyph slots, eight solar rays
+      sunstone(r) { for (const f of [1, 0.82, 0.62, 0.36, 0.2]) ring(r * f); for (let k = 0; k < 20; k++) { const a = k * Math.PI / 10; g.beginPath(); g.moveTo(Math.cos(a) * r * 0.62, Math.sin(a) * r * 0.62); g.lineTo(Math.cos(a) * r * 0.82, Math.sin(a) * r * 0.82); g.stroke(); } for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; g.beginPath(); g.moveTo(Math.cos(a) * r * 0.82, Math.sin(a) * r * 0.82); g.lineTo(Math.cos(a + 0.2) * r, Math.sin(a + 0.2) * r); g.lineTo(Math.cos(a - 0.2) * r, Math.sin(a - 0.2) * r); g.closePath(); g.stroke(); } shapes.ollin(r * 0.34); },
+      // Ollin, "movement": the four-lobed sign at the stone's centre
+      ollin(r) { for (let k = 0; k < 4; k++) { g.save(); g.rotate(k * Math.PI / 2 + Math.PI / 4); g.beginPath(); g.ellipse(r * 0.55, 0, r * 0.45, r * 0.22, 0, 0, 7); g.stroke(); g.restore(); } ring(r * 0.18); },
+      // Maya Kin, the sun/day glyph: a cartouche with a four-petalled flower
+      kin(r) { g.beginPath(); g.ellipse(0, 0, r, r * 0.85, 0, 0, 7); g.stroke(); for (let k = 0; k < 4; k++) { g.save(); g.rotate(k * Math.PI / 2); g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(r * 0.45, -r * 0.25, r * 0.6, 0); g.quadraticCurveTo(r * 0.45, r * 0.25, 0, 0); g.stroke(); g.restore(); } ring(r * 0.1); },
+      // Maya bar-and-dot numbers, stacked
+      mayanum(r) { const n = 1 + Math.floor(R() * 19), bars = Math.floor(n / 5), dots = n % 5; let y = r * 0.6; for (let k = 0; k < bars; k++) { g.strokeRect(-r * 0.6, y - r * 0.08, r * 1.2, r * 0.16); y -= r * 0.3; } for (let k = 0; k < dots; k++) { g.beginPath(); g.arc((k - (dots - 1) / 2) * r * 0.3, y, r * 0.09, 0, 7); g.stroke(); } },
+      // Andean Chakana: the stepped cross with an open centre
+      chakana(r) { const u = r / 3, P = [[1,3],[1,2],[2,2],[2,1],[3,1],[3,-1],[2,-1],[2,-2],[1,-2],[1,-3],[-1,-3],[-1,-2],[-2,-2],[-2,-1],[-3,-1],[-3,1],[-2,1],[-2,2],[-1,2],[-1,3]]; g.beginPath(); P.forEach(([x, y], k) => g[k ? "lineTo" : "moveTo"](x * u, y * u)); g.closePath(); g.stroke(); ring(u * 0.8); },
+      // Inti, the Inca sun: a face in a disc with zigzag rays
+      inti(r) { ring(r * 0.45); for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8; g.beginPath(); for (let j = 0; j <= 4; j++) { const d = r * (0.5 + j * 0.12), o = (j % 2 ? 0.08 : -0.08); g[j ? "lineTo" : "moveTo"](Math.cos(a + o) * d, Math.sin(a + o) * d); } g.stroke(); } g.beginPath(); g.arc(-r * 0.15, -r * 0.08, r * 0.05, 0, 7); g.arc(r * 0.15, -r * 0.08, r * 0.05, 0, 7); g.fill(); g.beginPath(); g.arc(0, r * 0.12, r * 0.15, 0.2, Math.PI - 0.2); g.stroke(); },
+      // spiral, as in Andean textiles and the Nazca ground drawings
+      spiral(r) { g.beginPath(); for (let k = 0; k < 220; k++) { const a = k * 0.12, d = r * k / 220; g[k ? "lineTo" : "moveTo"](Math.cos(a) * d, Math.sin(a) * d); } g.stroke(); },
+      // Inuit inuksuk: stacked stones in the shape of a person
+      inuksuk(r) { const u = r / 4; g.strokeRect(-u * 0.5, -u * 3.4, u, u * 0.8); g.strokeRect(-u * 2, -u * 2.5, u * 4, u * 0.6); g.strokeRect(-u * 0.9, -u * 1.8, u * 1.8, u * 1.2); g.strokeRect(-u * 1.3, -u * 0.5, u * 0.8, u * 2.5); g.strokeRect(u * 0.5, -u * 0.5, u * 0.8, u * 2.5); },
+      // Inuit qulliq, the seal-oil lamp, with its row of flames
+      qulliq(r) { g.beginPath(); g.moveTo(-r, 0); g.quadraticCurveTo(0, r * 0.9, r, 0); g.closePath(); g.stroke(); for (let k = 0; k < 7; k++) { const x = -r * 0.75 + k * r * 0.25; g.beginPath(); g.moveTo(x, -r * 0.05); g.quadraticCurveTo(x - r * 0.06, -r * 0.2, x, -r * 0.32); g.quadraticCurveTo(x + r * 0.06, -r * 0.2, x, -r * 0.05); g.stroke(); } },
+      // arsarnit, the aurora: curtains of light
+      aurora(r) { for (let k = 0; k < 6; k++) { g.beginPath(); for (let j = 0; j <= 30; j++) { const x = -r + j * r / 15, y = -r * 0.3 + k * r * 0.12 + Math.sin(j * 0.5 + k) * r * 0.12; g[j ? "lineTo" : "moveTo"](x, y); } g.stroke(); } },
+      // Mapuche kultrun: the drum's face, the world split in four, with forked ends and the sun, moon and stars in the quarters
+      kultrun(r) { ring(r); g.beginPath(); g.moveTo(-r, 0); g.lineTo(r, 0); g.moveTo(0, -r); g.lineTo(0, r); g.stroke(); for (let k = 0; k < 4; k++) { g.save(); g.rotate(k * Math.PI / 2); g.beginPath(); g.moveTo(r * 0.8, 0); g.lineTo(r * 0.92, -r * 0.1); g.moveTo(r * 0.8, 0); g.lineTo(r * 0.92, r * 0.1); g.moveTo(r * 0.8, 0); g.lineTo(r * 0.95, 0); g.stroke(); g.restore(); const a = k * Math.PI / 2 + Math.PI / 4; g.beginPath(); g.arc(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5, r * 0.1, 0, 7); g.stroke(); } },
+      // Mapuche wünelfe (also guñelve): the eight-pointed morning star
+      wunelfe(r) { const u = r / 3; const arm = [[1, 1], [1, 3], [-1, 3], [-1, 1]]; for (let k = 0; k < 8; k++) { g.save(); g.rotate(k * Math.PI / 4); g.beginPath(); g.moveTo(u * 0.5, u * 0.8); g.lineTo(u * 0.9, u * 2.6); g.lineTo(0, u * 3); g.lineTo(-u * 0.9, u * 2.6); g.lineTo(-u * 0.5, u * 0.8); g.stroke(); g.restore(); } ring(u * 0.8); },
+      phases(r) { for (let k = 0; k < 8; k++) { const x = (k - 3.5) * r * 0.28; g.beginPath(); g.arc(x, 0, r * 0.11, 0, 7); g.stroke(); g.beginPath(); g.ellipse(x, 0, r * 0.11 * Math.abs(Math.cos(k * Math.PI / 4)), r * 0.11, 0, -Math.PI / 2, Math.PI / 2, k > 4); g.fill(); } },
+    };
+    // the Americas weigh more in the mix
+    const kinds = ["sunstone", "sunstone", "ollin", "kin", "kin", "mayanum", "mayanum", "chakana", "chakana", "inti", "inti", "spiral", "inuksuk", "inuksuk", "qulliq", "aurora", "aurora", "kultrun", "kultrun", "kultrun", "wunelfe", "wunelfe", "wunelfe",
+                   "spheres", "aten", "yantra", "flower", "kepler", "phases"];
+    for (let i = 0; i < 560; i++) {
+      const layer = i < 80 ? 0 : i < 380 ? 1 : 2;
+      g.save();
+      g.translate(R() * w, R() * h); g.rotate((R() - 0.5) * (layer === 1 ? 1.4 : 6.28));
+      if (layer === 0 || (layer === 1 && R() < 0.35)) {
+        // drawn diagrams: white lines, now and then a coloured one
+        const col = R() < 0.25 ? pick(COLS) : "#ffffff";
+        g.strokeStyle = col; g.fillStyle = col;
+        const r = layer === 0 ? 120 + R() * 380 : 40 + R() * 120;
+        g.globalAlpha = 0.2 + R() * 0.45; g.lineWidth = 0.6 + R() * 1.8;
+        shapes[pick(kinds)](r);
+      } else {
+        // glyphs and words: coloured
+        const col = pick(COLS); g.fillStyle = col; g.strokeStyle = col;
+        const roll = R(), text = roll < 0.18 ? pick(SYLL) : roll < 0.3 ? pick(WORDS) : pick(GLYPHS) + "︎";
+        const size = (layer === 1 ? 26 + R() * 140 : 10 + R() * 26) * (roll < 0.3 ? 0.5 : 1);
+        g.globalAlpha = layer === 1 ? 0.25 + R() * 0.5 : 0.45 + R() * 0.45;
+        g.font = `${size}px "Euphemia UCAS", "Apple Symbols", "Noto Sans Canadian Aboriginal", "Noto Sans Symbols 2", "Segoe UI Symbol", serif`;
+        g.textAlign = "center"; g.textBaseline = "middle";
+        if (R() < 0.3) { g.lineWidth = 0.8; g.strokeText(text, 0, 0); } else g.fillText(text, 0, 0);
+      }
+      g.restore();
+    }
+    fogEl.style.backgroundImage = `url(${c.toDataURL("image/png")})`;
+  }
+  drawVeil();
+  // nebulae: two warped clouds in different hues, plus dark dust lanes
+  const nebA = (() => { const nz = makeNoise(11); return paint(384, 384, (u, v) => {
+    const q = nz(u * 3 + 5, v * 3) * 2.2, n = nz(u * 2.5 + q, v * 2.5 - q), e = Math.max(0, n - 0.38) * 2.6, edge = smooth(0, 0.18, Math.min(u, v, 1 - u, 1 - v));
+    return [180 * e + 60 * e * e, 60 * e, 200 * e, 255 * clamp01(e) * edge]; }); })();
+  const nebB = (() => { const nz = makeNoise(29); return paint(384, 384, (u, v) => {
+    const q = nz(u * 2 + 1, v * 2 + 9) * 2.5, n = nz(u * 3 - q, v * 3 + q), e = Math.max(0, n - 0.4) * 2.8, edge = smooth(0, 0.18, Math.min(u, v, 1 - u, 1 - v));
+    return [60 * e + 200 * e * e, 170 * e, 190 * e, 255 * clamp01(e) * edge]; }); })();
+  const dust = (() => { const nz = makeNoise(41); return paint(256, 256, (u, v) => {
+    const n = nz(u * 5, v * 5 + nz(u * 3, v * 3) * 2), d = smooth(0.5, 0.7, n) * smooth(0, 0.2, Math.min(u, v, 1 - u, 1 - v));
+    return [10, 6, 4, 230 * d]; }); })();
+  // wisps: soft pieces of nebula placed around the universe, each with its own breathing rhythm
+  const wisps = Array.from({ length: 9 }, (_, i) => {
+    const src = i % 2 ? nebA : nebB, c = document.createElement("canvas"); c.width = c.height = 192;
+    const g = c.getContext("2d"), sx = Math.random() * 192, sy = Math.random() * 192;
+    g.drawImage(src, sx, sy, 192, 192, 0, 0, 192, 192);
+    g.globalCompositeOperation = "destination-in";
+    const rg = g.createRadialGradient(96, 96, 10, 96, 96, 96); rg.addColorStop(0, "#000"); rg.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = rg; g.fillRect(0, 0, 192, 192);
+    const a = Math.random() * 6.28, d = 150 + Math.random() * 700;
+    return { c, x: Math.cos(a) * d, y: Math.sin(a) * d, size: 300 + Math.random() * 500, rot: Math.random() * 6.28, phase: Math.random() * 6.28, speed: 0.00025 + Math.random() * 0.0004 };
+  });
+  function drawSublime(now) {
+    const mid = smooth(0.3, 0.6, SUB), full = smooth(0.62, 1, SUB);
+    if (mid <= 0) return;
+    cx.save(); cx.globalCompositeOperation = "lighter";
+    for (const w of wisps) {
+      const breathe = 0.5 + 0.5 * Math.sin(now * w.speed + w.phase);
+      const a = mid * (0.25 + 0.75 * breathe) * (1 - full * 0.4) * 0.8;
+      if (a < 0.01) continue;
+      const p = toScreen(w.x, w.y), sz = w.size * S;
+      cx.globalAlpha = a; cx.save(); cx.translate(p.x, p.y); cx.rotate(w.rot + now * 0.000004); cx.drawImage(w.c, -sz / 2, -sz / 2, sz, sz); cx.restore();
+    }
+    if (full > 0) {
+      const big = 2600 * S, c0 = toScreen(0, 0);
+      cx.globalAlpha = full * 0.7; cx.save(); cx.translate(c0.x, c0.y); cx.rotate(now * 0.0000025); cx.drawImage(nebA, -big / 2, -big / 2, big, big); cx.restore();
+      cx.globalAlpha = full * 0.55; cx.save(); cx.translate(c0.x + 120 * S, c0.y - 80 * S); cx.rotate(-now * 0.000002 + 1.3); cx.drawImage(nebB, -big * 0.45, -big * 0.45, big * 0.9, big * 0.9); cx.restore();
+      cx.globalCompositeOperation = "source-over";
+      cx.globalAlpha = full * 0.8; cx.save(); cx.translate(c0.x, c0.y); cx.rotate(0.6); cx.drawImage(dust, -big * 0.4, -big * 0.4, big * 0.8, big * 0.8); cx.restore();
+    }
+    cx.restore(); cx.globalAlpha = 1;
+  }
+
+  // ---------- predicted paths ----------
+  // every body's future, simulated ahead together; bound orbits stop once they close the loop
+  function predictCore(bodies, R, G, SOFT) {
+    const n = bodies.length, X = [], Y = [], VX = [], VY = [], M = [], alive = [], pts = [], st = [], start = [], far = [];
+    bodies.forEach((b, i) => { X[i] = b.x; Y[i] = b.y; VX[i] = b.vx; VY[i] = b.vy; M[i] = b.m; alive[i] = true; pts[i] = [b.x, b.y]; st[i] = "run"; far[i] = 0; });
+    // each body's line stops after one lap around what it orbits (the heavier body pulling hardest at the start)
+    const host = [], ang = [], prev = [];
+    for (let i = 0; i < n; i++) {
+      let best = -1, bestA = 0;
+      for (let j = 0; j < n; j++) { if (j === i || M[j] <= M[i] * 1.5) continue; const a = M[j] / ((X[j] - X[i]) ** 2 + (Y[j] - Y[i]) ** 2 + 1); if (a > bestA) { bestA = a; best = j; } }
+      host[i] = best; ang[i] = 0; prev[i] = best >= 0 ? Math.atan2(Y[i] - Y[best], X[i] - X[best]) : 0;
+    }
+    const dt = 0.06, steps = 700;
+    for (let s = 1; s <= steps; s++) {
+      for (let i = 0; i < n; i++) {
+        if (!alive[i]) continue;
+        let ax = 0, ay = 0;
+        for (let j = 0; j < n; j++) {
+          if (j === i || !alive[j]) continue;
+          const dx = X[j] - X[i], dy = Y[j] - Y[i], d2 = dx * dx + dy * dy + SOFT * SOFT;
+          const f = G * M[j] / (d2 * Math.sqrt(d2)); ax += dx * f; ay += dy * f;
+        }
+        VX[i] += ax * dt; VY[i] += ay * dt;
+      }
+      for (let i = 0; i < n; i++) if (alive[i]) { X[i] += VX[i] * dt; Y[i] += VY[i] * dt; }
+      for (let i = 0; i < n; i++) {
+        if (!alive[i] || st[i] !== "run") continue;
+        for (let j = 0; j < n; j++) if (j !== i && alive[j] && M[j] >= M[i] && Math.hypot(X[i] - X[j], Y[i] - Y[j]) < (R[i] + R[j]) * 0.7) { st[i] = "hit"; alive[i] = false; break; }
+        if (st[i] !== "run") { pts[i].push(X[i], Y[i]); continue; }
+        if (s % 2 === 0) pts[i].push(X[i], Y[i]);
+        const h = host[i];
+        if (h >= 0 && alive[h]) {
+          const a = Math.atan2(Y[i] - Y[h], X[i] - X[h]); let da = a - prev[i];
+          if (da > Math.PI) da -= 2 * Math.PI; else if (da < -Math.PI) da += 2 * Math.PI;
+          ang[i] += da; prev[i] = a;
+          if (Math.abs(ang[i]) >= 2 * Math.PI) { st[i] = "loop"; pts[i].push(X[i], Y[i]); }
+        } else if (s > 120) st[i] = "loop"; // nothing to circle: a short line is enough
+        if (Math.hypot(X[i], Y[i]) > 2600) { st[i] = "out"; }
+      }
+      if (st.every(v => v !== "run")) break;
+    }
+    return bodies.map((b, i) => ({ pts: pts[i], st: st[i] === "run" ? (Math.hypot(VX[i], VY[i]) > Math.sqrt(2 * G * 3e6 / 600) ? "out" : "run") : st[i] }));
+  }
+  // the forecast is the heaviest thing the page does (hundreds of steps of every body pulling on every other),
+  // so it runs in a worker and the animation never waits for it
+  let paths = [], lastPredict = 0, predBusy = false, predSet = null, predWorker = null;
+  try {
+    predWorker = new Worker(URL.createObjectURL(new Blob([
+      "const predictCore = " + predictCore.toString() + ";\n" +
+      "onmessage = e => { const d = e.data; postMessage(predictCore(d.bodies, d.R, d.G, d.SOFT)); };"
+    ], { type: "text/javascript" })));
+    predWorker.onmessage = e => {
+      predBusy = false;
+      paths = e.data.map((o, i) => ({ b: predSet[i], id: predSet[i].id, pts: o.pts, st: o.st, ghost: !!predSet[i].ghost }));
+    };
+    predWorker.onerror = () => { predBusy = false; predWorker = null; };
+  } catch { predWorker = null; }
+  // returns true when the forecast was started
+  function predict(set) {
+    if (predWorker) {
+      if (predBusy) return false;
+      predBusy = true; predSet = set;
+      predWorker.postMessage({ bodies: set, R: set.map(radiusOf), G, SOFT });
+      return true;
+    }
+    paths = predictCore(set, set.map(radiusOf), G, SOFT).map((o, i) => ({ b: set[i], id: set[i].id, pts: o.pts, st: o.st, ghost: !!set[i].ghost }));
+    return true;
+  }
+  // projections are dashed and fade out ahead of the body, so they never read as trails.
+  // A calm orbit shows at most one lap within ~8 s; a disturbed one (it won't close, or it's falling in) shows only ~3 s.
+  function drawPaths() {
+    cx.save(); cx.lineJoin = "round"; cx.lineCap = "round";
+    const live = new Map(mine.concat(remoteNow(performance.now())).map(b => [b.id, b]));
+    for (const P of paths) {
+      let pts = P.pts; if (pts.length < 6) continue;
+      let ext = 0; for (let k = 2; k < pts.length; k += 2) ext = Math.max(ext, Math.abs(pts[k] - pts[0]) + Math.abs(pts[k + 1] - pts[1]));
+      if (ext < 12 && !P.ghost) continue; // suns that barely move
+      const calm = P.st === "loop", out = P.st === "out";
+      const keep = P.ghost ? 125 : calm ? 70 : 25; // points are 0.12 s apart
+      // start where the body is now, not where it was at the last calculation
+      let from = 0;
+      const now_ = live.get(P.id);
+      if (now_ && !P.ghost) { let best = Infinity; for (let k = 0; k < Math.min(pts.length, 24); k += 2) { const d = (pts[k] - now_.x) ** 2 + (pts[k + 1] - now_.y) ** 2; if (d < best) { best = d; from = k; } } }
+      const end = Math.min(pts.length, from + keep * 2);
+      const base = P.ghost ? 0.8 : out ? 0.55 : 0.32;
+      cx.strokeStyle = "#ffffff";
+      cx.lineWidth = P.ghost ? 1 : out ? 0.5 : 0.75;
+      cx.setLineDash(P.ghost ? [5, 5] : [3, 6]);
+      const chunk = 8, span = Math.max(2, end - from);
+      for (let k = from; k < end - 2; k += chunk) {
+        cx.globalAlpha = base * (1 - (k - from) / span);
+        cx.lineDashOffset = -(k - from) * 2;
+        cx.beginPath();
+        let q = toScreen(pts[k], pts[k + 1]); cx.moveTo(q.x, q.y);
+        for (let j = k + 2; j <= Math.min(end - 2, k + chunk); j += 2) { q = toScreen(pts[j], pts[j + 1]); cx.lineTo(q.x, q.y); }
+        cx.stroke();
+      }
+    }
+    cx.setLineDash([]); cx.restore(); cx.globalAlpha = 1;
+  }
+
+  // ---------- drawing ----------
+  function drawBody(b, t, ownerHue, ghost = 1) {
+    const p = toScreen(b.x, b.y), r = Math.max(1.5, radiusOf(b) * S * 1.6);
+    const tier = tierOf(b);
+    cx.globalAlpha = ghost;
+    if (tier.key === "bh") {
+      const g = cx.createRadialGradient(p.x, p.y, r * 0.8, p.x, p.y, r * 3);
+      g.addColorStop(0, C("#ff9a4a", 0.55)); g.addColorStop(1, C("#ff9a4a", 0));
+      cx.fillStyle = g; cx.beginPath(); cx.arc(p.x, p.y, r * 3, 0, 7); cx.fill();
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(t / 1600); cx.scale(1, 0.32);
+      cx.strokeStyle = C("#ffbe78", 0.9); cx.lineWidth = r * 0.35; cx.beginPath(); cx.arc(0, 0, r * 1.7, 0, 7); cx.stroke(); cx.restore();
+      cx.fillStyle = "#000"; cx.beginPath(); cx.arc(p.x, p.y, r, 0, 7); cx.fill();
+    } else if (tier.key === "ns") {
+      const beam = r * 14;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(t / 120);
+      const g = cx.createLinearGradient(0, -beam, 0, beam);
+      g.addColorStop(0, "rgba(200,240,255,0)"); g.addColorStop(0.5, "rgba(200,240,255,0.5)"); g.addColorStop(1, "rgba(200,240,255,0)");
+      cx.fillStyle = g; cx.fillRect(-r * 0.4, -beam, r * 0.8, beam * 2); cx.restore();
+      glow(p, r, "#e8fbff", 5);
+    } else if (b.k && PLANETS[b.k] && PLANETS[b.k].big) {
+      drawEarth(p, r, t, b, ghost);
+    } else {
+      const pulse = tier.key === "rock" || tier.key === "gas" ? 0 : Math.sin(t / 400 + b.x) * 0.08;
+      const halo = { rock: 0, gas: 0, brown: 2.2, red: 3.5, sun: 4.5, blue: 5.5 }[tier.key];
+      if (halo) glow(p, r * (1 + pulse), tier.col, halo * (0.65 + 0.35 * smooth(0, 0.6, SUB)));
+      const P = b.k && PLANETS[b.k];
+      if (P && P.rings) {
+        cx.save(); cx.translate(p.x, p.y); cx.rotate(-0.35); cx.scale(1, 0.3);
+        cx.strokeStyle = C("#e8d9b0", 0.7); cx.lineWidth = r * 0.5; cx.beginPath(); cx.arc(0, 0, r * 1.9, 0, 7); cx.stroke(); cx.restore();
+      }
+      cx.fillStyle = C(P ? P.col : tier.col); cx.beginPath(); cx.arc(p.x, p.y, r, 0, 7); cx.fill();
+      if (tier.key === "gas" && !(P && (b.k === "ur" || b.k === "ne"))) {
+        cx.save(); cx.beginPath(); cx.arc(p.x, p.y, r, 0, 7); cx.clip();
+        cx.fillStyle = "rgba(120,70,40,0.45)";
+        for (let k = -2; k <= 2; k++) cx.fillRect(p.x - r, p.y + k * r * 0.38 - r * 0.08, r * 2, r * 0.16);
+        cx.restore();
+      }
+      if (tier.key === "rock") { cx.fillStyle = "rgba(0,0,0,0.35)"; cx.beginPath(); cx.arc(p.x + r * 0.35, p.y + r * 0.2, r * 0.75, 0, 7); cx.fill(); }
+      if (halo) { cx.fillStyle = "rgba(255,255,255,0.55)"; cx.beginPath(); cx.arc(p.x, p.y, r * 0.55, 0, 7); cx.fill(); }
+      if (P && !(b.loud > 0.15)) {
+        cx.font = "10px 'IBM Plex Mono', monospace"; cx.textAlign = "left";
+        cx.fillStyle = "rgba(233,228,216,0.45)";
+        const nm = nameOf(b, t);
+        cx.globalAlpha = ghost * nm.a; cx.fillText(nm.text, p.x + r + 5, p.y + 3); cx.globalAlpha = ghost;
+      }
+    }
+    if (b.sangAt && t - b.sangAt < 900) {
+      const a = Math.min(1, 1 - (t - b.sangAt) / 900);
+      cx.strokeStyle = `rgba(255,255,255,${a * 0.8})`; cx.lineWidth = 1;
+      cx.beginPath(); cx.arc(p.x, p.y, r + 4 + (1 - a) * 22, 0, 7); cx.stroke();
+    }
+    cx.globalAlpha = 1;
+  }
+  function glow(p, r, col, k) {
+    r = Math.max(0.5, r);
+    const g = cx.createRadialGradient(p.x, p.y, r * 0.5, p.x, p.y, r * k);
+    g.addColorStop(0, C(col, 0.67)); g.addColorStop(0.35, C(col, 0.2)); g.addColorStop(1, C(col, 0));
+    cx.fillStyle = g; cx.beginPath(); cx.arc(p.x, p.y, Math.max(0, r * k), 0, 7); cx.fill();
+  }
+
+  // ---------- a bigger Earth that looks like Earth ----------
+  // A map made once (oceans, continents, ice, and a separate layer of cloud), turned slowly inside a circle with
+  // the edge darkened and a blue haze around it. The two layers turn at different speeds.
+  let earthMaps = null;
+  function makeEarth() {
+    const TW = 512, TH = 256;
+    const hash = (i, j) => { let n = Math.imul(i, 374761393) + Math.imul(j, 668265263); n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967295; };
+    const vn = (x, y, cxn, seed) => {      // value noise that repeats horizontally every cxn cells
+      const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+      const h = (a, b) => hash(((a % cxn) + cxn) % cxn + seed, b + seed * 7);
+      return h(i, j) * (1 - sx) * (1 - sy) + h(i + 1, j) * sx * (1 - sy) + h(i, j + 1) * (1 - sx) * sy + h(i + 1, j + 1) * sx * sy;
+    };
+    const fbm = (px, py, seed) => { let sum = 0, a = 0.5, c = 4, tot = 0; for (let o = 0; o < 5; o++) { sum += a * vn(px / TW * c, py / TW * c, c, seed + o * 13); tot += a; a *= 0.5; c *= 2; } return sum / tot; };
+    const land = document.createElement("canvas"); land.width = TW; land.height = TH;
+    const clouds = document.createElement("canvas"); clouds.width = TW; clouds.height = TH;
+    const lg = land.getContext("2d"), cg = clouds.getContext("2d");
+    const li = lg.createImageData(TW, TH), ci = cg.createImageData(TW, TH);
+    const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+    for (let y = 0; y < TH; y++) {
+      const lat = Math.abs(y / TH - 0.5) * 2;                // 0 at the equator, 1 at the poles
+      for (let x = 0; x < TW; x++) {
+        const n = fbm(x, y, 3), o = (y * TW + x) * 4;
+        let col;
+        if (n > 0.53 - lat * 0.03) {                          // land: green, olive, then sand and rock where it is dry or high
+          const dry = fbm(x, y, 40), h = Math.min(1, (n - 0.53) * 6);
+          col = mixc([46, 120, 52], [150, 140, 80], Math.min(1, dry * 1.4 * (0.5 + h)));
+          if (h > 0.7) col = mixc(col, [120, 100, 80], (h - 0.7) * 2);
+          if (n < 0.545) col = mixc(col, [214, 200, 140], 0.6);
+        } else {                                              // sea: lighter near the coast
+          const d = Math.min(1, (0.53 - n) * 6);
+          col = mixc([40, 120, 190], [8, 36, 96], d);
+        }
+        if (lat > 0.84 + fbm(x, y, 70) * 0.1) col = [238, 244, 250];   // polar ice
+        li.data[o] = col[0]; li.data[o + 1] = col[1]; li.data[o + 2] = col[2]; li.data[o + 3] = 255;
+        const c = fbm(x * 1.2, y * 1.6, 110);
+        const a = Math.max(0, Math.min(1, (c - 0.5) * 3.2)) * (lat > 0.9 ? 0.5 : 0.85);
+        ci.data[o] = 255; ci.data[o + 1] = 255; ci.data[o + 2] = 255; ci.data[o + 3] = Math.round(a * 255);
+      }
+    }
+    lg.putImageData(li, 0, 0); cg.putImageData(ci, 0, 0);
+    return { land, clouds, TW, TH };
+  }
+  function drawEarth(p, r, t, b, ghost) {
+    if (!earthMaps) earthMaps = makeEarth();
+    const { land, clouds, TW, TH } = earthMaps;
+    // atmosphere
+    glow(p, r, "#6fb4ff", 1.45);
+    cx.save();
+    cx.beginPath(); cx.arc(p.x, p.y, r, 0, 7); cx.clip();
+    const half = TW / 2;
+    const layer = (img, off, alpha) => {
+      cx.globalAlpha = ghost * alpha;
+      const sx = ((off % TW) + TW) % TW;
+      const w1 = Math.min(half, TW - sx);
+      cx.drawImage(img, sx, 0, w1, TH, p.x - r, p.y - r, 2 * r * (w1 / half), 2 * r);
+      if (w1 < half) cx.drawImage(img, 0, 0, half - w1, TH, p.x - r + 2 * r * (w1 / half), p.y - r, 2 * r * ((half - w1) / half), 2 * r);
+    };
+    layer(land, t * 0.004, 1);
+    layer(clouds, t * 0.007 + 90, 0.9);
+    // light from the upper left, and a dark limb
+    const sh = cx.createRadialGradient(p.x - r * 0.4, p.y - r * 0.4, r * 0.1, p.x, p.y, r * 1.05);
+    sh.addColorStop(0, "rgba(255,255,255,0.16)"); sh.addColorStop(0.55, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,4,16,0.7)");
+    cx.globalAlpha = ghost; cx.fillStyle = sh; cx.fillRect(p.x - r, p.y - r, 2 * r, 2 * r);
+    cx.restore();
+    cx.globalAlpha = ghost;
+    cx.strokeStyle = "rgba(150,200,255,0.55)"; cx.lineWidth = Math.max(1, r * 0.04);
+    cx.beginPath(); cx.arc(p.x, p.y, r, 0, 7); cx.stroke();
+    const P = PLANETS[b.k];
+    if (!(b.loud > 0.15)) {
+      cx.font = "10px 'IBM Plex Mono', monospace"; cx.textAlign = "left";
+      cx.fillStyle = "rgba(233,228,216,0.45)";
+      const nm = nameOf(b, t);
+      cx.globalAlpha = ghost * nm.a; cx.fillText(nm.text, p.x + r + 8, p.y + 3); cx.globalAlpha = ghost;
+    }
+  }
+  document.getElementById("earthBtn").addEventListener("click", () => {
+    const busy = (x, y) => mine.concat(remoteNow(performance.now())).some(b => b.m > 1e4 && Math.hypot(b.x - x, b.y - y) < 500);
+    let x = 0, y = 0;
+    for (let k = 0; k < 12 && busy(x, y); k++) { const a = Math.random() * 6.283; x = Math.cos(a) * 700; y = Math.sin(a) * 450; }
+    while (mine.length + 1 > MAX_MINE) mine.sort((a, c) => a.m - c.m).shift();
+    const L = launch({ x, y, px: x, py: y }, PLANETS.eb.m);   // it starts on a circular orbit around what pulls it most, so it does not just fall in
+    mine.push({ id: uid(), x, y, vx: L.vx, vy: L.vy, m: PLANETS.eb.m, type: "", born: performance.now(), k: "eb" });
+    fx.push({ x, y, t: performance.now(), kind: "merge", col: "#6fb4ff" });
+    lastPredict = 0; share();
+  });
+
+  // ---------- a rocket ----------
+  // Click the big Earth: a rocket stands up from it and its fire starts going out. Then it stops, and you get the numbers.
+  let rocket = null;                 // { id, phase: "up" | "ask" | "go" | "back", h, v, parts }
+  let rocketsThrown = 0;
+  const rockAsk = document.getElementById("rocketask");
+  const bodyById = id => mine.find(b => b.id === id) || remoteNow(performance.now()).find(b => b.id === id);
+  function earthAt(w) {
+    for (const b of mine.concat(remoteNow(performance.now()))) if (b.k === "eb" && Math.hypot(w.x - b.x, w.y - b.y) <= radiusOf(b) * 1.6 * 1.25) return b;
+    return null;
+  }
+  function startRocket(b) { rocket = { id: b.id, phase: "up", h: 0, v: 40, parts: [] }; }
+  function endRocket() { rocket = null; rockAsk.hidden = true; }
+  function updateRocket(dt) {
+    if (!rocket) return;
+    const b = bodyById(rocket.id);
+    if (!b) { endRocket(); return; }
+    const r = radiusOf(b) * S * 1.6;
+    const burning = rocket.phase === "up" || rocket.phase === "go";
+    if (rocket.phase === "up") {
+      rocket.v += dt * 420; rocket.h += rocket.v * dt;
+      if (rocket.h > r * 0.9 + 90) { rocket.phase = "ask"; rocket.v = 0; document.getElementById("rocketTally").textContent = rocketsThrown ? `You have thrown ${rocketsThrown}: about ${rocketsThrown * 400} tonnes of CO₂.` : ""; rockAsk.hidden = false; document.getElementById("rocketNo").focus({ preventScroll: true }); }
+    } else if (rocket.phase === "go") {
+      rocket.v += dt * 1100; rocket.h += rocket.v * dt;
+      if (rocket.h > Math.max(W, H) * 1.4) { endRocket(); showNote(`Gone. About ${rocketsThrown * 400} tonnes of CO₂ stay here.`); return; }
+    } else if (rocket.phase === "back") {
+      rocket.h = Math.max(0, rocket.h - dt * 240);
+      if (rocket.h <= 0) { endRocket(); showNote("It stays on the ground."); return; }
+    }
+    // fire: it leaves the base, falls behind and fades. It stops when the rocket stops.
+    const rh = Math.min(70, Math.max(26, r * 0.55)), bx = toScreen(b.x, b.y), baseY = bx.y - r - rocket.h;
+    if (burning) for (let i = 0; i < 4; i++) rocket.parts.push({ x: bx.x + (Math.random() - 0.5) * rh * 0.22, y: baseY + 2, vx: (Math.random() - 0.5) * 50, vy: 90 + Math.random() * 170, life: 0.45 + Math.random() * 0.5, max: 0.95 });
+    for (const q of rocket.parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt; }
+    rocket.parts = rocket.parts.filter(q => q.life > 0);
+  }
+  function drawRocket(now) {
+    if (!rocket) return;
+    const b = bodyById(rocket.id); if (!b) return;
+    const r = radiusOf(b) * S * 1.6, p = toScreen(b.x, b.y);
+    const rh = Math.min(70, Math.max(26, r * 0.55)), w = rh * 0.3, x = p.x, y = p.y - r - rocket.h;
+    cx.save();
+    cx.globalCompositeOperation = "lighter";
+    for (const q of rocket.parts) {            // the fire
+      const a = Math.max(0, q.life / q.max), rr = 1 + a * rh * 0.14;
+      cx.fillStyle = a > 0.6 ? `rgba(255,240,200,${a})` : a > 0.3 ? `rgba(255,170,60,${a})` : `rgba(255,80,30,${a * 0.9})`;
+      cx.beginPath(); cx.arc(q.x, q.y, rr, 0, 7); cx.fill();
+    }
+    cx.globalCompositeOperation = "source-over";
+    const burning = rocket.phase === "up" || rocket.phase === "go";
+    if (burning) {                             // a flickering cone under the engine
+      const L = rh * (0.5 + 0.35 * Math.random()) * (rocket.phase === "go" ? 1.6 : 1);
+      const g = cx.createLinearGradient(x, y, x, y + L);
+      g.addColorStop(0, "rgba(255,250,220,0.95)"); g.addColorStop(0.5, "rgba(255,160,50,0.7)"); g.addColorStop(1, "rgba(255,70,20,0)");
+      cx.fillStyle = g; cx.beginPath(); cx.moveTo(x - w * 0.35, y); cx.lineTo(x + w * 0.35, y); cx.lineTo(x, y + L); cx.closePath(); cx.fill();
+    }
+    // the rocket itself: white body, red nose and fins, one window
+    cx.fillStyle = "#f0f0f0"; cx.fillRect(x - w / 2, y - rh * 0.78, w, rh * 0.78);
+    cx.fillStyle = "#d94a3a";
+    cx.beginPath(); cx.moveTo(x - w / 2, y - rh * 0.78); cx.lineTo(x, y - rh); cx.lineTo(x + w / 2, y - rh * 0.78); cx.closePath(); cx.fill();
+    cx.beginPath(); cx.moveTo(x - w / 2, y - rh * 0.28); cx.lineTo(x - w, y); cx.lineTo(x - w / 2, y); cx.closePath(); cx.fill();
+    cx.beginPath(); cx.moveTo(x + w / 2, y - rh * 0.28); cx.lineTo(x + w, y); cx.lineTo(x + w / 2, y); cx.closePath(); cx.fill();
+    cx.fillStyle = "#1c2a44"; cx.beginPath(); cx.arc(x, y - rh * 0.55, w * 0.2, 0, 7); cx.fill();
+    cx.restore();
+  }
+  rockAsk.addEventListener("click", e => e.stopPropagation());
+  document.getElementById("rocketYes").addEventListener("click", () => {
+    if (!rocket || rocket.phase !== "ask") return;
+    rocketsThrown++; rocket.phase = "go"; rocket.v = 120; rockAsk.hidden = true;
+  });
+  document.getElementById("rocketNo").addEventListener("click", () => {
+    if (!rocket || rocket.phase !== "ask") return;
+    rocket.phase = "back"; rockAsk.hidden = true;
+  });
+  addEventListener("keydown", e => { if (e.key === "Escape" && rocket && rocket.phase === "ask") document.getElementById("rocketNo").click(); });
+
+  const trails = new Map(); // body id -> recent positions, a fading comet tail
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const others = remoteNow(now);
+    for (let i = 0; i < 3; i++) step(dt / 3, others);
+    if (hold && hold.growing) hold.grown += dt;
+    if (hands) hands.tick(now);
+    listenForLaps(now);
+    soundTick(now);
+    share(false);
+    const othersNow = remoteNow(now);
+
+    cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    cx.fillStyle = "#05060b"; cx.fillRect(0, 0, W, H);
+    const starCol = C("#cfd4ff");
+    for (const s of stars) { cx.globalAlpha = s[2] * (reduce ? 0.6 : 0.45 + 0.35 * Math.sin(now / 900 + s[3] * 40)); cx.fillStyle = starCol; cx.fillRect(s[0], s[1], 1, 1); }
+    cx.globalAlpha = 1;
+    drawSublime(now);
+
+    // recompute everyone's future a few times a second (more often while aiming)
+    if (now - lastPredict > (hold ? 90 : 450)) {
+      const set = mine.concat(othersNow).map(b => ({ id: b.id, x: b.x, y: b.y, vx: b.vx, vy: b.vy, m: b.m, type: b.type, k: b.k }));
+      if (hold) {
+        const m = Math.min(holdMass(), NOVA_MASS * 0.99), L = launch(hold, m);
+        set.push({ x: hold.x, y: hold.y, vx: L.vx, vy: L.vy, m, type: "", ghost: true });
+      }
+      if (predict(set)) lastPredict = now;
+    }
+    drawPaths();
+
+    for (const b of mine.concat(othersNow)) {
+      let tr = trails.get(b.id); if (!tr) trails.set(b.id, tr = []);
+      tr.push(b.x, b.y); if (tr.length > 120) tr.splice(0, 2);
+      tr.seen = now;
+      const col = C(tierOf(b).col), w = Math.max(0.8, radiusOf(b) * S * 0.5);
+      cx.strokeStyle = col; cx.lineWidth = w;
+      const pn = tr.length / 2, bands = 4; // the tail fades in four steps, one stroke each
+      for (let band = 0; band < bands; band++) {
+        const k0 = Math.floor(pn * band / bands), k1 = Math.min(pn - 1, Math.floor(pn * (band + 1) / bands));
+        if (k1 <= k0) continue;
+        cx.globalAlpha = 0.35 * (band + 0.5) / bands;
+        cx.beginPath();
+        let prev = null;
+        for (let k = k0; k <= k1; k++) {
+          const c = toScreen(tr[k * 2], tr[k * 2 + 1]);
+          if (prev && Math.abs(c.x - prev.x) + Math.abs(c.y - prev.y) > 200) cx.moveTo(c.x, c.y);
+          else if (prev) cx.lineTo(c.x, c.y);
+          else cx.moveTo(c.x, c.y);
+          prev = c;
+        }
+        cx.stroke();
+      }
+    }
+    cx.globalAlpha = 1;
+    for (const [id, tr] of trails) if (now - tr.seen > 1000) trails.delete(id);
+
+    for (const b of othersNow) drawBody(b, now, b.hue, 0.9);
+    for (const b of mine) drawBody(b, now, myHue);
+    updateRocket(dt); drawRocket(now);
+
+    // effects
+    for (let i = fx.length - 1; i >= 0; i--) {
+      const f = fx[i], age = Math.max(0, (now - f.t) / 1000), p = toScreen(f.x, f.y);
+      if (f.kind === "nova") {
+        if (age > 2.2) { fx.splice(i, 1); continue; }
+        const rr = f.r * S * Math.min(1, age / 1.6);
+        cx.globalAlpha = Math.max(0, 1 - age / 2.2);
+        cx.strokeStyle = "#cfe6ff"; cx.lineWidth = 3; cx.beginPath(); cx.arc(p.x, p.y, rr, 0, 7); cx.stroke();
+        if (age < 0.5) { glow(p, 30 * S * (1 + age * 6), "#ffffff", 4); }
+        cx.globalAlpha = 1;
+      } else if (f.kind === "merge") {
+        if (age > 0.6) { fx.splice(i, 1); continue; }
+        cx.globalAlpha = 1 - age / 0.6; cx.strokeStyle = C(f.col); cx.lineWidth = 2;
+        cx.beginPath(); cx.arc(p.x, p.y, 10 + age * 80 * S * 2, 0, 7); cx.stroke(); cx.globalAlpha = 1;
+      } else if (f.kind === "fade") {
+        if (age > 1.5) { fx.splice(i, 1); continue; }
+        drawBody(f.b, now, f.hue, 0.9 * (1 - age / 1.5));
+      }
+    }
+
+    // the body being held
+    if (hold) {
+      const m = holdMass(), ghost = { x: hold.x, y: hold.y, m, type: "" };
+      const nova = m >= NOVA_MASS;
+      if (nova) { ghost.m = 2.6e6; }
+      const p = toScreen(hold.x, hold.y), q = toScreen(hold.px, hold.py);
+      if (Math.hypot(q.x - p.x, q.y - p.y) > 4) {
+        cx.strokeStyle = "rgba(233,228,216,0.4)"; cx.setLineDash([3, 5]); cx.lineWidth = 1;
+        cx.beginPath(); cx.moveTo(p.x, p.y); cx.lineTo(q.x, q.y); cx.stroke(); cx.setLineDash([]);
+      }
+      const shake = nova ? (Math.random() - 0.5) * 4 : 0;
+      ghost.x += shake / S;
+      drawBody(ghost, now, myHue, 0.85);
+      const label = nova ? (m >= BH_MASS ? "Supernova → black hole" : "Supernova → neutron star") : tierOf(ghost).name;
+      cx.font = "500 11px 'IBM Plex Mono', monospace"; cx.textAlign = "center";
+      cx.fillStyle = nova ? "#cfe6ff" : "#e9e4d8";
+      const ty = p.y - radiusOf(ghost) * S * 1.6 - 30;
+      cx.fillText(label.toUpperCase(), p.x, ty);
+      cx.fillStyle = "#8a8798"; cx.fillText(fmtMass(m) + (mic ? "  ● recording" : ""), p.x, ty + 14);
+      lightLegend(nova ? (m >= BH_MASS ? "bh" : "ns") : tierOf(ghost).key);
+    } else lightLegend(null);
+    drawHearing(now);
+
+    requestAnimationFrame(frame);
+  }
+  readDials();
+  requestAnimationFrame(frame);
+
+  // ---------- exhibit: scene from JSON, sounds you hear by coming close ----------
+  const DEFAULT_SCENE = {"about": "A Joyful Noise exhibit scene. Bodies with a 'planet' key orbit the first body (the Sun) at their squeezed real distance. 'sound' is either a synth recipe or {\"src\": \"sounds/file.mp3\"} to loop a recording. Move the cursor close to a body to hear it; hearingRadius is in screen pixels.", "hearingRadius": 170, "opacity": 100, "sublime": 0, "bodies": [{"name": "Sun", "mass": 333000, "x": 0, "y": 0, "sound": {"wave": "sawtooth", "freq": 55, "harmonic": 1.5, "detune": 6, "cutoff": 260, "noise": 0.35, "lfo": 0.07, "depth": 0.5, "volume": 0.9}}, {"planet": "me", "angle": 0.4, "sound": {"wave": "sine", "freq": 880, "harmonic": 1.5, "detune": 3, "cutoff": 4000, "noise": 0, "lfo": 7, "depth": 0.6, "volume": 0.35}}, {"planet": "ve", "angle": 2.1, "sound": {"wave": "triangle", "freq": 110, "harmonic": 2, "detune": 9, "cutoff": 600, "noise": 0.45, "lfo": 0.15, "depth": 0.5, "volume": 0.7}}, {"planet": "ea", "angle": 3.6, "sound": {"wave": "sine", "freq": 220, "harmonic": 1.5, "detune": 2, "cutoff": 1400, "noise": 0.05, "lfo": 0.25, "depth": 0.3, "volume": 0.6}}, {"planet": "ma", "angle": 5.0, "sound": {"wave": "square", "freq": 165, "harmonic": 1.335, "detune": 5, "cutoff": 420, "noise": 0.25, "lfo": 0.4, "depth": 0.4, "volume": 0.5}}, {"planet": "ju", "angle": 1.0, "sound": {"wave": "sawtooth", "freq": 73.4, "harmonic": 2, "detune": 7, "cutoff": 480, "noise": 0.15, "lfo": 0.09, "depth": 0.6, "volume": 0.8}}, {"planet": "sa", "angle": 4.2, "sound": {"wave": "triangle", "freq": 98, "harmonic": 20, "detune": 4, "cutoff": 2400, "noise": 0.05, "lfo": 0.12, "depth": 0.4, "volume": 0.65}}, {"planet": "ur", "angle": 2.8, "sound": {"wave": "sine", "freq": 261.6, "harmonic": 1.5, "detune": 12, "cutoff": 1800, "noise": 0.1, "lfo": 0.05, "depth": 0.3, "volume": 0.55}}, {"planet": "ne", "angle": 0.1, "sound": {"wave": "sine", "freq": 123.5, "harmonic": 2, "detune": 6, "cutoff": 900, "noise": 0.5, "lfo": 0.2, "depth": 0.5, "volume": 0.6}}, {"planet": "pl", "angle": 5.7, "sound": {"wave": "sine", "freq": 1046.5, "harmonic": 1.5, "detune": 1, "cutoff": 5000, "noise": 0, "lfo": 0.5, "depth": 0.9, "volume": 0.3}}]};
+  let scene = null, hearing = 170;
+  const cursor = { x: -9999, y: -9999 };
+  addEventListener("pointermove", e => { cursor.x = e.clientX; cursor.y = e.clientY; });
+  cv.addEventListener("pointerleave", () => { cursor.x = cursor.y = -9999; });
+  function buildScene(sc) {
+    scene = sc; hearing = Number(sc.hearingRadius) || 170;
+    if (Number.isFinite(sc.opacity)) opIn.value = sc.opacity;
+    if (Number.isFinite(sc.sublime)) subIn.value = sc.sublime;
+    readDials();
+    mine = [];
+    let center = null;
+    for (const d of sc.bodies || []) {
+      const b = { id: uid(), x: 0, y: 0, vx: 0, vy: 0, m: 1, type: "", born: 0, k: "", sound: d.sound || null, name: d.name || "" };
+      const P = d.planet && PLANETS[d.planet];
+      if (P && center) {
+        const r = 40 + 75 * Math.sqrt(P.au), a = Number(d.angle) || 0, v = Math.sqrt(G * center.m / r) * Math.sqrt(1 + (P.e || 0));
+        Object.assign(b, { k: d.planet, m: P.m, x: center.x + Math.cos(a) * r, y: center.y + Math.sin(a) * r, vx: center.vx - Math.sin(a) * v, vy: center.vy + Math.cos(a) * v });
+      } else {
+        Object.assign(b, { m: Number(d.mass) || 1, x: Number(d.x) || 0, y: Number(d.y) || 0, vx: Number(d.vx) || 0, vy: Number(d.vy) || 0 });
+        if (d.planet && PLANETS[d.planet]) b.k = d.planet;
+        if (!center) center = b;
+      }
+      mine.push(b);
+    }
+    lastPredict = 0;
+  }
+
+  // one synth (or looping recording) per body, silent until the cursor comes near
+  const voices = new Map(); let master = null;
+  function noiseBuffer() {
+    const len = actx.sampleRate * 2, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+  let noiseBuf = null;
+  function makeVoice(spec) {
+    const out = actx.createGain(); out.gain.value = 0;
+    const pan = actx.createStereoPanner(); out.connect(pan).connect(master);
+    const v = { out, pan, stop: [] };
+    if (spec.src) {
+      fetch(spec.src).then(r => r.arrayBuffer()).then(a => actx.decodeAudioData(a)).then(buf => {
+        const src = actx.createBufferSource(); src.buffer = buf; src.loop = true;
+        const g = actx.createGain(); g.gain.value = spec.volume ?? 0.8;
+        src.connect(g).connect(out); src.start(); v.stop.push(src);
+      }).catch(() => {});
+      return v;
+    }
+    const vol = spec.volume ?? 0.6, cutoff = spec.cutoff || 1000, depth = spec.depth ?? 0.3;
+    const filter = actx.createBiquadFilter(); filter.type = "lowpass"; filter.frequency.value = cutoff; filter.Q.value = 2;
+    const amp = actx.createGain(); amp.gain.value = vol * 0.3 * (1 - depth * 0.5);
+    filter.connect(amp).connect(out);
+    const o1 = actx.createOscillator(); o1.type = spec.wave || "sine"; o1.frequency.value = spec.freq || 220;
+    const o2 = actx.createOscillator(); o2.type = spec.wave || "sine"; o2.frequency.value = (spec.freq || 220) * (spec.harmonic || 1.5); o2.detune.value = spec.detune || 0;
+    const g2 = actx.createGain(); g2.gain.value = 0.45;
+    o1.connect(filter); o2.connect(g2).connect(filter);
+    if (spec.noise) {
+      noiseBuf = noiseBuf || noiseBuffer();
+      const n = actx.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
+      const ng = actx.createGain(); ng.gain.value = spec.noise; n.connect(ng).connect(filter); n.start(); v.stop.push(n);
+    }
+    const lfo = actx.createOscillator(); lfo.frequency.value = spec.lfo || 0.2;
+    const lf = actx.createGain(); lf.gain.value = cutoff * depth * 0.8; lfo.connect(lf).connect(filter.frequency);
+    const la = actx.createGain(); la.gain.value = vol * 0.3 * depth * 0.5; lfo.connect(la).connect(amp.gain);
+    for (const o of [o1, o2, lfo]) { o.start(); v.stop.push(o); }
+    return v;
+  }
+  function startSound() {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    actx.resume();
+    if (!master) { master = actx.createDynamicsCompressor(); master.connect(actx.destination); }
+  }
+  function soundTick(now) {
+    if (!EXHIBIT || !master) return;
+    const t = actx.currentTime, alive = new Set();
+    for (const b of mine) {
+      if (!b.sound) continue;
+      alive.add(b.id);
+      let v = voices.get(b.id); if (!v) voices.set(b.id, v = makeVoice(b.sound));
+      const p = toScreen(b.x, b.y), d = Math.hypot(p.x - cursor.x, p.y - cursor.y);
+      const near = Math.max(0, 1 - d / hearing), g = near * near;
+      b.loud = g;
+      v.out.gain.setTargetAtTime(g, t, 0.06);
+      v.pan.pan.setTargetAtTime(Math.max(-1, Math.min(1, (p.x - cursor.x) / hearing)), t, 0.06);
+    }
+    for (const [id, v] of voices) if (!alive.has(id)) { v.out.gain.setTargetAtTime(0, t, 0.05); setTimeout(() => v.stop.forEach(o => { try { o.stop(); } catch {} }), 400); voices.delete(id); }
+  }
+  // what you hear, drawn: rings leave a body as loud as it sounds, and your hearing range follows the cursor
+  function drawHearing(now) {
+    if (!EXHIBIT || !master) return;
+    const ink = "255,255,255";
+    if (cursor.x > -999) {
+      cx.strokeStyle = `rgba(${ink},0.12)`; cx.lineWidth = 1; cx.setLineDash([2, 6]);
+      cx.beginPath(); cx.arc(cursor.x, cursor.y, hearing, 0, 7); cx.stroke(); cx.setLineDash([]);
+    }
+    for (const b of mine) {
+      if (!b.loud || b.loud < 0.01) continue;
+      const p = toScreen(b.x, b.y), r = Math.max(1.5, radiusOf(b) * S * 1.6), f = (b.sound.freq || 200);
+      const speed = 0.0004 + Math.min(0.002, f / 400000);
+      for (let k = 0; k < 3; k++) {
+        const ph = (now * speed + k / 3) % 1;
+        cx.strokeStyle = `rgba(${ink},${(1 - ph) * b.loud * 0.8})`; cx.lineWidth = 1;
+        cx.beginPath(); cx.arc(p.x, p.y, r + 4 + ph * (20 + 50 * b.loud), 0, 7); cx.stroke();
+      }
+      if (b.loud > 0.15) {
+        cx.font = "10px 'IBM Plex Mono', monospace"; cx.textAlign = "center";
+        cx.fillStyle = `rgba(${ink},${Math.min(1, b.loud * 1.4)})`;
+        cx.fillText(nameOf(b, now).text.toUpperCase(), p.x, p.y - r - 12);
+      }
+    }
+  }
+
+  // copy what is on screen as a scene, to paste into exhibit.json
+  document.getElementById("copyBtn").addEventListener("click", async () => {
+    const out = { hearingRadius: hearing, opacity: Number(opIn.value), sublime: Number(subIn.value),
+      bodies: mine.map(b => ({ name: b.name || (b.k && PLANETS[b.k].name) || undefined, planet: b.k || undefined, mass: +b.m.toPrecision(4), x: Math.round(b.x), y: Math.round(b.y), vx: +b.vx.toFixed(2), vy: +b.vy.toFixed(2), sound: b.sound || undefined })) };
+    const text = JSON.stringify(out, null, 2);
+    const btn = document.getElementById("copyBtn");
+    try { await navigator.clipboard.writeText(text); btn.textContent = "Copied"; }
+    catch { showNote("Copy was blocked. Here is the start of the scene: " + text.slice(0, 300) + "…"); }
+    setTimeout(() => { btn.textContent = "Copy scene JSON"; }, 1500);
+  });
+
+  if (EXHIBIT) {
+    buildScene(DEFAULT_SCENE);
+    fetch("exhibit.json").then(r => r.ok ? r.json() : null).then(sc => { if (sc && Array.isArray(sc.bodies)) buildScene(sc); }).catch(() => {});
+    const enter = document.getElementById("enter"); enter.hidden = false;
+    document.getElementById("enterBtn").addEventListener("click", () => { startSound(); enter.hidden = true; });
+  } else {
+  // a small starter system so the first frame isn't empty: one sun with two planets, yours to clear
+  const a0 = Math.random() * 6.28, d0 = 150 + Math.random() * 250, sx = Math.cos(a0) * d0, sy = Math.sin(a0) * d0;
+  mine.push({ id: uid(), x: sx, y: sy, vx: 0, vy: 0, m: SUN, type: "", born: 0 });
+  const orbit = (r, m) => { const v = Math.sqrt(G * SUN / r); mine.push({ id: uid(), x: sx + r, y: sy, vx: 0, vy: v, m, type: "", born: 0 }); };
+  orbit(110, 1); orbit(200, JUP);
+  }
+})();
+</script>
+<script src="../../../site.js" defer></script>
+<script src="../../../nav.js" data-path="cabz/fw/a-joyful-noise/index.html" defer></script>

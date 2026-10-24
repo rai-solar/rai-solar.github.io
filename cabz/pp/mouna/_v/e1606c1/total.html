@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Total — Poids du temps</title>
+
+  <style>
+    :root{
+      --page-margin: 1.25rem;
+      --bg: #FCFD99;
+      --text: #111;
+      --muted: #444;
+    }
+
+    html, body{ height:100%; }
+
+    body{
+      margin:0;
+      background: var(--bg);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .page{
+      min-height: 100vh;
+      padding: var(--page-margin);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .chiffon-close{
+      position: fixed;
+      top: var(--page-margin);
+      right: var(--page-margin);
+      width: 5.25rem;
+      height: auto;
+      z-index: 10;
+      display: inline-flex;
+      opacity: 0.95;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chiffon-close img{
+      width: 100%;
+      height: auto;
+      display:block;
+    }
+
+    /* Slower, earlier reveal */
+    .content{
+      max-width: 56rem;
+      margin: 12vh auto 10vh auto;
+      display:flex;
+      flex-direction:column;
+      gap: 0.8rem;
+
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 900ms ease, transform 900ms ease;
+      transition-delay: 80ms; /* earlier */
+    }
+
+    .content.is-visible{
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .title{
+      margin: 0;
+      font-size: 2.25rem;
+      letter-spacing: 0.02em;
+      font-weight: 600;
+    }
+
+    .sub{
+      margin: 0;
+      max-width: 40rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <a class="chiffon-close" href="index.html" aria-label="Retour">
+      <img src="imgs/chiffon.png" alt="Retour" />
+    </a>
+
+    <section class="content" id="content">
+      <h1 class="title">TOTAL</h1>
+      <p class="sub">
+        Page temporaire — données complètes à venir (scroll, synthèse, etc.).
+      </p>
+    </section>
+  </main>
+
+  <script>
+    // Reveal quickly (but not instant), and slower fade
+    window.requestAnimationFrame(() => {
+      const content = document.getElementById("content");
+      if (content) content.classList.add("is-visible");
+    });
+  </script>
+<script src="../../../../../site.js" defer></script>
+<script src="../../../../../nav.js" data-path="cabz/pp/mouna/total.html" data-version="e1606c1" defer></script>
+</body>
+</html>

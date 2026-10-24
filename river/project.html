@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>River study · rai p. solar</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<style>
+:root { --bg:#e9e7de; --fg:#222; color-scheme:light; }
+html,body { background:var(--bg); color:var(--fg); margin:0; min-height:100%; }
+main { min-height:100svh; box-sizing:border-box; padding:90px 8px 32px; display:flex; flex-direction:column; justify-content:space-between; font:400 14px/1.5 Spectral,Georgia,serif; }
+h1 { font-size:clamp(54px,12vw,170px); font-weight:400; line-height:1; letter-spacing:-.06em; margin:0; }
+.eyebrow { font-size:12px; letter-spacing:.04em; }
+p { max-width:34ch; } a { color:inherit; text-underline-offset:4px; }
+</style>
+</head>
+<body>
+<main>
+<div><span class="eyebrow">01 / FLOATING RIVER — PROJECT STUDY</span><h1 id="title">field notes</h1></div>
+<div><p>A place to land. This is a temporary destination for the river experiment.</p><a href="../?mode=river">return to the current ↗</a></div>
+</main>
+<script>
+(() => {
+ const titles={'lisiere':'lisière','future-web':'future web','pas-a-pas':'pas à pas','field-notes':'field notes','soleil':'soleil','pesca':'pesca','no-fixed-point':'no fixed point','wild-gardens':'wild gardens','small-signals':'small signals','in-between':'in between'};
+ const title=titles[new URLSearchParams(location.search).get('id')]||'field notes';
+ document.querySelector('#title').textContent=title;document.title=title+' · River study';
+})();
+</script>
+<script src="../site.js" defer></script>
+<script src="../nav.js" data-path="river/project.html" defer></script>
+</body>
+</html>

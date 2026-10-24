@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Wetland Hotspots</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="total.css" />
+</head>
+
+  <body>
+
+    <main class="page" data-page="main">
+      <section class="top">
+        <div class="left vstack">
+          <div class="figure">
+            <div class="stack" id="stack">
+              <canvas id="heatmap"></canvas>
+            </div>
+            <figcaption class="figcaption">
+              Fig. 1 — Carte des emplacements de miction de Mouna dans
+              l’appartement (01.09.2024–30.07.2025)
+            </figcaption>
+          </div>
+
+          <div class="figure">
+            <div
+              id="cleaned-bars"
+              class="cleaned-bars"
+              aria-label="Mictions nettoyées par personne"
+            ></div>
+            <figcaption class="figcaption">
+              Fig. 2 — Nombre mensuel de mictions nettoyées par personne
+              (01.09.2024–30.07.2025)
+            </figcaption>
+          </div>
+        </div>
+
+        <aside class="right">
+          <div class="text vstack">
+            <p>
+              En vieillissant, les êtres vivants deviennent de plus en plus
+              dépendants d’autrui. L’envie de partager de beaux moments avec nos
+              aînés ne fait plus le poids face aux responsabilités qui en
+              découlent. Par conséquent, cette charge est souvent externalisée à
+              un personnel spécialisé, mais ce n’est pas toujours possible.
+            </p>
+
+            <p>
+              Mouna a refusé de finir ses jours en urinant dans une litière
+              propre comme elle l’avait toujours fait pendant ses premières 17
+              années de vie. Pendant presque deux ans, elle a méthodiquement
+              fait ses besoins sur des emplacements précis, avec une certaine
+              variance saisonnière. Afin de tendre vers une répartition plus
+              équilibrée de cette charge dans la colocation, nous avons
+              quantifié chaque miction nettoyée.
+            </p>
+
+            <p>
+              Nous avons consulté une médium pour tenter de la comprendre et
+              trouver une solution. Elle a
+              <a class="link-rapport" href="email.html">rapporté</a>
+              que Mouna éprouvait des difficultés à retenir ses urines.
+            </p>
+
+            <p>
+              Comme nous pouvons l’observer (fig. 1), le choix d’un nombre
+              restreint de zones bien définies (n < 6) suggère une volonté de
+              Mouna de transmettre une revendication qui restera à jamais
+              incomprise, et non une incapacité physiologique.
+            </p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="bottom">
+        <div class="bottom-left">
+          <div class="month-cylinders" id="month-cylinders"></div>
+        </div>
+
+        <div class="bottom-right">
+          <div
+            class="total-block is-latent"
+            id="total-block"
+            role="button"
+            tabindex="0"
+            aria-label="Total (cliquer pour ouvrir)"
+          >
+            <img
+              class="pipi-total"
+              id="pipi-total"
+              src="imgs/pipi.svg"
+              alt="Total"
+            />
+            <!-- <div class="total-label">Total</div> -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Pee overlay layer (erasable layer) -->
+    <div class="pee-overlay" id="pee-overlay" aria-hidden="true">
+      <!-- solid pee layer (erasable) -->
+      <canvas id="pee-canvas"></canvas>
+
+      <!-- kept for transition.js compatibility -->
+      <canvas id="pee-text-canvas" aria-hidden="true"></canvas>
+
+      <!-- NEW: rasterized UI layer (erasable, stable) -->
+      <canvas id="pee-ui-canvas" aria-hidden="true"></canvas>
+
+      <!-- Layout template (HTML/CSS only, not shown; rasterized into pee-ui-canvas) -->
+      <div class="pee-ui" id="pee-ui" aria-hidden="true">
+        <div class="pee-ui__left">
+          <div class="pee-ui__topline">
+            <div class="pee-ui__title">TOTAL</div>
+
+            <div class="pee-ui__monthnav" aria-label="Navigation par mois">
+              <button
+                class="pee-ui__navbtn"
+                id="total-prev"
+                type="button"
+                aria-label="Mois précédent"
+              >
+                ←
+              </button>
+              <div class="pee-ui__month" id="total-month">—</div>
+              <button
+                class="pee-ui__navbtn"
+                id="total-next"
+                type="button"
+                aria-label="Mois suivant"
+              >
+                →
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="pee-ui__graphwrap"
+            aria-label="Graphique journalier des mictions"
+          >
+            <canvas
+              id="total-graph"
+              class="pee-ui__graph"
+              aria-hidden="true"
+            ></canvas>
+            <div class="pee-ui__graphcaption">
+              Répartition journalière (prototype).
+            </div>
+          </div>
+        </div>
+
+        <div class="pee-ui__right">
+          <div class="pee-ui__block">
+            <div class="pee-ui__h">Stats individuelles</div>
+            <ul class="pee-ui__list">
+              <li><span>Luna</span><span id="stat-luna">xx</span></li>
+              <li><span>Tom</span><span id="stat-tom">xx</span></li>
+              <li><span>Garfield</span><span id="stat-garfield">xx</span></li>
+              <li><span>Meowth</span><span id="stat-meowth">xx</span></li>
+            </ul>
+          </div>
+
+          <div class="pee-ui__block">
+            <div class="pee-ui__h">Moyennes</div>
+            <ul class="pee-ui__list">
+              <li><span>Par jour</span><span id="avg-day">xx</span></li>
+              <li>
+                <span>Équivalent litres</span><span id="avg-litres">xx</span>
+              </li>
+              <li>
+                <span>Équivalent temps</span><span id="avg-time">xx</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="pee-ui__hint">
+            Nettoyez l’écran avec le chiffon pour revenir à la visualisation.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Draggable chiffon -->
+    <button
+      class="chiffon-btn"
+      id="chiffon-btn"
+      aria-label="Chiffon (glisser pour nettoyer)"
+    >
+      <img src="imgs/chiffon.png" alt="Chiffon" />
+    </button>
+
+    <script src="heatmap.js"></script>
+    <script src="cleaned-bars.js"></script>
+    <script src="transition.js"></script>
+    <script src="total-ui.js"></script>
+
+    <!-- NEW: renders the HTML UI into the erasable canvas -->
+
+    <script src="chiffon.js"></script>
+<script src="../../../site.js" defer></script>
+<script src="../../../nav.js" data-path="cabz/pp/mouna/poids.html" defer></script>
+</body>
+</html>

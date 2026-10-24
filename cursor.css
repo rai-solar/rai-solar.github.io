@@ -1,0 +1,39 @@
+/* Shared cursor layer, independent of each project's layout and typography. */
+/* The grid's arrow and hand are real system cursors (SVG images, as on gabeferreira.com): the
+   operating system draws them, so they never lag behind the mouse. Black by day, purple at night;
+   the hand has its outline and finger lines in the opposite colour so it doesn't read as a blob.
+   The river's pointer bends as it moves, so cursor.js still draws that one (the system one hides). */
+html.cabz-cursor-ready {
+  --cursor-color: #FF4500;
+  --cursor-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='26' viewBox='-1 -1 16 26'%3E%3Cpath d='M0 0 L0 19.8 L4.7 15.5 L8 23.2 L10.8 22 L7.6 14.4 L13.9 14.4 Z' fill='%23222222'/%3E%3C/svg%3E") 1 1, auto;
+  --cursor-hand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='26' viewBox='-1.5 -1.5 21 26'%3E%3Cpath d='M4.4 2.4 C4.4 -.6 9.4 -.6 9.4 2.4 L9.4 8.2 C9.4 6.8 12.8 6.8 12.8 8.2 C12.8 7.6 15.2 7.6 15.2 9.2 C15.2 8.6 17.6 8.8 17.6 10.6 L17.6 16.4 C17.6 20.4 15.2 22.6 11.6 22.6 C9 22.6 7.4 21.8 6 20.2 L1 13.2 C-.2 11.6 1.8 9.6 3.2 11 L4.4 12.4 Z' fill='%23222222' stroke='%23ffffff' stroke-width='.9' stroke-linejoin='round'/%3E%3Cpath d='M9.4 8.4 V12.6 M12.8 8.4 V12.8 M15.2 9.4 V13' fill='none' stroke='%23ffffff' stroke-width='.9' stroke-linecap='round'/%3E%3C/svg%3E") 8 1, pointer;
+  --cursor: var(--cursor-hand);
+  cursor: var(--cursor-arrow);
+}
+html.cabz-cursor-dark, html:has(body.eclipse-dark), html:has(body.eclipse-locked) {
+  --cursor-color: #B026FF;
+  --cursor-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='26' viewBox='-1 -1 16 26'%3E%3Cpath d='M0 0 L0 19.8 L4.7 15.5 L8 23.2 L10.8 22 L7.6 14.4 L13.9 14.4 Z' fill='%23B026FF'/%3E%3C/svg%3E") 1 1, auto;
+  --cursor-hand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='26' viewBox='-1.5 -1.5 21 26'%3E%3Cpath d='M4.4 2.4 C4.4 -.6 9.4 -.6 9.4 2.4 L9.4 8.2 C9.4 6.8 12.8 6.8 12.8 8.2 C12.8 7.6 15.2 7.6 15.2 9.2 C15.2 8.6 17.6 8.8 17.6 10.6 L17.6 16.4 C17.6 20.4 15.2 22.6 11.6 22.6 C9 22.6 7.4 21.8 6 20.2 L1 13.2 C-.2 11.6 1.8 9.6 3.2 11 L4.4 12.4 Z' fill='%23B026FF' stroke='%23222222' stroke-width='.9' stroke-linejoin='round'/%3E%3Cpath d='M9.4 8.4 V12.6 M12.8 8.4 V12.8 M15.2 9.4 V13' fill='none' stroke='%23222222' stroke-width='.9' stroke-linecap='round'/%3E%3C/svg%3E") 8 1, pointer;
+}
+/* the river: the paw is a system cursor too (it doesn't move); only the pointer, whose stem flexes, is drawn by cursor.js */
+html.cabz-cursor-ready.river-active {
+  --cursor-arrow: none;
+  --cursor-hand: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='28'%20height='31'%20viewBox='2%201%2028%2031'%3E%3Cpath%20d='M4.7%2014.3%20C4.3%2010.8%207.3%2010.2%209.1%2012.8%20C11%2015.4%2010.7%2019%208.1%2019.4%20C5.8%2019.7%204.9%2017.1%204.7%2014.3%20Z%20M9.6%2011.1%20C9.3%207%2012.3%206.1%2014.2%208.7%20C15.8%2010.9%2015.5%2015.5%2013%2016.2%20C10.6%2016.7%209.8%2013.8%209.6%2011.1%20Z%20M17%2011.1%20C16.7%207%2019.7%206.1%2021.6%208.7%20C23.2%2010.9%2022.9%2015.5%2020.4%2016.2%20C18%2016.7%2017.2%2013.8%2017%2011.1%20Z%20M22.8%2012.8%20C24.5%2010.3%2027.4%2010.8%2027%2014.3%20C26.7%2017.1%2025.8%2019.7%2023.5%2019.4%20C20.9%2019%2020.8%2015.4%2022.8%2012.8%20Z%20M6.8%2025%20C6.4%2021.9%2011.8%2020.2%2013.7%2018.8%20Q16%2016.8%2018.3%2018.8%20C20.2%2020.2%2025.6%2021.9%2025.2%2025%20C24.9%2029.7%2022.4%2031%2019.3%2029.4%20Q16%2027.8%2012.7%2029.4%20C9.6%2031%207.1%2029.7%206.8%2025%20Z%20M4.7%209.7%20Q2.9%206.4%204.5%206.7%20Q6.3%206.9%206.2%209.7%20Q5.6%2010.3%204.7%209.7%20Z%20M11.1%205.5%20Q10.8%202.2%2012.2%202.5%20Q13.7%203%2013%205.5%20Q12%206.1%2011.1%205.5%20Z%20M18.7%205.5%20Q18.2%202.2%2019.7%202.5%20Q21.2%203%2020.7%205.5%20Q19.7%206.1%2018.7%205.5%20Z%20M25.5%209.7%20Q25.7%206.2%2027.3%206.7%20Q28.9%207.1%2027%209.7%20Q26.3%2010.3%2025.5%209.7%20Z'%20fill='%23FF4500'%20stroke='%23222222'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3C/svg%3E") 14 17, pointer;
+}
+:is(html.cabz-cursor-dark, html:has(body.eclipse-dark), html:has(body.eclipse-locked)).river-active {
+  --cursor-hand: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='28'%20height='31'%20viewBox='2%201%2028%2031'%3E%3Cpath%20d='M4.7%2014.3%20C4.3%2010.8%207.3%2010.2%209.1%2012.8%20C11%2015.4%2010.7%2019%208.1%2019.4%20C5.8%2019.7%204.9%2017.1%204.7%2014.3%20Z%20M9.6%2011.1%20C9.3%207%2012.3%206.1%2014.2%208.7%20C15.8%2010.9%2015.5%2015.5%2013%2016.2%20C10.6%2016.7%209.8%2013.8%209.6%2011.1%20Z%20M17%2011.1%20C16.7%207%2019.7%206.1%2021.6%208.7%20C23.2%2010.9%2022.9%2015.5%2020.4%2016.2%20C18%2016.7%2017.2%2013.8%2017%2011.1%20Z%20M22.8%2012.8%20C24.5%2010.3%2027.4%2010.8%2027%2014.3%20C26.7%2017.1%2025.8%2019.7%2023.5%2019.4%20C20.9%2019%2020.8%2015.4%2022.8%2012.8%20Z%20M6.8%2025%20C6.4%2021.9%2011.8%2020.2%2013.7%2018.8%20Q16%2016.8%2018.3%2018.8%20C20.2%2020.2%2025.6%2021.9%2025.2%2025%20C24.9%2029.7%2022.4%2031%2019.3%2029.4%20Q16%2027.8%2012.7%2029.4%20C9.6%2031%207.1%2029.7%206.8%2025%20Z%20M4.7%209.7%20Q2.9%206.4%204.5%206.7%20Q6.3%206.9%206.2%209.7%20Q5.6%2010.3%204.7%209.7%20Z%20M11.1%205.5%20Q10.8%202.2%2012.2%202.5%20Q13.7%203%2013%205.5%20Q12%206.1%2011.1%205.5%20Z%20M18.7%205.5%20Q18.2%202.2%2019.7%202.5%20Q21.2%203%2020.7%205.5%20Q19.7%206.1%2018.7%205.5%20Z%20M25.5%209.7%20Q25.7%206.2%2027.3%206.7%20Q28.9%207.1%2027%209.7%20Q26.3%2010.3%2025.5%209.7%20Z'%20fill='%23B026FF'%20stroke='%23222222'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3C/svg%3E") 14 17, pointer;
+}
+html.cabz-cursor-ready body { cursor: var(--cursor-arrow); }
+/* no I-beam over text or in fields: the arrow stays */
+html.cabz-cursor-ready :is(input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='range']), textarea, [contenteditable]) { cursor: var(--cursor-arrow); }
+html.cabz-cursor-ready a[href], html.cabz-cursor-ready button:not(:disabled),
+html.cabz-cursor-ready summary, html.cabz-cursor-ready [role='button']:not([aria-disabled='true']),
+html.cabz-cursor-ready input[type='submit'], html.cabz-cursor-ready input[type='checkbox'],
+html.cabz-cursor-ready input[type='radio'], html.cabz-cursor-ready select { cursor: var(--cursor-hand); }
+/* over an index name only the moon shows (a version dot gets its round from nav.js) */
+html.cabz-cursor-ready body:not(.eclipse-locked) .list a.name[data-full] { cursor: none; }
+.cabz-cursor {
+  position: fixed; left: 0; top: 0; width: 48px; height: 52px;
+  pointer-events: none; z-index: 2147483647; color: var(--cursor-color); visibility: hidden;
+}
+.cabz-cursor path { fill: currentColor; stroke: #222; stroke-width: 1; stroke-linejoin: round; }

@@ -1,0 +1,81 @@
+/* Experiment 01 is isolated from the original portfolio's layout. */
+html.river-active body { color: #f5f2e7; overflow: hidden; }
+/* grid ↔ river is a plain crossfade; the sun is not faded, sun.js melts it into its reflection */
+body.home > .list, body.home > .identity { transition: opacity .9s ease-in-out, visibility 0s; }
+html.river-active body.home > .list {
+  opacity: 0; pointer-events: none; visibility: hidden;
+  transition: opacity .9s ease-in-out, visibility 0s .9s;
+}
+/* the sun while it is water (sun.js): above the river, never a link; light on water while it drifts or drowns */
+html.river-active body.home > .sun, body.home > .sun.liquid { z-index: 3; pointer-events: none; }
+body.home > .sun.reflection { mix-blend-mode: screen; }
+html.river-active .sun-ball { display: none; }
+html.river-active .identity { z-index: 5; text-shadow: 0 1px 8px #101b1a80; }
+/* the name goes light on the water; it fades only while switching, so the eclipse's colours never lag */
+html.river-active .identity .name-line { color: #f5f2e7; }
+html.river-switching .identity .name-line { transition: color .9s ease-in-out; }
+.river-scene { position: fixed; inset: 0; z-index: 2; isolation: isolate; color: #f5f2e7;
+  background: #21363c; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .9s ease-in-out, visibility 0s .9s;
+  font: 400 12px/1.4 Spectral, Georgia, serif; letter-spacing: .025em; }
+html.river-active .river-scene { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .9s ease-in-out, visibility 0s; }
+.river-video, .river-bed, .river-drifters { position: absolute; inset: 0; width: 100%; height: 100%; }
+.river-video { object-fit: cover; filter: brightness(.86) saturate(.85); }   /* a slightly lighter blue */
+/* the footage runs about 9° left of straight down: turned 36° it runs on the diagonal, top right → bottom left,
+   like flowDirection in config.js. A square of 142vmax covers the viewport at any angle. */
+.river-video { inset: auto; left: 50%; top: 50%; width: 142vmax; height: 142vmax; transform: translate(-50%, -50%) rotate(36deg); }
+.river-bed { background: #21363c; z-index: -1; }
+.river-drifters { overflow: hidden; perspective: 1000px; }
+.river-object { position: absolute; left: 0; top: 0; display: block; width: var(--size);
+  padding: 7px; margin: 0; border: 0; text-decoration: none; color: inherit;
+  will-change: transform; transform-origin: center; -webkit-tap-highlight-color: transparent;
+  outline-offset: 8px; touch-action: manipulation; }
+.river-object[hidden] { display: none; }
+.river-object:focus-visible { outline: 1px solid #f5f2e7; border-radius: 5px; }
+.river-cargo { display: block; transform-origin: center; filter: var(--ripple);
+  text-align: center; line-height: 1; user-select: none;
+  text-shadow: 0 3px 4px #13262630; }
+.river-cargo img { display: block; width: 100%; height: auto; pointer-events: none; }
+.river-object .river-label { position: fixed; font: 400 12px/1.35 Spectral, Georgia, serif;
+  letter-spacing: .025em; white-space: nowrap; color: #fffdf3; text-shadow: 0 1px 6px #111;
+  opacity: 0; pointer-events: none; }
+.river-object:is(:hover,:focus-visible,[data-held]) { z-index: 4; }
+.river-object:is(:hover,:focus-visible,[data-held]) .river-label { opacity: 1; }
+.river-emoji { font-family: 'Apple Color Emoji','Segoe UI Emoji',sans-serif; font-size: var(--emoji-size); }
+.river-asterisk { color: #e9f950; font: 500 110px/.8 Arial,sans-serif; }
+.river-ring { display: block; width: 100%; aspect-ratio: 1; border: 18px solid #ff6b3b; border-radius: 50%; }
+.river-postcard { display: block; background: #ede9de; padding: 7px 7px 19px; color: #222; }
+.river-postcard img { aspect-ratio: 1.4; object-fit: cover; }
+.river-postcard small { display: block; text-align: left; margin-top: 7px; font: 8px/1 Arial,sans-serif; letter-spacing: .05em; }
+.river-ticket { display: block; background: #e8a8ac; color: #332e2d; padding: 12px 8px; text-align: left;
+  clip-path: polygon(0 0,100% 0,100% 43%,94% 47%,100% 51%,100% 100%,0 100%,0 51%,6% 47%,0 43%); }
+.river-ticket b { display: block; font: 500 18px/1.05 Arial,sans-serif; letter-spacing: -.06em; }
+.river-ticket small { display: block; font: 8px/1.1 monospace; margin-top: 25px; }
+.river-type { display: block; font: 500 38px/.95 Spectral,Georgia,serif; color: #f2eee0; letter-spacing: -.07em; text-align: left; }
+.river-seal { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid #e1eee5; border-radius: 50%; font: 400 56px/1 Georgia,serif; color: #e1eee5; }
+.river-flower { display: block; width: 100%; height: auto; fill: #a49ae2; }
+.river-controls { position: absolute; right: 8px; bottom: 12px; display: flex; gap: 18px; align-items: flex-end; z-index: 6; }
+.river-controls button, .river-controls summary, .river-controls a { background: none; border: 0; color: inherit; padding: 0; font: inherit; letter-spacing: inherit; }
+.river-controls summary { list-style: none; cursor: var(--cursor-hand,pointer); }
+.river-controls summary::-webkit-details-marker { display: none; }
+.river-controls button:hover, .river-controls a:hover, .river-controls summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+.river-index nav, .river-credits div { position: absolute; bottom: 32px; right: 0; width: max-content; max-width: calc(100vw - 16px);
+  background: #172522ed; padding: 16px; border: 1px solid #f5f2e733; text-align: left; }
+.river-index nav { display: grid; gap: 9px; min-width: 210px; }
+.river-index nav a { display: flex; gap: 24px; justify-content: space-between; text-decoration: none; }
+.river-index nav small { opacity: .5; font-size: 10px; }
+.river-credits div { width: 280px; }
+.river-credits p { margin: 0 0 10px; }
+.river-credits p:last-child { margin-bottom: 0; }
+.river-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.river-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); border: 1px solid currentColor;
+  background: #172522d9; color: #f5f2e7; padding: 10px 14px; font: inherit; }
+.river-play[hidden] { display: none; }
+@media (max-width: 600px) {
+  .river-controls { bottom: 52px; gap: 14px; }
+  .river-emoji { font-size: calc(var(--emoji-size) * .85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .river-scene, body.home > .list, body.home > .identity { transition: none; }
+  .river-object { will-change: auto; }
+}

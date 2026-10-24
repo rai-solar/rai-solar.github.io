@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 280" width="420" height="280">
+  <defs>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"></feGaussianBlur>
+      <feOffset dx="0" dy="6" result="off"></feOffset>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.25"></feFuncA>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <ellipse cx="180" cy="232" rx="92" ry="18" fill="#000000" opacity="0.18"></ellipse>
+
+  <g filter="url(#shadow)" transform="translate(0 0)">
+    <!-- body -->
+    <ellipse cx="180" cy="150" rx="88" ry="42" fill="#ddb96e" stroke="#7f6537" stroke-width="5"></ellipse>
+
+    <!-- neck -->
+    <path d="M238 122 L274 104 L286 118 L248 144 Z" fill="#ddb96e" stroke="#7f6537" stroke-width="5"></path>
+
+    <!-- head -->
+    <ellipse cx="302" cy="110" rx="34" ry="28" fill="#ddb96e" stroke="#7f6537" stroke-width="5"></ellipse>
+
+    <!-- muzzle -->
+    <ellipse cx="334" cy="118" rx="20" ry="12" fill="#cda45a" stroke="#7f6537" stroke-width="4"></ellipse>
+
+    <!-- ears -->
+    <path d="M286 86 L300 48 L318 82 Z" fill="#ddb96e" stroke="#7f6537" stroke-width="5"></path>
+    <path d="M312 84 L336 54 L336 92 Z" fill="#ddb96e" stroke="#7f6537" stroke-width="5"></path>
+
+    <!-- tail -->
+    <path d="M96 146 C54 132, 34 110, 18 86" fill="none" stroke="#7f6537" stroke-width="8" stroke-linecap="round"></path>
+
+    <!-- legs -->
+    <g stroke="#6e6e6e" stroke-width="8" stroke-linecap="round">
+      <line x1="138" y1="186" x2="130" y2="250"></line>
+      <line x1="176" y1="190" x2="178" y2="250"></line>
+      <line x1="224" y1="188" x2="220" y2="250"></line>
+      <line x1="258" y1="182" x2="262" y2="246"></line>
+    </g>
+
+    <!-- spots -->
+    <g fill="#c8862d" opacity="0.95">
+      <path d="M146 128 C132 116, 148 102, 166 112 C182 120, 168 138, 146 128 Z"></path>
+      <path d="M214 156 C198 140, 220 126, 238 140 C248 148, 240 166, 214 156 Z"></path>
+      <path d="M292 104 C284 94, 298 88, 308 94 C316 100, 306 112, 292 104 Z"></path>
+      <path d="M178 176 C166 166, 184 156, 196 164 C202 170, 196 180, 178 176 Z"></path>
+    </g>
+
+    <!-- eye -->
+    <circle cx="312" cy="108" r="3.8" fill="#1a1a1a"></circle>
+    <!-- nose -->
+    <circle cx="346" cy="120" r="3.5" fill="#1a1a1a"></circle>
+  </g>
+</svg>

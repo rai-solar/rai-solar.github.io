@@ -1,0 +1,37 @@
+/* raíz · the design tokens: the grid, the type and the palette the whole site shares.
+   style.css (the home page and the cabz indexes) and the bar (nav.js) are built on them. A project
+   uses them by linking this file (<link rel="stylesheet" href="../../tokens.css">) and laying its
+   visual elements on the grid: .cabz-grid below, or var(--grid-margin), var(--c-sun)…
+   The index's design column (nav.js) changes them live, in this browser only; its "copy css"
+   gives this :root block with the new values, to paste here and make them the site's. */
+:root {
+  /* the grid: 8 columns, 8 px between them, 24 px at each side */
+  --grid-cols: 8;
+  --grid-gap: 8px;
+  --grid-margin: 24px;
+  /* type: one family, two sizes */
+  --type-font: Spectral, Georgia, "Times New Roman", serif;
+  --type-s: 13px;   /* the bar, dates, labels */
+  --type-m: 16px;   /* names, lists, text */
+  /* the palette: the only colours of the interface */
+  --c-peach: #efb4a5;    /* the sky by day */
+  --c-ink: #222222;      /* type by day, the sky at night */
+  --c-sun: #FF4500;      /* the sun's disc, selected type */
+  --c-ray: #E83700;      /* the sun's rays */
+  --c-violet: #B026FF;   /* type at night */
+  --c-lilac: #C16CFF;    /* future web's type */
+  --c-black: #000000;    /* future web's field */
+  --c-cream: #f5f2e7;    /* the river's type */
+  --c-deep: #21363c;     /* the river's water */
+  /* what the interface paints with, chosen from the palette */
+  --ui-paper: var(--c-peach);
+  --ui-ink: var(--c-ink);
+}
+
+/* a row on the grid: 8 columns between the side margins */
+.cabz-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
+  column-gap: var(--grid-gap);
+  padding-inline: var(--grid-margin);
+}

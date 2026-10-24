@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>connected wild dogs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- MapLibre GL JS v6 is ESM-only: CSS stays here; JS is imported by script.js -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@6.8.0/dist/maplibre-gl.css"
+    />
+
+    <!-- Libraries used as browser globals by script.js -->
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+    <script src="https://unpkg.com/rbush@3.0.1/rbush.min.js"></script>
+
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+
+  <body>
+
+    <div class="app">
+      <!-- LEFT -->
+      <section class="pane pane-left">
+        <div class="pane-header">
+          <div>
+            <div class="title" id="csvTitle">rafi_pos.csv</div>
+          </div>
+          <div class="meta">Wheel to scrub (Shift = faster)</div>
+        </div>
+
+        <div class="left-body" id="leftBody">
+          <div class="left-main">
+            <div class="table-wrap" id="tableWrap">
+              <table id="csvTable" class="mono"></table>
+            </div>
+
+            <div class="overlay-panel">
+              <div class="habitat-overlay" id="habitatOverlay" aria-hidden="true">
+                <div
+                  id="overlayBgVideo"
+                  class="overlay-bg-video"
+                  aria-hidden="true"
+                ></div>
+
+                <div class="overlay-dog-layer">
+                  <img
+                    id="overlayDog"
+                    class="overlay-dog"
+                    src="./assets/rafi.webp"
+                    alt=""
+                  />
+                </div>
+
+                <canvas id="overlayVegCanvas" class="overlay-veg-canvas"></canvas>
+
+                <div class="overlay-meta" aria-hidden="true">
+                  <span id="overlayHabitatLabel" class="overlay-habitat-hidden">–</span>
+                </div>
+
+                <button
+                  class="play-btn overlay-play-btn"
+                  id="playBtn"
+                  type="button"
+                  title="Play / Pause"
+                  aria-label="Play / Pause"
+                >
+                  <span class="play-dot"></span>
+                  <span id="playLabel">▶</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="scrubber-strip">
+            <input
+              id="vslider"
+              class="vslider"
+              type="range"
+              min="0"
+              max="1"
+              step="1"
+              value="0"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- CENTER -->
+      <section class="map-pane">
+        <div id="map"></div>
+      </section>
+
+      <!-- RIGHT -->
+      <aside class="pane side">
+        <div class="pane-header">
+          <div>
+            <div class="title">Layers &amp; data</div>
+            <div class="meta" id="vegMeta">Loading vegetation…</div>
+          </div>
+        </div>
+
+        <div class="side-section controls-section">
+          <div class="dataset-row">
+            <div class="dataset-labels">
+              <button class="dataset-name is-active" id="datasetRafiLabel" type="button">
+                rafi_pos.csv
+              </button>
+              <button class="dataset-name" id="datasetNoarLabel" type="button">
+                noar_pos.csv
+              </button>
+            </div>
+
+            <button
+              id="datasetSwitch"
+              class="toggle toggle-vertical is-on"
+              type="button"
+              aria-label="Switch dataset"
+              aria-pressed="true"
+            >
+              <span class="toggle-line"></span>
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="toggle-list">
+            <div class="toggle-row is-off">
+              <span class="toggle-text">Background</span>
+              <button
+                id="toggleBackground"
+                class="toggle toggle-horizontal"
+                type="button"
+                aria-label="Toggle satellite background"
+                aria-pressed="false"
+              >
+                <span class="toggle-line"></span>
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+
+            <div class="toggle-row is-off">
+              <span class="toggle-text">Vegetation</span>
+              <button
+                id="toggleVegetation"
+                class="toggle toggle-horizontal"
+                type="button"
+                aria-label="Toggle vegetation"
+                aria-pressed="false"
+              >
+                <span class="toggle-line"></span>
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+
+            <div class="toggle-row">
+              <span class="toggle-text">Roads</span>
+              <button
+                id="toggleRoads"
+                class="toggle toggle-horizontal is-on"
+                type="button"
+                aria-label="Toggle roads"
+                aria-pressed="true"
+              >
+                <span class="toggle-line"></span>
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+
+            <div class="toggle-row">
+              <span class="toggle-text">Rivers</span>
+              <button
+                id="toggleRivers"
+                class="toggle toggle-horizontal is-on"
+                type="button"
+                aria-label="Toggle rivers"
+                aria-pressed="true"
+              >
+                <span class="toggle-line"></span>
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-section stats-section">
+          <div class="kv">
+            <div>Index</div><b id="idx">–</b>
+            <div>Total fixes</div><b id="total">–</b>
+            <div>Time</div><b id="time">–</b>
+            <div>Coordinates</div><b id="lonlat">–</b>
+            <div>Vegetation class</div><b id="vegClass">–</b>
+            <div>Distance (current)</div><b id="distNow">–</b>
+            <div>Distance (total)</div><b id="distTotal">–</b>
+          </div>
+        </div>
+
+        <div class="side-section legend-section" id="vegLegend">
+          <div class="legend-title">Legend</div>
+          <div class="meta">Waiting for vegetation layer…</div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- IMPORTANT: module, not a classic script -->
+    <script type="module" src="./script.js"></script>
+<script src="../../../site.js" defer></script>
+<script src="../../../nav.js" data-path="cabz/pp/perros/index.html" defer></script>
+</body>
+</html>
